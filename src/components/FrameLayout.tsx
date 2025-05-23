@@ -31,8 +31,8 @@ export default function FrameLayout({}: FrameLayoutProps) {
   else if (activeTab === 'insights') activeTabComponent = <InsightsLayout key={`insights-${tabKey}`} />;
 
   return (
-    <div className="w-full h-screen flex flex-col bg-[#0D0D0F] text-white">
-      <main className="flex-1 overflow-auto">
+    <div className="w-full h-screen flex flex-col bg-[#0D0D0F] text-white overflow-hidden">
+      <main className="flex-1 relative">
         {/* Render the active tab component */}
         {activeTabComponent}
       </main>

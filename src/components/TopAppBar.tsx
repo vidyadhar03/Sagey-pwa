@@ -30,32 +30,34 @@ export default function TopAppBar({
 }: TopAppBarProps) {
   return (
     <header 
-      className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between p-4 h-[60px]"
+      className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between h-[60px]"
       style={{
         background: 'rgba(18, 18, 20, 0.8)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)', // For Safari
       }}
     >
-      {/* Left Icon (Optional) */}
-      <div className="w-10 flex justify-start">
-        {showLeftIcon ? (
-          <button className="p-2" aria-label={leftIconLabel}>
-            <Icon path={leftIconPath} />
-          </button>
-        ) : <div />}
-      </div>
+      <div className="w-full max-w-7xl mx-auto px-4 flex items-center justify-between">
+        {/* Left Icon (Optional) */}
+        <div className="w-10 flex justify-start">
+          {showLeftIcon ? (
+            <button className="p-2" aria-label={leftIconLabel}>
+              <Icon path={leftIconPath} />
+            </button>
+          ) : <div />}
+        </div>
 
-      {/* Title - Centered */}
-      <h1 className="text-xl font-medium text-white">{title}</h1>
+        {/* Title - Centered */}
+        <h1 className="text-xl font-medium text-white">{title}</h1>
 
-      {/* Right Icon (Optional) */}
-      <div className="w-10 flex justify-end">
-        {showRightIcon ? (
-          <button className="p-2" aria-label={rightIconLabel}>
-            <Icon path={rightIconPath} />
-          </button>
-        ) : <div />}
+        {/* Right Icon (Optional) */}
+        <div className="w-10 flex justify-end">
+          {showRightIcon ? (
+            <button className="p-2" aria-label={rightIconLabel}>
+              <Icon path={rightIconPath} />
+            </button>
+          ) : <div />}
+        </div>
       </div>
     </header>
   );

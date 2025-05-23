@@ -66,7 +66,7 @@ export default function ChatInterface() {
               await scrollControls.start({
                 x: -scrollDistance,
                 transition: { 
-                  duration: 30,
+                  duration: 60,
                   ease: "linear" 
                 }
               });
@@ -173,78 +173,85 @@ export default function ChatInterface() {
   };
 
   return (
-    <>
-      {/* Horizontally Scrolling Suggestion Chips */}
-      <div className="fixed bottom-[156px] left-0 right-0 flex justify-center z-30 overflow-hidden">
-        <AnimatePresence>
-          {isVisible && (
-            <div className="w-full max-w-md px-4">
-              <div 
-                ref={scrollContainerRef}
-                className="flex gap-2 overflow-x-auto touch-pan-x"
-                style={{ scrollBehavior: 'smooth' }}
-              >
-                <motion.div 
-                  className="flex gap-2 flex-nowrap"
-                  animate={scrollControls}
-                  initial="hidden"
-                >
-                  {suggestions.map((suggestion, index) => (
-                    <motion.button 
-                      key={index}
-                      className="px-4 py-2 rounded-full bg-[#2A2A2D]/80 backdrop-blur-sm text-[#E0E0E0] text-sm whitespace-nowrap shadow-sm border border-white/10"
-                      initial={{ opacity: 0, y: 20, scale: 0.8 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 20, scale: 0.8 }}
-                      transition={{ 
-                        delay: getAnimationDelay(index),
-                        type: "spring", 
-                        damping: 12, 
-                        stiffness: 200 
-                      }}
-                    >
-                      {suggestion}
-                    </motion.button>
-                  ))}
-                </motion.div>
-              </div>
-            </div>
-          )}
-        </AnimatePresence>
-      </div>
+    <div className="fixed bottom-16 left-0 right-0 z-10 flex flex-col items-center pt-[1px] transition-all duration-300 ease-in-out pointer-events-none">
+      {/* Background blur layer */}
+      <div className="absolute inset-0 backdrop-blur-[2px] pointer-events-none"></div>
       
-      {/* Chat Input Bar with Animation */}
-      <AnimatePresence>
-        {isVisible && (
-          <motion.div 
-            className="fixed bottom-[94px] left-4 right-4 h-14 rounded-3xl z-20 border border-white/10 flex items-center justify-between px-4"
-            style={{
-              backgroundColor: 'rgba(30, 30, 32, 0.75)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)'
-            }}
-            variants={inputBarVariants}
-            initial="hidden"
-            animate="visible"
-            exit="hidden"
-          >
-            {/* Left: Search icon + placeholder */}
-            <div className="flex items-center gap-2 flex-1">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-[#A0A0A0]">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-              </svg>
-              <span className="text-sm text-[#A0A0A0]">Chat with Sagey…</span>
-            </div>
-            
-            {/* Right: Send button */}
-            <button className="w-11 h-11 rounded-full flex items-center justify-center bg-[#1DB954]">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-white">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
-              </svg>
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
+      <div className="w-full max-w-7xl mx-auto pb-[4px] relative z-10 pointer-events-none">
+        {/* Horizontally Scrolling Suggestion Chips */}
+        <div className="w-full flex justify-center overflow-hidden mb-[4px] px-0 mt-[1px] pointer-events-auto">
+          <AnimatePresence>
+            {isVisible && (
+              <div className="w-full">
+                <div 
+                  ref={scrollContainerRef}
+                  className="flex gap-2 overflow-x-auto touch-pan-x w-full px-4"
+                  style={{ scrollBehavior: 'smooth' }}
+                >
+                  <motion.div 
+                    className="flex gap-2 flex-nowrap w-full"
+                    animate={scrollControls}
+                    initial="hidden"
+                  >
+                    {suggestions.map((suggestion, index) => (
+                      <motion.button 
+                        key={index}
+                        className="px-3 py-1.5 rounded-full bg-[#2A2A2D]/80 backdrop-blur-sm text-[#E0E0E0] text-xs whitespace-nowrap shadow-sm border border-white/10"
+                        initial={{ opacity: 0, y: 20, scale: 0.8 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 20, scale: 0.8 }}
+                        transition={{ 
+                          delay: getAnimationDelay(index),
+                          type: "spring", 
+                          damping: 12, 
+                          stiffness: 200 
+                        }}
+                      >
+                        {suggestion}
+                      </motion.button>
+                    ))}
+                  </motion.div>
+                </div>
+              </div>
+            )}
+          </AnimatePresence>
+        </div>
+        
+        {/* Chat Input Bar with Animation */}
+        <div className="px-4 pointer-events-auto">
+          <AnimatePresence>
+            {isVisible && (
+              <motion.div 
+                className="h-14 rounded-[34px] border border-white/10 flex items-center justify-between px-4 mb-[2px]"
+                style={{
+                  backgroundColor: 'rgba(30, 30, 32, 0.75)',
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)'
+                }}
+                variants={inputBarVariants}
+                initial="hidden"
+                animate="visible"
+                exit="hidden"
+              >
+                {/* Left: Search icon + placeholder */}
+                <div className="flex items-center gap-2 flex-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-[#A0A0A0]">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                  </svg>
+                  <span className="text-sm text-[#A0A0A0]">Chat with Sagey…</span>
+                </div>
+                
+                {/* Right: Send button - Original arrow icon without background */}
+                <button className="w-11 h-11 rounded-full flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-[#1DB954]">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+                  </svg>
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    </div>
   );
 }
