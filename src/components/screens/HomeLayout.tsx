@@ -4,13 +4,6 @@ import React from 'react';
 import TopAppBar from '../TopAppBar';
 import ChatInterface from '../ChatInterface';
 
-// Helper component for SVG icons
-const Icon = ({ path, className = "w-6 h-6" }: { path: string; className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-    <path strokeLinecap="round" strokeLinejoin="round" d={path} />
-  </svg>
-);
-
 export default function HomeLayout() {
   return (
     <>
@@ -45,7 +38,7 @@ export default function HomeLayout() {
               <h3 className="text-white font-medium">Daily Aha!</h3>
             </div>
             <p className="text-secondary text-sm ml-7">
-              "The way you start your day determines how well you live your day."
+              &ldquo;The way you start your day determines how well you live your day.&rdquo;
             </p>
           </div>
         </section>

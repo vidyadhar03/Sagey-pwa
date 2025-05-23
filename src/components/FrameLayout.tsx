@@ -1,16 +1,16 @@
 "use client";
 
-import React, { ReactNode, useState, useEffect } from 'react';
+import React, { ReactNode, useState } from 'react';
 import BottomNav from './BottomNav';
 import HomeLayout from './screens/HomeLayout';
 import JournalLayout from './screens/JournalLayout';
 import InsightsLayout from './screens/InsightsLayout';
 
 interface FrameLayoutProps {
-  children: ReactNode;
+  // Removed unused children prop
 }
 
-export default function FrameLayout({ children }: FrameLayoutProps) {
+export default function FrameLayout({}: FrameLayoutProps) {
   // Implement active tab state
   const [activeTab, setActiveTab] = useState('home');
   // Add a key state to force remount of tab components

@@ -17,7 +17,7 @@ export default function InsightsLayout() {
         
         <div className="mt-6 p-4 rounded-xl bg-card-bg border border-white/10">
           <div className="flex justify-center items-center h-40">
-            <p className="text-secondary italic">Insights will appear here once you've logged more entries.</p>
+            <p className="text-secondary italic">Insights will appear here once you&apos;ve logged more entries.</p>
           </div>
         </div>
       </div>

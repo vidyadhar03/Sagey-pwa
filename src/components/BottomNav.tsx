@@ -8,14 +8,7 @@ interface BottomNavProps {
 }
 
 export default function BottomNav({ activeTab, onTabClick }: BottomNavProps) {
-  // Helper to render the appropriate icon based on active state
-  const renderIcon = (
-    tab: string, 
-    activeIconJSX: React.ReactNode, 
-    inactiveIconJSX: React.ReactNode
-  ) => {
-    return activeTab === tab ? activeIconJSX : inactiveIconJSX;
-  };
+  // The renderIcon function was unused, so I've removed it
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-10 bg-card-bg border-t border-white/10 flex justify-around items-center px-6 py-5 rounded-t-xl">

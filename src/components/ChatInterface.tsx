@@ -59,8 +59,8 @@ export default function ChatInterface() {
             const currentScrollX = scrollContainerRef.current ? 
               scrollContainerRef.current.scrollLeft : 0;
               
-            // Calculate remaining distance based on current position
-            const remainingDistance = scrollDistance - currentScrollX;
+            // Calculate remaining distance (for future reference)
+            // const remainingDistance = scrollDistance - currentScrollX;
             
             while (!isUserScrolling) {
               await scrollControls.start({
@@ -125,26 +125,7 @@ export default function ChatInterface() {
         }
       };
     }
-  }, []);
-
-  // Individual chip variants
-  const chipVariants = {
-    hidden: { 
-      opacity: 0, 
-      y: 20, 
-      scale: 0.8 
-    },
-    visible: { 
-      opacity: 1, 
-      y: 0, 
-      scale: 1,
-      transition: { 
-        type: "spring", 
-        damping: 12, 
-        stiffness: 200 
-      }
-    }
-  };
+  }, [handleUserInteractionStart, handleUserInteractionEnd]);
 
   // Input bar animation variants
   const inputBarVariants = {

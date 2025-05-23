@@ -8,6 +8,12 @@ const withPWA = require('next-pwa')({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  telemetryDisabled: true,
+  outputFileTracingExcludes: {
+    '*': [
+      'node_modules/**/*'
+    ],
+  }
 }
 
 module.exports = withPWA(nextConfig) 
