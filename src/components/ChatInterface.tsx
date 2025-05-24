@@ -142,32 +142,30 @@ export default function ChatInterface() {
         type: "spring", 
         damping: 20, 
         stiffness: 300,
-        delay: 0.1 // Just a slight delay after initial animation starts
+        delay: 0.2 // Doubled from 0.1 - Just a slight delay after initial animation starts
       }
     }
   };
 
-  // Suggestion prompts - expanded to 7
+  // Suggestion prompts - expanded to 6 Sagey-specific tasks
   const suggestions = [
-    "How are you feeling today?",
-    "What's on your mind?",
-    "What are you grateful for?",
-    "Tell me about your day",
-    "What's your goal today?",
-    "Need help with something?",
-    "What made you smile today?"
+    "Analyse my recent journals",
+    "Psychoanalyse me by asking the right questions",
+    "What do you think about my music taste",
+    "Help me understand my mood patterns",
+    "Review my goals and suggest improvements",
+    "Find insights from my daily habits"
   ];
 
   // Custom delay function with faster staggered timing
   const getAnimationDelay = (index: number) => {
     switch(index) {
       case 0: return 0;    // First item appears immediately
-      case 1: return 0.3;  // Reduced from 0.7s
-      case 2: return 0.6;  // Reduced from 1.4s
-      case 3: return 0.9;  // Reduced from 2.0s
-      case 4: return 1.2;  // Reduced from 2.5s
-      case 5: return 1.5;  // Reduced from 3.0s
-      case 6: return 1.8;  // Reduced from 3.5s
+      case 1: return 0.6;  // Doubled from 0.3s
+      case 2: return 1.2;  // Doubled from 0.6s
+      case 3: return 1.8;  // Doubled from 0.9s
+      case 4: return 2.4;  // Doubled from 1.2s
+      case 5: return 3.0;  // Doubled from 1.5s
       default: return 0;
     }
   };
