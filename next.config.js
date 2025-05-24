@@ -1,22 +1,9 @@
-// const withPWA = require('next-pwa')({
-//   dest: 'public',
-//   register: true,
-//   skipWaiting: true,
-//   disable: process.env.NODE_ENV === 'development'
-// })
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
+  reactStrictMode: false,
   experimental: {
-    optimizePackageImports: ['framer-motion']
-  },
-  outputFileTracingExcludes: {
-    '*': [
-      'node_modules/**/*'
-    ],
+    forceSwcTransforms: true,
   }
 }
 
-// module.exports = withPWA(nextConfig)
 module.exports = nextConfig 
