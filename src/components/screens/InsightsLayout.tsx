@@ -150,6 +150,25 @@ export default function InsightsLayout() {
                 ))}
               </div>
             </div>
+
+            {/* View Full Spotify Data CTA */}
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-[#1DB954]/20 to-[#1AA34A]/20 border border-[#1DB954]/30">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-white font-medium mb-1">Your Complete Music Profile</h4>
+                  <p className="text-[#1DB954]/80 text-sm">View all your recent tracks, top artists, and detailed listening history</p>
+                </div>
+                <button 
+                  onClick={() => window.location.href = '/spotify-data'}
+                  className="px-4 py-2 bg-[#1DB954] hover:bg-[#1AA34A] rounded-full text-white text-sm font-medium transition-all flex items-center"
+                >
+                  View All Data
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 ml-1">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                  </svg>
+                </button>
+              </div>
+            </div>
           </div>
         );
 
@@ -261,7 +280,12 @@ export default function InsightsLayout() {
                     <div className="w-2 h-2 bg-[#1DB954] rounded-full mr-2"></div>
                     <span className="text-white text-sm">Spotify</span>
                   </div>
-                  <span className="text-secondary text-xs">Connected</span>
+                  <button 
+                    onClick={() => window.location.href = '/spotify-data'}
+                    className="text-[#1DB954] text-xs font-medium hover:text-[#1AA34A] transition-colors"
+                  >
+                    View Data →
+                  </button>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
