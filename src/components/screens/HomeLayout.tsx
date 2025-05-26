@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import TopAppBar from '../TopAppBar';
 import ChatInterface from '../ChatInterface';
+import MusicalAgeEstimator from '../MusicalAgeEstimator';
 import { useSpotify } from '../../hooks/useSpotify';
 
 interface HomeLayoutProps {
@@ -96,11 +97,27 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
             </div>
           </motion.section>
 
+          {/* Musical Age Estimator - Featured Section */}
+          {connected && (
+            <motion.section 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="mt-6 mb-8"
+            >
+              <div className="mb-4">
+                <h3 className="text-white font-semibold text-lg mb-2">🎵 Musical Age Estimator</h3>
+                <p className="text-gray-400 text-sm">Discover your musical DNA and see how your taste compares to your actual age</p>
+              </div>
+              <MusicalAgeEstimator />
+            </motion.section>
+          )}
+
           {/* Quick Stats Section */}
           <motion.section 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
+            transition={{ delay: 0.2 }}
             className="mt-6 mb-8"
           >
             <h3 className="text-white font-semibold text-lg mb-4">Your Music at a Glance</h3>
@@ -156,7 +173,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
             <motion.section 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
+              transition={{ delay: 0.4 }}
               className="mt-6 mb-8"
             >
               <div className="flex items-center justify-between mb-4">
@@ -213,7 +230,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
             <motion.section 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
+              transition={{ delay: 0.5 }}
               className="mt-6 mb-8"
             >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -298,7 +315,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
           <motion.section 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
+            transition={{ delay: 0.6 }}
             className="mt-6 mb-8"
           >
             <h3 className="text-white font-semibold text-lg mb-4">Quick Actions</h3>
