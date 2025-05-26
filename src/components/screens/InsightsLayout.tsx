@@ -228,7 +228,7 @@ export default function InsightsLayout() {
             <div className="p-4 rounded-2xl bg-[#2A2A2D] border border-white/10">
               <h4 className="text-white font-medium mb-4">Top Artists</h4>
               <div className="space-y-3">
-                {musicInsights.topArtists.map((artist, index) => (
+                {musicInsights.topArtists.map((artist: any, index: number) => (
                   <div key={index} className="flex items-center justify-between">
                     <div className="flex items-center">
                       <span className="text-[#1DB954] font-bold text-sm w-6">#{index + 1}</span>

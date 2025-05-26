@@ -269,7 +269,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      {topArtists.map((artist, index) => (
+                                              {topArtists.map((artist: any, index: number) => (
                         <div key={artist.id} className="flex items-center">
                           <span className="text-[#1ed760] font-bold text-sm w-6">#{index + 1}</span>
                           {artist.images?.[0] && (

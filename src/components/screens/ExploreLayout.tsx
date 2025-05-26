@@ -220,7 +220,7 @@ export default function ExploreLayout() {
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-4">
-                  {topArtists?.[selectedTimeRange]?.slice(0, 8).map((artist, index) => (
+                  {topArtists?.[selectedTimeRange]?.slice(0, 8).map((artist: any, index: number) => (
                     <div key={artist.id} className="flex items-center gap-3 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
                       <span className="text-[#1DB954] font-bold text-sm">{index + 1}</span>
                       {artist.images?.[0] && (
@@ -289,7 +289,7 @@ export default function ExploreLayout() {
                   <div className="flex-1 min-w-0">
                     <p className="font-medium truncate">{item.track.name}</p>
                     <p className="text-sm text-gray-400 truncate">
-                      {item.track.artists?.map(artist => artist.name).join(', ')}
+                      {item.track.artists?.map((artist: any) => artist.name).join(', ')}
                     </p>
                   </div>
                   <div className="text-xs text-gray-400">

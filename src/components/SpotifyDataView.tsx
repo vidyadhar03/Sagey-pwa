@@ -365,7 +365,7 @@ export default function SpotifyDataView() {
                     <span className="text-secondary text-sm">{getTimeRangeLabel(timeRange)}</span>
                   </div>
                   
-                  {topArtists.map((artist, index) => (
+                  {topArtists.map((artist: any, index: number) => (
                     <div key={artist.id} className="p-4 rounded-2xl bg-[#2A2A2D] border border-white/10 hover:border-[#1DB954]/30 transition-all">
                       <div className="flex items-center">
                         <span className="text-[#1DB954] font-bold text-lg mr-4 w-6">#{index + 1}</span>
@@ -385,7 +385,7 @@ export default function SpotifyDataView() {
                           </div>
                           {artist.genres.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-2">
-                              {artist.genres.slice(0, 3).map((genre, genreIndex) => (
+                              {artist.genres.slice(0, 3).map((genre: string, genreIndex: number) => (
                                 <span 
                                   key={genreIndex}
                                   className="px-2 py-1 bg-[#1DB954]/20 text-[#1DB954] text-xs rounded-full"
