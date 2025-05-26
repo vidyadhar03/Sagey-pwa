@@ -33,16 +33,25 @@ export default function ExploreLayout() {
     setDataLoading(true);
     try {
       const [tracks, artists, recent] = await Promise.all([
-        getTopTracks(selectedTimeRange),
-        getTopArtists(selectedTimeRange),
-        getRecentTracks()
+        getTopTracks(selectedTimeRange).catch(() => []),
+        getTopArtists(selectedTimeRange).catch(() => []),
+        getRecentTracks().catch(() => [])
       ]);
       
-      setTopTracks((prev: any) => ({ ...prev, [selectedTimeRange]: tracks }));
-      setTopArtists((prev: any) => ({ ...prev, [selectedTimeRange]: artists }));
-      setRecentTracks(recent);
+      // Ensure we have valid arrays with proper data structure
+      const validTracks = Array.isArray(tracks) ? tracks.filter(track => track && track.id) : [];
+      const validArtists = Array.isArray(artists) ? artists.filter(artist => artist && artist.id) : [];
+      const validRecent = Array.isArray(recent) ? recent.filter((item: any) => item && item.track && item.track.id) : [];
+      
+      setTopTracks((prev: any) => ({ ...prev, [selectedTimeRange]: validTracks }));
+      setTopArtists((prev: any) => ({ ...prev, [selectedTimeRange]: validArtists }));
+      setRecentTracks(validRecent);
     } catch (error) {
       console.error('Failed to load data:', error);
+      // Set empty arrays as fallback
+      setTopTracks((prev: any) => ({ ...prev, [selectedTimeRange]: [] }));
+      setTopArtists((prev: any) => ({ ...prev, [selectedTimeRange]: [] }));
+      setRecentTracks([]);
     } finally {
       setDataLoading(false);
     }
@@ -55,10 +64,14 @@ export default function ExploreLayout() {
   };
 
   const getGenresFromArtists = () => {
-    if (!topArtists?.medium_term) return [];
-    const allGenres = topArtists.medium_term.flatMap((artist: any) => artist.genres || []);
+    if (!topArtists?.medium_term || !Array.isArray(topArtists.medium_term)) return [];
+    const allGenres = topArtists.medium_term
+      .filter((artist: any) => artist && Array.isArray(artist.genres))
+      .flatMap((artist: any) => artist.genres || []);
     const genreCounts = allGenres.reduce((acc: Record<string, number>, genre: string) => {
-      acc[genre] = (acc[genre] || 0) + 1;
+      if (genre && typeof genre === 'string') {
+        acc[genre] = (acc[genre] || 0) + 1;
+      }
       return acc;
     }, {} as Record<string, number>);
     
@@ -183,27 +196,30 @@ export default function ExploreLayout() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {topTracks?.[selectedTimeRange]?.slice(0, 10).map((track: any, index: number) => (
-                    <div key={track.id} className="flex items-center gap-4 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
-                      <span className="text-[#1DB954] font-bold w-6">{index + 1}</span>
-                      {track.album?.images?.[0] && (
-                        <img 
-                          src={track.album.images[0].url} 
-                          alt={track.album.name}
-                          className="w-12 h-12 rounded-lg"
-                        />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">{track.name}</p>
-                        <p className="text-sm text-gray-400 truncate">
-                          {track.artists?.map((artist: any) => artist.name).join(', ')}
-                        </p>
+                  {topTracks?.[selectedTimeRange]?.slice(0, 10).map((track: any, index: number) => {
+                    if (!track || !track.id) return null;
+                    return (
+                      <div key={track.id} className="flex items-center gap-4 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
+                        <span className="text-[#1DB954] font-bold w-6">{index + 1}</span>
+                        {track.album?.images?.[0] && (
+                          <img 
+                            src={track.album.images[0].url} 
+                            alt={track.album.name || 'Album cover'}
+                            className="w-12 h-12 rounded-lg"
+                          />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{track.name || 'Unknown Track'}</p>
+                          <p className="text-sm text-gray-400 truncate">
+                            {track.artists?.map((artist: any) => artist?.name || 'Unknown Artist').join(', ') || 'Unknown Artist'}
+                          </p>
+                        </div>
+                        <div className="text-sm text-gray-400">
+                          {track.duration_ms ? `${Math.floor(track.duration_ms / 60000)}:${String(Math.floor((track.duration_ms % 60000) / 1000)).padStart(2, '0')}` : '--:--'}
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-400">
-                        {Math.floor(track.duration_ms / 60000)}:{String(Math.floor((track.duration_ms % 60000) / 1000)).padStart(2, '0')}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  }).filter(Boolean)}
                 </div>
               )}
             </div>
@@ -220,24 +236,27 @@ export default function ExploreLayout() {
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-4">
-                  {topArtists?.[selectedTimeRange]?.slice(0, 8).map((artist: any, index: number) => (
-                    <div key={artist.id} className="flex items-center gap-3 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
-                      <span className="text-[#1DB954] font-bold text-sm">{index + 1}</span>
-                      {artist.images?.[0] && (
-                        <img 
-                          src={artist.images[0].url} 
-                          alt={artist.name}
-                          className="w-12 h-12 rounded-full"
-                        />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate text-sm">{artist.name}</p>
-                        <p className="text-xs text-gray-400">
-                          {artist.followers?.total?.toLocaleString()} followers
-                        </p>
+                  {topArtists?.[selectedTimeRange]?.slice(0, 8).map((artist: any, index: number) => {
+                    if (!artist || !artist.id) return null;
+                    return (
+                      <div key={artist.id} className="flex items-center gap-3 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
+                        <span className="text-[#1DB954] font-bold text-sm">{index + 1}</span>
+                        {artist.images?.[0] && (
+                          <img 
+                            src={artist.images[0].url} 
+                            alt={artist.name || 'Artist'}
+                            className="w-12 h-12 rounded-full"
+                          />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate text-sm">{artist.name || 'Unknown Artist'}</p>
+                          <p className="text-xs text-gray-400">
+                            {artist.followers?.total ? `${artist.followers.total.toLocaleString()} followers` : 'Artist'}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  }).filter(Boolean)}
                 </div>
               )}
             </div>
@@ -277,26 +296,29 @@ export default function ExploreLayout() {
             </div>
           ) : (
             <div className="space-y-3">
-              {recentTracks?.slice(0, 5).map((item, index) => (
-                <div key={`${item.track.id}-${index}`} className="flex items-center gap-4 p-3 bg-white/5 rounded-lg">
-                  {item.track.album?.images?.[0] && (
-                    <img 
-                      src={item.track.album.images[0].url} 
-                      alt={item.track.album.name}
-                      className="w-12 h-12 rounded-lg"
-                    />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{item.track.name}</p>
-                    <p className="text-sm text-gray-400 truncate">
-                      {item.track.artists?.map((artist: any) => artist.name).join(', ')}
-                    </p>
+              {recentTracks?.slice(0, 5).map((item, index) => {
+                if (!item || !item.track || !item.track.id) return null;
+                return (
+                  <div key={`${item.track.id}-${index}`} className="flex items-center gap-4 p-3 bg-white/5 rounded-lg">
+                    {item.track.album?.images?.[0] && (
+                      <img 
+                        src={item.track.album.images[0].url} 
+                        alt={item.track.album.name || 'Album cover'}
+                        className="w-12 h-12 rounded-lg"
+                      />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{item.track.name || 'Unknown Track'}</p>
+                      <p className="text-sm text-gray-400 truncate">
+                        {item.track.artists?.map((artist: any) => artist?.name || 'Unknown Artist').join(', ') || 'Unknown Artist'}
+                      </p>
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      {item.played_at ? new Date(item.played_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+                    </div>
                   </div>
-                  <div className="text-xs text-gray-400">
-                    {new Date(item.played_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </div>
-                </div>
-              ))}
+                );
+              }).filter(Boolean)}
             </div>
           )}
         </motion.div>

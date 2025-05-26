@@ -1,38 +1,73 @@
 /** @type {import('next').NextConfig} */
+const path = require('path')
+
 const nextConfig = {
   reactStrictMode: false,
+  
+  // Experimental features - keep minimal
   experimental: {
-    forceSwcTransforms: true,
+    optimizePackageImports: ['framer-motion'],
   },
-  // Windows-specific optimizations
-  webpack: (config, { dev, isServer }) => {
-    // Disable file watching on Windows to prevent permission issues
+  
+  // Compiler options
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+  
+  // Webpack configuration for Windows optimization
+  webpack: (config, { dev, isServer, webpack }) => {
+    // Windows-specific optimizations
     if (process.platform === 'win32') {
+      // Disable file watching to prevent permission issues
       config.watchOptions = {
         poll: 1000,
         aggregateTimeout: 300,
+        ignored: /node_modules/,
       }
     }
     
-    // Optimize for Windows builds
+    // Memory and performance optimizations
     config.optimization = {
       ...config.optimization,
       splitChunks: {
-        ...config.optimization.splitChunks,
+        chunks: 'all',
         cacheGroups: {
-          ...config.optimization.splitChunks?.cacheGroups,
-          default: false,
-          vendors: false,
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors',
+            chunks: 'all',
+            priority: 10,
+          },
         },
       },
     }
     
+    // Add fallbacks for Node.js modules
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+      net: false,
+      tls: false,
+      crypto: false,
+    }
+    
     return config
   },
-  // Optimize output
+  
+  // Output configuration
   output: 'standalone',
-  // Disable source maps in production to speed up build
+  
+  // Disable source maps in production
   productionBrowserSourceMaps: false,
+  
+  // Optimize images
+  images: {
+    domains: ['i.scdn.co', 'mosaic.scdn.co'],
+    formats: ['image/webp', 'image/avif'],
+  },
+  
+  // Compress output
+  compress: true,
 }
 
 module.exports = nextConfig 

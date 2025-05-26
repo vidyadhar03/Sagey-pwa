@@ -4,9 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev -H 0.0.0.0",
-    "build": "next build --no-lint",
+    "build": "cross-env NODE_OPTIONS=\"--max-old-space-size=4096\" next build --no-lint",
+    "build:debug": "cross-env NODE_OPTIONS=\"--max-old-space-size=4096 --inspect\" next build --no-lint",
+    "build:clean": "rimraf .next && npm run build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "clean": "rimraf .next node_modules/.cache"
   },
   "dependencies": {
     "framer-motion": "^12.12.1",
@@ -21,9 +24,11 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "autoprefixer": "^10.4.14",
+    "cross-env": "^7.0.3",
     "eslint": "^9",
     "eslint-config-next": "15.3.2",
     "postcss": "^8.4.23",
+    "rimraf": "^5.0.5",
     "tailwindcss": "^3.3.0",
     "typescript": "^5"
   }
