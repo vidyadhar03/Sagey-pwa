@@ -3,8 +3,9 @@
 import React, { ReactNode, useState } from 'react';
 import BottomNav from './BottomNav';
 import HomeLayout from './screens/HomeLayout';
-import JournalLayout from './screens/JournalLayout';
 import InsightsLayout from './screens/InsightsLayout';
+import ExploreLayout from './screens/ExploreLayout';
+import SpotifyDataView from './SpotifyDataView';
 
 interface FrameLayoutProps {
   // Removed unused children prop
@@ -26,9 +27,10 @@ export default function FrameLayout({}: FrameLayoutProps) {
 
   // Determine which tab component to render
   let activeTabComponent;
-  if (activeTab === 'home') activeTabComponent = <HomeLayout key={`home-${tabKey}`} />;
-  else if (activeTab === 'journal') activeTabComponent = <JournalLayout key={`journal-${tabKey}`} />;
+  if (activeTab === 'home') activeTabComponent = <HomeLayout key={`home-${tabKey}`} onTabClick={handleTabClick} />;
   else if (activeTab === 'insights') activeTabComponent = <InsightsLayout key={`insights-${tabKey}`} />;
+  else if (activeTab === 'explore') activeTabComponent = <ExploreLayout key={`explore-${tabKey}`} />;
+  else if (activeTab === 'stats') activeTabComponent = <SpotifyDataView key={`stats-${tabKey}`} />;
 
   return (
     <div className="w-full h-screen flex flex-col bg-[#0D0D0F] text-white overflow-hidden">

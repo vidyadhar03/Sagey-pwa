@@ -149,7 +149,7 @@ export default function ChatInterface() {
 
   // Suggestion prompts - expanded to 6 Sagey-specific tasks
   const suggestions = [
-    "Analyse my recent journals",
+    "Analyse my music listening patterns",
     "Psychoanalyse me by asking the right questions",
     "What do you think about my music taste",
     "Help me understand my mood patterns",

@@ -4,9 +4,9 @@ import React, { useState } from 'react';
 import TopAppBar from '../TopAppBar';
 
 export default function InsightsLayout() {
-  const [activeTab, setActiveTab] = useState<'music' | 'journal' | 'combined'>('combined');
+  const [activeTab, setActiveTab] = useState<'overview' | 'detailed' | 'ai-insights'>('overview');
 
-  // Sample data for insights
+  // Sample data for music insights
   const musicInsights = {
     topGenres: [
       { name: 'Electronic Pop', percentage: 35, color: '#1DB954' },
@@ -22,59 +22,68 @@ export default function InsightsLayout() {
     moodProfile: {
       energy: 75,
       valence: 68,
-      danceability: 82
+      danceability: 82,
+      acousticness: 23,
+      instrumentalness: 15
     },
     topTracks: [
       { name: 'Midnight City', artist: 'M83', plays: 23 },
       { name: 'Feel It Still', artist: 'Portugal. The Man', plays: 19 },
       { name: 'Electric Feel', artist: 'MGMT', plays: 17 }
+    ],
+    topArtists: [
+      { name: 'M83', plays: 45, genre: 'Electronic' },
+      { name: 'Portugal. The Man', plays: 38, genre: 'Indie Rock' },
+      { name: 'MGMT', plays: 32, genre: 'Psychedelic Pop' }
     ]
   };
 
-  const journalInsights = {
-    moodTrend: 'improving',
-    streakDays: 7,
-    topCategories: [
-      { name: 'Health', entries: 12, trend: '+2' },
-      { name: 'Work', entries: 8, trend: '+1' },
-      { name: 'Relationships', entries: 5, trend: '0' }
-    ],
-    weeklyMoods: ['😊', '😌', '😐', '😊', '😄', '😌', '😊']
-  };
-
-  const combinedInsights = [
+  const aiInsights = [
     {
       id: 1,
-      type: 'correlation',
-      insight: "You tend to feel 25% happier on days you listen to energetic playlists",
+      type: 'Musical Age',
+      insight: "Your musical taste suggests you're 24 years old",
+      description: "Based on your listening patterns, you gravitate toward music that peaked in popularity around 2010-2015, with a modern electronic twist.",
       confidence: 'High',
-      dataPoints: 14,
-      icon: '🎵',
-      action: 'View playlist recommendations'
+      dataPoints: 156,
+      icon: '🎂',
+      color: '#1DB954'
     },
     {
       id: 2,
-      type: 'pattern',
-      insight: "Your most productive journaling happens after listening to Lo-fi Hip Hop",
-      confidence: 'Medium',
-      dataPoints: 8,
-      icon: '✍️',
-      action: 'Explore writing sessions'
+      type: 'Mental Wellness Meter',
+      insight: "Your music indicates high emotional resilience",
+      description: "Your preference for uplifting, energetic tracks with positive valence suggests strong mental wellness and optimistic outlook.",
+      confidence: 'High',
+      dataPoints: 89,
+      icon: '🧠',
+      color: '#1ED760'
     },
     {
       id: 3,
-      type: 'discovery',
-      insight: "Electronic Pop peaks coincide with your best mood days this week",
+      type: 'Musical DNA',
+      insight: "You're a 'Nostalgic Explorer'",
+      description: "You blend familiar comfort music with adventurous discovery, creating a unique listening personality that values both emotional connection and musical exploration.",
+      confidence: 'Medium',
+      dataPoints: 67,
+      icon: '🧬',
+      color: '#1AA34A'
+    },
+    {
+      id: 4,
+      type: 'Productivity Pattern',
+      insight: "Lo-fi beats boost your focus by 40%",
+      description: "Your listening data shows increased session lengths and fewer skips when playing ambient and lo-fi genres, indicating enhanced concentration.",
       confidence: 'High',
-      dataPoints: 7,
+      dataPoints: 43,
       icon: '⚡',
-      action: 'See detailed breakdown'
+      color: '#16803C'
     }
   ];
 
   const renderTabContent = () => {
     switch(activeTab) {
-      case 'music':
+      case 'overview':
         return (
           <div className="space-y-6">
             {/* Spotify Connection Status */}
@@ -95,7 +104,7 @@ export default function InsightsLayout() {
               </div>
             </div>
 
-            {/* Listening Statistics */}
+            {/* Key Metrics */}
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 rounded-2xl bg-[#2A2A2D] border border-white/10">
                 <h4 className="text-white font-medium mb-2">Daily Average</h4>
@@ -108,6 +117,62 @@ export default function InsightsLayout() {
                 <h4 className="text-white font-medium mb-2">Energy Level</h4>
                 <p className="text-accent-secondary text-2xl font-bold">{musicInsights.moodProfile.energy}%</p>
                 <p className="text-secondary text-sm">High energy music</p>
+              </div>
+            </div>
+
+            {/* Audio Features */}
+            <div className="p-4 rounded-2xl bg-[#2A2A2D] border border-white/10">
+              <h4 className="text-white font-medium mb-4">Your Music DNA</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-white text-sm">Energy</span>
+                    <div className="flex items-center">
+                      <div className="w-16 h-2 bg-white/10 rounded-full mr-2 overflow-hidden">
+                        <div className="h-full bg-[#1DB954] rounded-full" style={{ width: `${musicInsights.moodProfile.energy}%` }} />
+                      </div>
+                      <span className="text-secondary text-sm w-8">{musicInsights.moodProfile.energy}%</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-white text-sm">Happiness</span>
+                    <div className="flex items-center">
+                      <div className="w-16 h-2 bg-white/10 rounded-full mr-2 overflow-hidden">
+                        <div className="h-full bg-[#1ED760] rounded-full" style={{ width: `${musicInsights.moodProfile.valence}%` }} />
+                      </div>
+                      <span className="text-secondary text-sm w-8">{musicInsights.moodProfile.valence}%</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-white text-sm">Danceability</span>
+                    <div className="flex items-center">
+                      <div className="w-16 h-2 bg-white/10 rounded-full mr-2 overflow-hidden">
+                        <div className="h-full bg-[#1AA34A] rounded-full" style={{ width: `${musicInsights.moodProfile.danceability}%` }} />
+                      </div>
+                      <span className="text-secondary text-sm w-8">{musicInsights.moodProfile.danceability}%</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-white text-sm">Acoustic</span>
+                    <div className="flex items-center">
+                      <div className="w-16 h-2 bg-white/10 rounded-full mr-2 overflow-hidden">
+                        <div className="h-full bg-[#16803C] rounded-full" style={{ width: `${musicInsights.moodProfile.acousticness}%` }} />
+                      </div>
+                      <span className="text-secondary text-sm w-8">{musicInsights.moodProfile.acousticness}%</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-white text-sm">Instrumental</span>
+                    <div className="flex items-center">
+                      <div className="w-16 h-2 bg-white/10 rounded-full mr-2 overflow-hidden">
+                        <div className="h-full bg-[#0F5D2E] rounded-full" style={{ width: `${musicInsights.moodProfile.instrumentalness}%` }} />
+                      </div>
+                      <span className="text-secondary text-sm w-8">{musicInsights.moodProfile.instrumentalness}%</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -134,18 +199,62 @@ export default function InsightsLayout() {
                 ))}
               </div>
             </div>
+          </div>
+        );
 
+      case 'detailed':
+        return (
+          <div className="space-y-6">
             {/* Top Tracks */}
             <div className="p-4 rounded-2xl bg-[#2A2A2D] border border-white/10">
               <h4 className="text-white font-medium mb-4">Most Played Tracks</h4>
               <div className="space-y-3">
                 {musicInsights.topTracks.map((track, index) => (
                   <div key={index} className="flex items-center justify-between">
-                    <div>
-                      <p className="text-white text-sm font-medium">{track.name}</p>
-                      <p className="text-secondary text-xs">{track.artist}</p>
+                    <div className="flex items-center">
+                      <span className="text-[#1DB954] font-bold text-sm w-6">#{index + 1}</span>
+                      <div>
+                        <p className="text-white text-sm font-medium">{track.name}</p>
+                        <p className="text-secondary text-xs">{track.artist}</p>
+                      </div>
                     </div>
                     <span className="text-[#1DB954] text-sm font-medium">{track.plays} plays</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Top Artists */}
+            <div className="p-4 rounded-2xl bg-[#2A2A2D] border border-white/10">
+              <h4 className="text-white font-medium mb-4">Top Artists</h4>
+              <div className="space-y-3">
+                {musicInsights.topArtists.map((artist, index) => (
+                  <div key={index} className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <span className="text-[#1DB954] font-bold text-sm w-6">#{index + 1}</span>
+                      <div>
+                        <p className="text-white text-sm font-medium">{artist.name}</p>
+                        <p className="text-secondary text-xs">{artist.genre}</p>
+                      </div>
+                    </div>
+                    <span className="text-[#1DB954] text-sm font-medium">{artist.plays} plays</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Listening Patterns */}
+            <div className="p-4 rounded-2xl bg-[#2A2A2D] border border-white/10">
+              <h4 className="text-white font-medium mb-4">Weekly Listening Pattern</h4>
+              <div className="flex justify-between items-end h-32">
+                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, index) => (
+                  <div key={day} className="flex flex-col items-center">
+                    <div 
+                      className="w-6 bg-[#1DB954] rounded-t mb-2"
+                      style={{ height: `${(musicInsights.dailyListening.weeklyData[index] / 156) * 100}%` }}
+                    />
+                    <span className="text-secondary text-xs">{day}</span>
+                    <span className="text-white text-xs">{Math.floor(musicInsights.dailyListening.weeklyData[index] / 60)}h</span>
                   </div>
                 ))}
               </div>
@@ -172,131 +281,63 @@ export default function InsightsLayout() {
           </div>
         );
 
-      case 'journal':
+      case 'ai-insights':
         return (
           <div className="space-y-6">
-            {/* Mood Overview */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 rounded-2xl bg-[#2A2A2D] border border-white/10">
-                <h4 className="text-white font-medium mb-2">Mood Trend</h4>
-                <p className="text-accent text-2xl font-bold">↗️</p>
-                <p className="text-secondary text-sm">{journalInsights.moodTrend}</p>
-              </div>
-              <div className="p-4 rounded-2xl bg-[#2A2A2D] border border-white/10">
-                <h4 className="text-white font-medium mb-2">Writing Streak</h4>
-                <p className="text-accent-secondary text-2xl font-bold">{journalInsights.streakDays}</p>
-                <p className="text-secondary text-sm">days in a row</p>
-              </div>
+            {/* AI Insights Header */}
+            <div className="text-center p-6 rounded-2xl bg-gradient-to-r from-[#1DB954]/10 to-[#1ED760]/10 border border-[#1DB954]/20">
+              <h3 className="text-2xl font-bold text-white mb-2">AI-Generated Insights</h3>
+              <p className="text-[#1DB954]/80">Discover what your music says about you</p>
             </div>
 
-            {/* Weekly Mood Pattern */}
-            <div className="p-4 rounded-2xl bg-[#2A2A2D] border border-white/10">
-              <h4 className="text-white font-medium mb-4">This Week's Moods</h4>
-              <div className="flex justify-between items-center">
-                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, index) => (
-                  <div key={day} className="text-center">
-                    <p className="text-secondary text-xs mb-2">{day}</p>
-                    <div className="text-2xl mb-1">{journalInsights.weeklyMoods[index]}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Top Categories */}
-            <div className="p-4 rounded-2xl bg-[#2A2A2D] border border-white/10">
-              <h4 className="text-white font-medium mb-4">Journal Categories</h4>
-              <div className="space-y-3">
-                {journalInsights.topCategories.map((category, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <span className="text-white text-sm">{category.name}</span>
-                    <div className="flex items-center">
-                      <span className="text-secondary text-sm mr-2">{category.entries} entries</span>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        category.trend.startsWith('+') 
-                          ? 'bg-accent/20 text-accent' 
-                          : 'bg-secondary/20 text-secondary'
-                      }`}>
-                        {category.trend === '0' ? '→' : category.trend}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'combined':
-        return (
-          <div className="space-y-6">
-            {/* Hero Insight */}
-            <div className="p-6 rounded-2xl bg-gradient-to-r from-accent/20 to-accent-secondary/20 border border-accent/30">
-              <div className="flex items-center mb-3">
-                <span className="text-2xl mr-3">💡</span>
-                <h3 className="text-white font-semibold">Weekly Aha! Moment</h3>
-              </div>
-              <p className="text-white text-lg leading-relaxed mb-4">
-                "Your most creative journal entries happen after listening to Lo-fi Hip Hop for 30+ minutes"
-              </p>
-              <button className="px-4 py-2 bg-accent hover:bg-accent/90 rounded-full text-white text-sm font-medium transition-all">
-                Explore This Pattern
-              </button>
-            </div>
-
-            {/* Cross-Domain Insights */}
+            {/* AI Insights Cards */}
             <div className="space-y-4">
-              <h3 className="text-white font-medium text-lg">Music × Journal Insights</h3>
-              {combinedInsights.map((insight) => (
-                <div key={insight.id} className="p-4 rounded-2xl bg-[#2A2A2D] border border-white/10">
-                  <div className="flex items-start justify-between mb-3">
+              {aiInsights.map((insight) => (
+                <div key={insight.id} className="p-6 rounded-2xl bg-[#2A2A2D] border border-white/10">
+                  <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center">
-                      <span className="text-xl mr-3">{insight.icon}</span>
+                      <div 
+                        className="w-12 h-12 rounded-full flex items-center justify-center mr-4"
+                        style={{ backgroundColor: `${insight.color}20` }}
+                      >
+                        <span className="text-2xl">{insight.icon}</span>
+                      </div>
                       <div>
-                        <span className={`text-xs px-2 py-1 rounded-full mr-2 ${
-                          insight.confidence === 'High' 
-                            ? 'bg-accent/20 text-accent' 
-                            : 'bg-accent-secondary/20 text-accent-secondary'
-                        }`}>
-                          {insight.confidence} Confidence
-                        </span>
-                        <span className="text-secondary text-xs">{insight.dataPoints} data points</span>
+                        <h4 className="text-white font-bold text-lg">{insight.type}</h4>
+                        <p className="text-secondary text-sm">{insight.confidence} confidence • {insight.dataPoints} data points</p>
                       </div>
                     </div>
                   </div>
-                  <p className="text-white text-sm leading-relaxed mb-3">{insight.insight}</p>
-                  <button className="text-accent text-sm font-medium hover:text-accent/80 transition-colors">
-                    {insight.action} →
-                  </button>
+                  
+                  <div className="mb-4">
+                    <p className="text-white font-medium text-lg mb-2">{insight.insight}</p>
+                    <p className="text-secondary text-sm leading-relaxed">{insight.description}</p>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="w-2 h-2 rounded-full mr-2" style={{ backgroundColor: insight.color }} />
+                      <span className="text-xs text-secondary">Based on your listening patterns</span>
+                    </div>
+                    <button 
+                      className="text-sm font-medium transition-colors"
+                      style={{ color: insight.color }}
+                    >
+                      Learn More
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
 
-            {/* Integration Status */}
-            <div className="p-4 rounded-2xl bg-[#2A2A2D] border border-white/10">
-              <h4 className="text-white font-medium mb-3">Active Integrations</h4>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="w-2 h-2 bg-[#1DB954] rounded-full mr-2"></div>
-                    <span className="text-white text-sm">Spotify</span>
-                  </div>
-                  <button 
-                    onClick={() => window.location.href = '/spotify-data'}
-                    className="text-[#1DB954] text-xs font-medium hover:text-[#1AA34A] transition-colors"
-                  >
-                    View Data →
-                  </button>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="w-2 h-2 bg-accent rounded-full mr-2"></div>
-                    <span className="text-white text-sm">Journal</span>
-                  </div>
-                  <span className="text-secondary text-xs">Active</span>
-                </div>
-              </div>
-              <button className="w-full mt-4 py-2 border border-white/20 rounded-lg text-white text-sm hover:bg-white/5 transition-all">
-                + Add More Integrations
+            {/* Generate More Insights CTA */}
+            <div className="p-6 rounded-2xl bg-gradient-to-r from-[#1DB954]/20 to-[#1ED760]/20 border border-[#1DB954]/30 text-center">
+              <h4 className="text-white font-bold text-lg mb-2">Want More Insights?</h4>
+              <p className="text-[#1DB954]/80 text-sm mb-4">
+                Connect more data sources to unlock deeper AI-powered insights about your music and lifestyle patterns.
+              </p>
+              <button className="px-6 py-3 bg-[#1DB954] hover:bg-[#1AA34A] rounded-full text-white font-medium transition-all">
+                Generate New Insights
               </button>
             </div>
           </div>
@@ -310,52 +351,50 @@ export default function InsightsLayout() {
   return (
     <>
       <TopAppBar
-        title="Insights"
+        title="Music Insights"
         showLeftIcon={false}
-        showRightIcon={false}
+        showRightIcon={true}
       />
-      <div className="pt-[60px] w-full h-screen overflow-y-auto bg-background">
+      <div className="pt-[60px] w-full h-screen overflow-y-auto">
         <div className="max-w-7xl mx-auto px-4 pb-[120px]">
-          
-          {/* Tab Switcher */}
-          <div className="mt-6 mb-6">
-            <div className="flex bg-[#2A2A2D] p-1 rounded-2xl border border-white/10">
+          {/* Tab Navigation */}
+          <div className="mt-4 mb-6">
+            <div className="flex bg-[#2A2A2D] rounded-2xl p-1">
               <button
-                onClick={() => setActiveTab('combined')}
-                className={`flex-1 py-2 px-3 rounded-xl text-sm font-medium transition-all ${
-                  activeTab === 'combined'
-                    ? 'bg-accent text-white shadow-sm'
+                onClick={() => setActiveTab('overview')}
+                className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
+                  activeTab === 'overview'
+                    ? 'bg-[#1DB954] text-white'
                     : 'text-secondary hover:text-white'
                 }`}
               >
-                Combined
+                Overview
               </button>
               <button
-                onClick={() => setActiveTab('music')}
-                className={`flex-1 py-2 px-3 rounded-xl text-sm font-medium transition-all ${
-                  activeTab === 'music'
-                    ? 'bg-accent text-white shadow-sm'
+                onClick={() => setActiveTab('detailed')}
+                className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
+                  activeTab === 'detailed'
+                    ? 'bg-[#1DB954] text-white'
                     : 'text-secondary hover:text-white'
                 }`}
               >
-                Music
+                Detailed
               </button>
               <button
-                onClick={() => setActiveTab('journal')}
-                className={`flex-1 py-2 px-3 rounded-xl text-sm font-medium transition-all ${
-                  activeTab === 'journal'
-                    ? 'bg-accent text-white shadow-sm'
+                onClick={() => setActiveTab('ai-insights')}
+                className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
+                  activeTab === 'ai-insights'
+                    ? 'bg-[#1DB954] text-white'
                     : 'text-secondary hover:text-white'
                 }`}
               >
-                Journal
+                AI Insights
               </button>
             </div>
           </div>
 
-          {/* Dynamic Content */}
+          {/* Tab Content */}
           {renderTabContent()}
-
         </div>
       </div>
     </>
