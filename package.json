@@ -3,11 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -H 0.0.0.0",
-    "build": "cross-env NODE_OPTIONS=\"--max-old-space-size=4096\" next build --no-lint",
-    "build:debug": "cross-env NODE_OPTIONS=\"--max-old-space-size=4096 --inspect\" next build --no-lint",
+    "dev": "cross-env NEXT_TELEMETRY_DISABLED=1 next dev -H 0.0.0.0",
+    "build": "cross-env NODE_OPTIONS=\"--max-old-space-size=4096\" NEXT_TELEMETRY_DISABLED=1 DISABLE_OPENCOLLECTIVE=1 CI=true next build --no-lint",
+    "build:standard": "cross-env NODE_OPTIONS=\"--max-old-space-size=4096\" NEXT_TELEMETRY_DISABLED=1 DISABLE_OPENCOLLECTIVE=1 next build --no-lint",
+    "build:debug": "cross-env NODE_OPTIONS=\"--max-old-space-size=4096 --inspect\" NEXT_TELEMETRY_DISABLED=1 DISABLE_OPENCOLLECTIVE=1 next build --no-lint",
     "build:clean": "rimraf .next && npm run build",
-    "start": "next start",
+    "build:windows": "powershell -ExecutionPolicy Bypass -File build-windows.ps1",
+    "start": "cross-env NEXT_TELEMETRY_DISABLED=1 next start",
     "lint": "next lint",
     "clean": "rimraf .next node_modules/.cache"
   },

@@ -16,6 +16,23 @@ const nextConfig = {
   
   // Webpack configuration for Windows optimization
   webpack: (config, { dev, isServer, webpack }) => {
+    // Completely disable tracing and logging to prevent Windows permission issues
+    config.infrastructureLogging = {
+      level: 'error',
+    }
+    
+    // Disable webpack's built-in tracing
+    config.stats = {
+      ...config.stats,
+      logging: 'error',
+      loggingTrace: false,
+    }
+    
+    // Disable Next.js trace collection
+    config.plugins = config.plugins.filter(plugin => {
+      return !plugin.constructor.name.includes('Trace')
+    })
+    
     // Windows-specific optimizations
     if (process.platform === 'win32') {
       // Disable file watching to prevent permission issues
@@ -24,6 +41,9 @@ const nextConfig = {
         aggregateTimeout: 300,
         ignored: /node_modules/,
       }
+      
+      // Disable any file system operations that might cause permission issues
+      config.cache = false
     }
     
     // Memory and performance optimizations
