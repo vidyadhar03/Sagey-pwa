@@ -9,21 +9,36 @@ export async function GET(request: NextRequest) {
   // Check for authorization errors
   if (error) {
     console.error('Spotify authorization error:', error);
-    return NextResponse.redirect(new URL('/?spotify=error', request.url));
+    return NextResponse.redirect(new URL('/?spotify=error&reason=auth_error', request.url));
   }
 
   if (!code || !state) {
-    return NextResponse.redirect(new URL('/?spotify=error', request.url));
+    console.error('Missing code or state in callback');
+    return NextResponse.redirect(new URL('/?spotify=error&reason=missing_params', request.url));
+  }
+
+  // Check if environment variables are configured
+  if (!process.env.SPOTIFY_CLIENT_ID || !process.env.SPOTIFY_CLIENT_SECRET) {
+    console.error('Missing Spotify environment variables');
+    return NextResponse.redirect(new URL('/?spotify=error&reason=config_error', request.url));
   }
 
   // Verify state parameter
   const storedState = request.cookies.get('spotify_auth_state')?.value;
   if (state !== storedState) {
     console.error('State mismatch in Spotify callback');
-    return NextResponse.redirect(new URL('/?spotify=error', request.url));
+    return NextResponse.redirect(new URL('/?spotify=error&reason=state_mismatch', request.url));
   }
 
   try {
+    // Determine redirect URI based on environment
+    const redirectUri = process.env.SPOTIFY_REDIRECT_URI || 
+      (process.env.NODE_ENV === 'production' 
+        ? 'https://sagey-pwa.vercel.app/api/spotify/callback'
+        : 'http://localhost:3000/api/spotify/callback');
+
+    console.log('Token exchange attempt with redirect URI:', redirectUri);
+
     // Exchange authorization code for access token
     const tokenResponse = await fetch('https://accounts.spotify.com/api/token', {
       method: 'POST',
@@ -36,14 +51,18 @@ export async function GET(request: NextRequest) {
       body: new URLSearchParams({
         grant_type: 'authorization_code',
         code: code,
-        redirect_uri: process.env.SPOTIFY_REDIRECT_URI || '',
+        redirect_uri: redirectUri,
       }).toString()
     });
 
     if (!tokenResponse.ok) {
       const errorData = await tokenResponse.text();
-      console.error('Token exchange failed:', errorData);
-      return NextResponse.redirect(new URL('/?spotify=error', request.url));
+      console.error('Token exchange failed:', {
+        status: tokenResponse.status,
+        statusText: tokenResponse.statusText,
+        error: errorData
+      });
+      return NextResponse.redirect(new URL('/?spotify=error&reason=token_exchange', request.url));
     }
 
     const tokenData = await tokenResponse.json();
@@ -56,8 +75,11 @@ export async function GET(request: NextRequest) {
     });
 
     if (!profileResponse.ok) {
-      console.error('Failed to fetch Spotify profile');
-      return NextResponse.redirect(new URL('/?spotify=error', request.url));
+      console.error('Failed to fetch Spotify profile:', {
+        status: profileResponse.status,
+        statusText: profileResponse.statusText
+      });
+      return NextResponse.redirect(new URL('/?spotify=error&reason=profile_fetch', request.url));
     }
 
     const profileData = await profileResponse.json();
@@ -105,10 +127,11 @@ export async function GET(request: NextRequest) {
     // Clear the state cookie
     response.cookies.delete('spotify_auth_state');
 
+    console.log('Spotify authentication successful for user:', profileData.display_name);
     return response;
 
   } catch (error) {
     console.error('Spotify callback error:', error);
-    return NextResponse.redirect(new URL('/?spotify=error', request.url));
+    return NextResponse.redirect(new URL('/?spotify=error&reason=server_error', request.url));
   }
 } 

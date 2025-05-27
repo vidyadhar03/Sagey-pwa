@@ -16,6 +16,53 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
   const [topTracks, setTopTracks] = useState<any[]>([]);
   const [topArtists, setTopArtists] = useState<any[]>([]);
   const [dataLoading, setDataLoading] = useState(false);
+  const [spotifyError, setSpotifyError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Check for Spotify authentication errors in URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const spotifyStatus = urlParams.get('spotify');
+    const errorReason = urlParams.get('reason');
+
+    if (spotifyStatus === 'error') {
+      let errorMessage = 'Failed to connect to Spotify. Please try again.';
+      
+      switch (errorReason) {
+        case 'config_error':
+          errorMessage = 'Spotify configuration error. Please contact support.';
+          break;
+        case 'auth_error':
+          errorMessage = 'Spotify authorization was denied or failed.';
+          break;
+        case 'state_mismatch':
+          errorMessage = 'Security validation failed. Please try connecting again.';
+          break;
+        case 'token_exchange':
+          errorMessage = 'Failed to exchange authorization code. Please try again.';
+          break;
+        case 'profile_fetch':
+          errorMessage = 'Failed to fetch your Spotify profile. Please try again.';
+          break;
+        case 'server_error':
+          errorMessage = 'Server error occurred. Please try again later.';
+          break;
+        case 'missing_params':
+          errorMessage = 'Invalid authorization response. Please try again.';
+          break;
+      }
+      
+      setSpotifyError(errorMessage);
+      
+      // Clear the error parameters from URL after showing the error
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+    } else if (spotifyStatus === 'connected') {
+      setSpotifyError(null);
+      // Clear the success parameter from URL
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, []);
 
   useEffect(() => {
     if (connected && user) {
@@ -58,6 +105,10 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
     }
   };
 
+  const dismissError = () => {
+    setSpotifyError(null);
+  };
+
   return (
     <>
       <TopAppBar
@@ -67,6 +118,43 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
       />
       <div className="pt-[60px] w-full h-screen overflow-y-auto bg-gradient-to-br from-[#0A0A0A] via-[#1A1A1A] to-[#0A0A0A]">
         <div className="max-w-7xl mx-auto px-4 pb-[120px]">
+          {/* Spotify Error Alert */}
+          {spotifyError && (
+            <motion.div 
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-6 mb-4 p-4 rounded-2xl bg-red-500/10 border border-red-500/20"
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex items-start">
+                  <div className="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center mr-3 mt-0.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 text-red-400">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="text-red-400 font-medium text-sm mb-1">Spotify Connection Failed</h4>
+                    <p className="text-red-300/80 text-sm">{spotifyError}</p>
+                    <button 
+                      onClick={connect}
+                      className="mt-2 text-red-400 text-sm font-medium hover:text-red-300 underline"
+                    >
+                      Try connecting again
+                    </button>
+                  </div>
+                </div>
+                <button 
+                  onClick={dismissError}
+                  className="text-red-400/60 hover:text-red-400 transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </motion.div>
+          )}
+
           {/* Welcome Section */}
           <motion.section 
             initial={{ opacity: 0, y: 20 }}
