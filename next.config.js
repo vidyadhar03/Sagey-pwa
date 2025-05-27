@@ -66,8 +66,8 @@ const nextConfig = {
     return config
   },
   
-  // Output configuration - use standalone for better Vercel compatibility
-  output: 'standalone',
+  // Use default output for better Vercel compatibility
+  // output: 'standalone', // Commented out for Vercel deployment
   
   // Disable source maps in production
   productionBrowserSourceMaps: false,
@@ -81,18 +81,16 @@ const nextConfig = {
   // Compress output
   compress: true,
   
-  // File tracing configuration for monorepo setups
-  outputFileTracingRoot: path.join(__dirname, '../../'),
-  
-  // Exclude unnecessary files from tracing to reduce bundle size
-  outputFileTracingExcludes: {
-    '*': [
-      'node_modules/@swc/core-linux-x64-gnu',
-      'node_modules/@swc/core-linux-x64-musl',
-      'node_modules/@esbuild/linux-x64',
-      '.git/**/*',
-    ],
-  },
+  // Remove file tracing configurations that might conflict with Vercel
+  // outputFileTracingRoot: path.join(__dirname, '../../'),
+  // outputFileTracingExcludes: {
+  //   '*': [
+  //     'node_modules/@swc/core-linux-x64-gnu',
+  //     'node_modules/@swc/core-linux-x64-musl',
+  //     'node_modules/@esbuild/linux-x64',
+  //     '.git/**/*',
+  //   ],
+  // },
 }
 
 module.exports = nextConfig 
