@@ -1,45 +1,98 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams;
-  const code = searchParams.get('code');
-  const state = searchParams.get('state');
-  const error = searchParams.get('error');
-
-  // Check for authorization errors
-  if (error) {
-    console.error('Spotify authorization error:', error);
-    return NextResponse.redirect(new URL('/?spotify=error&reason=auth_error', request.url));
-  }
-
-  if (!code || !state) {
-    console.error('Missing code or state in callback');
-    return NextResponse.redirect(new URL('/?spotify=error&reason=missing_params', request.url));
-  }
-
-  // Check if environment variables are configured
-  if (!process.env.SPOTIFY_CLIENT_ID || !process.env.SPOTIFY_CLIENT_SECRET) {
-    console.error('Missing Spotify environment variables');
-    return NextResponse.redirect(new URL('/?spotify=error&reason=config_error', request.url));
-  }
-
-  // Verify state parameter
-  const storedState = request.cookies.get('spotify_auth_state')?.value;
-  if (state !== storedState) {
-    console.error('State mismatch in Spotify callback');
-    return NextResponse.redirect(new URL('/?spotify=error&reason=state_mismatch', request.url));
-  }
-
+  console.log('=== SPOTIFY CALLBACK START ===');
+  console.log('Request URL:', request.url);
+  console.log('Request method:', request.method);
+  
   try {
-    // Determine redirect URI based on environment
-    const redirectUri = process.env.SPOTIFY_REDIRECT_URI || 
-      (process.env.NODE_ENV === 'production' 
+    const searchParams = request.nextUrl.searchParams;
+    const code = searchParams.get('code');
+    const state = searchParams.get('state');
+    const error = searchParams.get('error');
+
+    console.log('URL Search Params:', {
+      code: code ? `${code.substring(0, 10)}...` : null,
+      state: state ? `${state.substring(0, 10)}...` : null,
+      error: error,
+      allParams: Object.fromEntries(searchParams.entries())
+    });
+
+    // Check for authorization errors
+    if (error) {
+      console.error('❌ Spotify authorization error:', error);
+      return NextResponse.redirect(new URL('/?spotify=error&reason=auth_error', request.url));
+    }
+
+    if (!code || !state) {
+      console.error('❌ Missing required parameters:', { hasCode: !!code, hasState: !!state });
+      return NextResponse.redirect(new URL('/?spotify=error&reason=missing_params', request.url));
+    }
+
+    // Check environment variables
+    console.log('🔍 Checking environment variables...');
+    const hasClientId = !!process.env.SPOTIFY_CLIENT_ID;
+    const hasClientSecret = !!process.env.SPOTIFY_CLIENT_SECRET;
+    console.log('Environment check:', { hasClientId, hasClientSecret });
+
+    if (!hasClientId || !hasClientSecret) {
+      console.error('❌ Missing Spotify environment variables');
+      return NextResponse.redirect(new URL('/?spotify=error&reason=config_error', request.url));
+    }
+
+    // Check cookies
+    console.log('🍪 Checking cookies...');
+    const allCookies = request.cookies.getAll();
+    console.log('All cookies:', allCookies.map(c => ({ name: c.name, hasValue: !!c.value })));
+    
+    const storedState = request.cookies.get('spotify_auth_state')?.value;
+    console.log('State verification:', { 
+      receivedState: state ? `${state.substring(0, 10)}...` : null,
+      storedState: storedState ? `${storedState.substring(0, 10)}...` : null,
+      match: state === storedState
+    });
+    
+    if (state !== storedState) {
+      console.error('❌ State mismatch in Spotify callback');
+      return NextResponse.redirect(new URL('/?spotify=error&reason=state_mismatch', request.url));
+    }
+
+    // Environment detection
+    console.log('🌍 Environment detection...');
+    const nodeEnv = process.env.NODE_ENV;
+    const vercelEnv = process.env.VERCEL_ENV;
+    const explicitRedirectUri = process.env.SPOTIFY_REDIRECT_URI;
+    const isProduction = nodeEnv === 'production' || vercelEnv === 'production';
+    
+    console.log('Environment info:', {
+      nodeEnv,
+      vercelEnv,
+      isProduction,
+      hasExplicitRedirectUri: !!explicitRedirectUri
+    });
+
+    const redirectUri = explicitRedirectUri || 
+      (isProduction 
         ? 'https://sagey-pwa.vercel.app/api/spotify/callback'
         : 'http://localhost:3000/api/spotify/callback');
 
-    console.log('Token exchange attempt with redirect URI:', redirectUri);
+    console.log('🔗 Using redirect URI:', redirectUri);
 
-    // Exchange authorization code for access token
+    // Token exchange
+    console.log('🔄 Starting token exchange...');
+    const tokenRequestBody = new URLSearchParams({
+      grant_type: 'authorization_code',
+      code: code,
+      redirect_uri: redirectUri,
+    });
+
+    console.log('Token request details:', {
+      url: 'https://accounts.spotify.com/api/token',
+      method: 'POST',
+      hasAuthHeader: true,
+      bodyParams: Object.fromEntries(tokenRequestBody.entries())
+    });
+
     const tokenResponse = await fetch('https://accounts.spotify.com/api/token', {
       method: 'POST',
       headers: {
@@ -48,90 +101,185 @@ export async function GET(request: NextRequest) {
           `${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`
         ).toString('base64')}`
       },
-      body: new URLSearchParams({
-        grant_type: 'authorization_code',
-        code: code,
-        redirect_uri: redirectUri,
-      }).toString()
+      body: tokenRequestBody.toString()
+    });
+
+    console.log('Token response received:', {
+      status: tokenResponse.status,
+      statusText: tokenResponse.statusText,
+      ok: tokenResponse.ok,
+      headers: Object.fromEntries(tokenResponse.headers.entries())
     });
 
     if (!tokenResponse.ok) {
       const errorData = await tokenResponse.text();
-      console.error('Token exchange failed:', {
+      console.error('❌ Token exchange failed:', {
         status: tokenResponse.status,
         statusText: tokenResponse.statusText,
-        error: errorData
+        errorBody: errorData
       });
       return NextResponse.redirect(new URL('/?spotify=error&reason=token_exchange', request.url));
     }
 
-    const tokenData = await tokenResponse.json();
+    let tokenData;
+    try {
+      const tokenText = await tokenResponse.text();
+      console.log('Raw token response:', tokenText.substring(0, 200) + '...');
+      tokenData = JSON.parse(tokenText);
+    } catch (parseError) {
+      console.error('❌ Failed to parse token response:', parseError);
+      return NextResponse.redirect(new URL('/?spotify=error&reason=token_parse', request.url));
+    }
 
-    // Get user profile for user ID
+    console.log('✅ Token data parsed:', { 
+      hasAccessToken: !!tokenData.access_token,
+      hasRefreshToken: !!tokenData.refresh_token,
+      expiresIn: tokenData.expires_in,
+      tokenType: tokenData.token_type,
+      scope: tokenData.scope
+    });
+
+    // Validate token data structure
+    if (!tokenData.access_token) {
+      console.error('❌ Invalid token response: missing access_token');
+      return NextResponse.redirect(new URL('/?spotify=error&reason=invalid_token', request.url));
+    }
+
+    // Get user profile
+    console.log('👤 Fetching user profile...');
     const profileResponse = await fetch('https://api.spotify.com/v1/me', {
       headers: {
         'Authorization': `Bearer ${tokenData.access_token}`
       }
     });
 
+    console.log('Profile response received:', {
+      status: profileResponse.status,
+      statusText: profileResponse.statusText,
+      ok: profileResponse.ok
+    });
+
     if (!profileResponse.ok) {
-      console.error('Failed to fetch Spotify profile:', {
+      const profileErrorText = await profileResponse.text();
+      console.error('❌ Failed to fetch Spotify profile:', {
         status: profileResponse.status,
-        statusText: profileResponse.statusText
+        statusText: profileResponse.statusText,
+        errorBody: profileErrorText
       });
       return NextResponse.redirect(new URL('/?spotify=error&reason=profile_fetch', request.url));
     }
 
-    const profileData = await profileResponse.json();
+    let profileData;
+    try {
+      const profileText = await profileResponse.text();
+      console.log('Raw profile response:', profileText.substring(0, 200) + '...');
+      profileData = JSON.parse(profileText);
+    } catch (parseError) {
+      console.error('❌ Failed to parse profile response:', parseError);
+      return NextResponse.redirect(new URL('/?spotify=error&reason=profile_parse', request.url));
+    }
 
-    // Store tokens in localStorage via client-side redirect
-    // For MVP, we'll use localStorage. In production, use a secure database
-    const tokenInfo = {
-      access_token: tokenData.access_token,
-      refresh_token: tokenData.refresh_token,
-      expires_at: Date.now() + (tokenData.expires_in * 1000),
-      user_id: profileData.id,
-      display_name: profileData.display_name,
-      email: profileData.email
-    };
+    console.log('✅ Profile data parsed:', { 
+      id: profileData.id,
+      displayName: profileData.display_name,
+      email: profileData.email,
+      hasImages: !!profileData.images?.length
+    });
 
-    // Create a response that will store tokens in localStorage
+    // Create response
+    console.log('🍪 Setting cookies...');
     const response = NextResponse.redirect(new URL('/?spotify=connected', request.url));
     
-    // Set tokens in secure httpOnly cookies for server-side access
-    response.cookies.set('spotify_access_token', tokenData.access_token, {
+    const cookieOptions = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: tokenData.expires_in,
-      sameSite: 'lax'
-    });
+      secure: isProduction,
+      sameSite: 'lax' as const,
+      path: '/'
+    };
 
-    response.cookies.set('spotify_refresh_token', tokenData.refresh_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 60 * 60 * 24 * 30, // 30 days
-      sameSite: 'lax'
-    });
+    console.log('Cookie options:', cookieOptions);
 
-    response.cookies.set('spotify_user_info', JSON.stringify({
-      user_id: profileData.id,
-      display_name: profileData.display_name,
-      email: profileData.email
-    }), {
-      httpOnly: false, // Allow client-side access for UI
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 60 * 60 * 24 * 30, // 30 days
-      sameSite: 'lax'
-    });
+    // Set access token cookie
+    try {
+      response.cookies.set('spotify_access_token', tokenData.access_token, {
+        ...cookieOptions,
+        maxAge: tokenData.expires_in || 3600
+      });
+      console.log('✅ Access token cookie set');
+    } catch (cookieError) {
+      console.error('❌ Failed to set access token cookie:', cookieError);
+    }
 
-    // Clear the state cookie
-    response.cookies.delete('spotify_auth_state');
+    // Set refresh token cookie
+    if (tokenData.refresh_token) {
+      try {
+        response.cookies.set('spotify_refresh_token', tokenData.refresh_token, {
+          ...cookieOptions,
+          maxAge: 60 * 60 * 24 * 30 // 30 days
+        });
+        console.log('✅ Refresh token cookie set');
+      } catch (cookieError) {
+        console.error('❌ Failed to set refresh token cookie:', cookieError);
+      }
+    }
 
-    console.log('Spotify authentication successful for user:', profileData.display_name);
+    // Set user info cookie
+    try {
+      const userInfo = JSON.stringify({
+        user_id: profileData.id,
+        display_name: profileData.display_name,
+        email: profileData.email
+      });
+      response.cookies.set('spotify_user_info', userInfo, {
+        httpOnly: false,
+        secure: isProduction,
+        maxAge: 60 * 60 * 24 * 30,
+        sameSite: 'lax',
+        path: '/'
+      });
+      console.log('✅ User info cookie set');
+    } catch (cookieError) {
+      console.error('❌ Failed to set user info cookie:', cookieError);
+    }
+
+    // Clear state cookie
+    try {
+      response.cookies.set('spotify_auth_state', '', {
+        httpOnly: true,
+        secure: isProduction,
+        maxAge: 0,
+        sameSite: 'lax',
+        path: '/'
+      });
+      console.log('✅ State cookie cleared');
+    } catch (cookieError) {
+      console.error('❌ Failed to clear state cookie:', cookieError);
+    }
+
+    console.log('🎉 Spotify authentication successful for user:', profileData.display_name);
+    console.log('=== SPOTIFY CALLBACK SUCCESS ===');
     return response;
 
-  } catch (error) {
-    console.error('Spotify callback error:', error);
+  } catch (error: unknown) {
+    console.error('💥 CRITICAL ERROR in Spotify callback:');
+    console.error('Error type:', error?.constructor?.name);
+    
+    if (error instanceof Error) {
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    } else {
+      console.error('Error details:', error);
+    }
+    
+    if (error instanceof TypeError) {
+      console.error('🔍 TypeError details - likely network or parsing issue');
+    } else if (error instanceof SyntaxError) {
+      console.error('🔍 SyntaxError details - likely JSON parsing issue');
+    } else {
+      console.error('🔍 Unknown error type');
+    }
+    
+    console.log('=== SPOTIFY CALLBACK ERROR ===');
     return NextResponse.redirect(new URL('/?spotify=error&reason=server_error', request.url));
   }
 } 

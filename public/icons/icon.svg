@@ -1,0 +1,6 @@
+<svg width="144" height="144" viewBox="0 0 144 144" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="144" height="144" rx="24" fill="#1DB954"/>
+  <circle cx="72" cy="72" r="32" fill="white"/>
+  <path d="M60 64c0-6.627 5.373-12 12-12s12 5.373 12 12v16c0 6.627-5.373 12-12 12s-12-5.373-12-12V64z" fill="#1DB954"/>
+  <text x="72" y="110" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="16" font-weight="bold">Sagey</text>
+</svg> 
