@@ -4,7 +4,7 @@ const path = require('path')
 const nextConfig = {
   reactStrictMode: false,
   
-  // Experimental features - keep minimal
+  // Experimental features
   experimental: {
     optimizePackageImports: ['framer-motion'],
   },
@@ -14,36 +14,28 @@ const nextConfig = {
     removeConsole: process.env.NODE_ENV === 'production',
   },
   
-  // Webpack configuration for Windows optimization
+  // Webpack configuration
   webpack: (config, { dev, isServer, webpack }) => {
-    // Completely disable tracing and logging to prevent Windows permission issues
+    // Disable infrastructure logging
     config.infrastructureLogging = {
       level: 'error',
     }
     
-    // Disable webpack's built-in tracing
+    // Optimize stats output
     config.stats = {
       ...config.stats,
       logging: 'error',
       loggingTrace: false,
+      warnings: false,
     }
-    
-    // Disable Next.js trace collection
-    config.plugins = config.plugins.filter(plugin => {
-      return !plugin.constructor.name.includes('Trace')
-    })
     
     // Windows-specific optimizations
     if (process.platform === 'win32') {
-      // Disable file watching to prevent permission issues
       config.watchOptions = {
         poll: 1000,
         aggregateTimeout: 300,
         ignored: /node_modules/,
       }
-      
-      // Disable any file system operations that might cause permission issues
-      config.cache = false
     }
     
     // Memory and performance optimizations
@@ -74,7 +66,7 @@ const nextConfig = {
     return config
   },
   
-  // Output configuration
+  // Output configuration - use standalone for better Vercel compatibility
   output: 'standalone',
   
   // Disable source maps in production
@@ -88,6 +80,19 @@ const nextConfig = {
   
   // Compress output
   compress: true,
+  
+  // File tracing configuration for monorepo setups
+  outputFileTracingRoot: path.join(__dirname, '../../'),
+  
+  // Exclude unnecessary files from tracing to reduce bundle size
+  outputFileTracingExcludes: {
+    '*': [
+      'node_modules/@swc/core-linux-x64-gnu',
+      'node_modules/@swc/core-linux-x64-musl',
+      'node_modules/@esbuild/linux-x64',
+      '.git/**/*',
+    ],
+  },
 }
 
 module.exports = nextConfig 
