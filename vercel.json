@@ -1,5 +1,33 @@
 {
+  "framework": "nextjs",
+  "buildCommand": "npm run build:standard",
   "env": {
-    "NEXT_TELEMETRY_DISABLED": "1"
-  }
+    "NEXT_TELEMETRY_DISABLED": "1",
+    "DISABLE_OPENCOLLECTIVE": "1",
+    "NODE_OPTIONS": "--max-old-space-size=4096"
+  },
+  "functions": {
+    "app/api/**/*.ts": {
+      "maxDuration": 30
+    }
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
+    }
+  ]
 } 

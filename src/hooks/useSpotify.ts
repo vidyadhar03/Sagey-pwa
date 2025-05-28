@@ -42,6 +42,19 @@ interface SpotifyArtist {
   image_url?: string;
 }
 
+interface SpotifyAlbum {
+  id: string;
+  name: string;
+  artist: string;
+  artists: string;
+  release_date: string;
+  total_tracks: number;
+  external_urls: { spotify: string };
+  image_url?: string;
+  album_type: string;
+  track_count: number;
+}
+
 interface AudioFeatures {
   energy: number;
   valence: number;
@@ -139,6 +152,23 @@ export function useSpotify() {
     return data.artists;
   };
 
+  // Fetch top albums
+  const getTopAlbums = async (timeRange: 'short_term' | 'medium_term' | 'long_term' = 'medium_term'): Promise<SpotifyAlbum[]> => {
+    if (!status.connected) {
+      throw new Error('Spotify not connected');
+    }
+
+    const response = await fetch(`/api/spotify/top-albums?time_range=${timeRange}`);
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to fetch top albums');
+    }
+
+    const data = await response.json();
+    return data.albums;
+  };
+
   // Fetch audio features for tracks
   const getAudioFeatures = async (trackIds: string[]): Promise<{ aggregate: AudioFeatures; audio_features: any[] }> => {
     if (!status.connected) {
@@ -210,6 +240,7 @@ export function useSpotify() {
     getRecentTracks,
     getTopTracks,
     getTopArtists,
+    getTopAlbums,
     getAudioFeatures,
     getMusicInsights
   };

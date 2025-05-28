@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import TopAppBar from '../TopAppBar';
 import MusicalAgeEstimator from '../MusicalAgeEstimator';
+import UserProfile from '../UserProfile';
 import { useSpotify } from '../../hooks/useSpotify';
 
 interface HomeLayoutProps {
@@ -17,6 +18,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
   const [topArtists, setTopArtists] = useState<any[]>([]);
   const [dataLoading, setDataLoading] = useState(false);
   const [spotifyError, setSpotifyError] = useState<string | null>(null);
+  const [showUserProfile, setShowUserProfile] = useState(false);
 
   useEffect(() => {
     // Check for Spotify authentication errors in URL parameters
@@ -109,12 +111,21 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
     setSpotifyError(null);
   };
 
+  const handleAccountClick = () => {
+    setShowUserProfile(true);
+  };
+
+  const handleCloseUserProfile = () => {
+    setShowUserProfile(false);
+  };
+
   return (
     <>
       <TopAppBar
         title="Sagey"
         showLeftIcon={false}
         showRightIcon={true}
+        onRightClick={handleAccountClick}
       />
       <div className="pt-[60px] w-full h-screen overflow-y-auto bg-gradient-to-br from-[#0A0A0A] via-[#1A1A1A] to-[#0A0A0A]">
         <div className="max-w-7xl mx-auto px-4 pb-[120px]">
@@ -463,6 +474,11 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
 
         </div>
       </div>
+
+      {/* User Profile Modal */}
+      {showUserProfile && (
+        <UserProfile onClose={handleCloseUserProfile} />
+      )}
     </>
   );
 } 

@@ -36,6 +36,9 @@ const nextConfig = {
         aggregateTimeout: 300,
         ignored: /node_modules/,
       }
+      
+      // Disable file system caching on Windows to prevent permission issues
+      config.cache = false
     }
     
     // Memory and performance optimizations
@@ -66,9 +69,6 @@ const nextConfig = {
     return config
   },
   
-  // Use default output for better Vercel compatibility
-  // output: 'standalone', // Commented out for Vercel deployment
-  
   // Disable source maps in production
   productionBrowserSourceMaps: false,
   
@@ -80,17 +80,6 @@ const nextConfig = {
   
   // Compress output
   compress: true,
-  
-  // Remove file tracing configurations that might conflict with Vercel
-  // outputFileTracingRoot: path.join(__dirname, '../../'),
-  // outputFileTracingExcludes: {
-  //   '*': [
-  //     'node_modules/@swc/core-linux-x64-gnu',
-  //     'node_modules/@swc/core-linux-x64-musl',
-  //     'node_modules/@esbuild/linux-x64',
-  //     '.git/**/*',
-  //   ],
-  // },
 }
 
 module.exports = nextConfig 
