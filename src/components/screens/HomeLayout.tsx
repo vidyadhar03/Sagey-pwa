@@ -184,58 +184,42 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
             </div>
           </motion.section>
 
-          {/* Musical Age Estimator - Featured Section */}
-          {connected && (
-            <motion.section 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="mt-6 mb-8"
-            >
-              <div className="mb-4">
-                <h3 className="text-white font-semibold text-lg mb-2">🎵 Musical Age Estimator</h3>
-                <p className="text-gray-400 text-sm">Discover your musical DNA and see how your taste compares to your actual age</p>
-              </div>
-              <MusicalAgeEstimator />
-            </motion.section>
-          )}
-
-          {/* Quick Stats Section */}
+          {/* Quick Stats Section - Moved to top and title removed */}
           <motion.section 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            transition={{ delay: 0.1 }}
             className="mt-6 mb-8"
           >
-            <h3 className="text-white font-semibold text-lg mb-4">Your Music at a Glance</h3>
-            
             {connected ? (
               <div className="grid grid-cols-2 gap-4">
-                {/* Listening Time */}
                 <div className="p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">
-                  <div className="flex items-center mb-2">
-                    <div className="w-8 h-8 rounded-full bg-[#1DB954]/20 flex items-center justify-center mr-3">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 text-[#1DB954]">
+                  <div className="flex items-center mb-3">
+                    <div className="w-10 h-10 rounded-full bg-[#1DB954]/20 flex items-center justify-center mr-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-[#1DB954]">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
-                    <h4 className="text-white font-medium text-sm">Today</h4>
+                    <div>
+                      <p className="text-white font-semibold text-sm">Today</p>
+                    </div>
                   </div>
-                  <p className="text-[#1DB954] text-xl font-bold">2h 34m</p>
+                  <div className="text-[#1DB954] text-2xl font-bold mb-1">2h 34m</div>
                   <p className="text-gray-400 text-xs">+12% vs yesterday</p>
                 </div>
 
-                {/* Top Genre */}
                 <div className="p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">
-                  <div className="flex items-center mb-2">
-                    <div className="w-8 h-8 rounded-full bg-[#1ed760]/20 flex items-center justify-center mr-3">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 text-[#1ed760]">
+                  <div className="flex items-center mb-3">
+                    <div className="w-10 h-10 rounded-full bg-[#1ed760]/20 flex items-center justify-center mr-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-[#1ed760]">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 11-.99-3.467l2.31-.66a2.25 2.25 0 001.632-2.163zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 01-.99-3.467l2.31-.66A2.25 2.25 0 009 15.553z" />
                       </svg>
                     </div>
-                    <h4 className="text-white font-medium text-sm">Top Genre</h4>
+                    <div>
+                      <p className="text-white font-semibold text-sm">Top Genre</p>
+                    </div>
                   </div>
-                  <p className="text-[#1ed760] text-lg font-bold">Electronic</p>
+                  <div className="text-[#1ed760] text-lg font-bold mb-1">Electronic</div>
                   <p className="text-gray-400 text-xs">35% of listening</p>
                 </div>
               </div>
@@ -255,12 +239,28 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
             )}
           </motion.section>
 
+          {/* Musical Age Estimator - Now second */}
+          {connected && (
+            <motion.section 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="mt-6 mb-8"
+            >
+              <div className="mb-4">
+                <h3 className="text-white font-semibold text-lg mb-2">🎵 Musical Age Estimator</h3>
+                <p className="text-gray-400 text-sm">Discover your musical DNA and see how your taste compares to your actual age</p>
+              </div>
+              <MusicalAgeEstimator />
+            </motion.section>
+          )}
+
           {/* Recently Played Section */}
           {connected && (
             <motion.section 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
+              transition={{ delay: 0.3 }}
               className="mt-6 mb-8"
             >
               <div className="flex items-center justify-between mb-4">
@@ -317,7 +317,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
             <motion.section 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
+              transition={{ delay: 0.4 }}
               className="mt-6 mb-8"
             >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -402,7 +402,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
           <motion.section 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
+            transition={{ delay: 0.5 }}
             className="mt-6 mb-8"
           >
             <h3 className="text-white font-semibold text-lg mb-4">Quick Actions</h3>

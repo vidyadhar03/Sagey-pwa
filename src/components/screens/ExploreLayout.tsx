@@ -17,7 +17,7 @@ export default function ExploreLayout() {
   } = useSpotify();
 
   const [selectedTimeRange, setSelectedTimeRange] = useState<'short_term' | 'medium_term' | 'long_term'>('medium_term');
-  const [selectedCategory, setSelectedCategory] = useState<'tracks' | 'artists' | 'genres'>('tracks');
+  const [selectedCategory, setSelectedCategory] = useState<'tracks' | 'artists' | 'genres' | 'recent'>('tracks');
   const [topTracks, setTopTracks] = useState<any>({});
   const [topArtists, setTopArtists] = useState<any>({});
   const [recentTracks, setRecentTracks] = useState<any[]>([]);
@@ -155,10 +155,11 @@ export default function ExploreLayout() {
           className="bg-white/5 backdrop-blur-sm rounded-2xl p-4"
         >
           <h3 className="text-lg font-semibold mb-3">Explore By</h3>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             {[
               { key: 'tracks', label: 'Top Tracks', icon: '🎵' },
               { key: 'artists', label: 'Top Artists', icon: '🎤' },
+              { key: 'recent', label: 'Recent Tracks', icon: '🕒' },
               { key: 'genres', label: 'Genres', icon: '🎼' }
             ].map(({ key, label, icon }) => (
               <button
@@ -195,8 +196,8 @@ export default function ExploreLayout() {
                   ))}
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {topTracks?.[selectedTimeRange]?.slice(0, 10).map((track: any, index: number) => {
+                <div className="space-y-3 max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-[#1DB954]/30 scrollbar-track-transparent">
+                  {topTracks?.[selectedTimeRange]?.map((track: any, index: number) => {
                     if (!track || !track.id) return null;
                     return (
                       <div key={track.id} className="flex items-center gap-4 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
@@ -235,8 +236,8 @@ export default function ExploreLayout() {
                   ))}
                 </div>
               ) : (
-                <div className="grid grid-cols-2 gap-4">
-                  {topArtists?.[selectedTimeRange]?.slice(0, 8).map((artist: any, index: number) => {
+                <div className="grid grid-cols-2 gap-4 max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-[#1DB954]/30 scrollbar-track-transparent">
+                  {topArtists?.[selectedTimeRange]?.map((artist: any, index: number) => {
                     if (!artist || !artist.id) return null;
                     return (
                       <div key={artist.id} className="flex items-center gap-3 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
@@ -262,10 +263,50 @@ export default function ExploreLayout() {
             </div>
           )}
 
+          {selectedCategory === 'recent' && (
+            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6">
+              <h3 className="text-xl font-bold mb-4">Recently Played Tracks</h3>
+              {dataLoading ? (
+                <div className="space-y-3">
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="animate-pulse bg-white/10 h-16 rounded-lg" />
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-3 max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-[#1DB954]/30 scrollbar-track-transparent">
+                  {recentTracks?.map((item, index) => {
+                    if (!item || !item.track || !item.track.id) return null;
+                    return (
+                      <div key={`${item.track.id}-${index}`} className="flex items-center gap-4 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
+                        {item.track.album?.images?.[0] && (
+                          <img 
+                            src={item.track.album.images[0].url} 
+                            alt={item.track.album.name || 'Album cover'}
+                            className="w-12 h-12 rounded-lg"
+                          />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{item.track.name || 'Unknown Track'}</p>
+                          <p className="text-sm text-gray-400 truncate">
+                            {item.track.artists?.map((artist: any) => artist?.name || 'Unknown Artist').join(', ') || 'Unknown Artist'}
+                          </p>
+                        </div>
+                        <div className="text-xs text-gray-400 text-right">
+                          <div>{item.played_at ? new Date(item.played_at).toLocaleDateString() : '--'}</div>
+                          <div>{item.played_at ? new Date(item.played_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}</div>
+                        </div>
+                      </div>
+                    );
+                  }).filter(Boolean)}
+                </div>
+              )}
+            </div>
+          )}
+
           {selectedCategory === 'genres' && (
             <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6">
               <h3 className="text-xl font-bold mb-4">Your Music Genres</h3>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3 max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-[#1DB954]/30 scrollbar-track-transparent">
                 {getGenresFromArtists().map(({ genre, count }, index) => (
                   <div key={genre} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
                     <div className="flex items-center gap-2">
@@ -280,54 +321,13 @@ export default function ExploreLayout() {
           )}
         </motion.div>
 
-        {/* Recent Activity */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="bg-white/5 backdrop-blur-sm rounded-2xl p-6"
-        >
-          <h3 className="text-xl font-bold mb-4">Recently Played</h3>
-          {dataLoading ? (
-            <div className="space-y-3">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="animate-pulse bg-white/10 h-16 rounded-lg" />
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {recentTracks?.slice(0, 5).map((item, index) => {
-                if (!item || !item.track || !item.track.id) return null;
-                return (
-                  <div key={`${item.track.id}-${index}`} className="flex items-center gap-4 p-3 bg-white/5 rounded-lg">
-                    {item.track.album?.images?.[0] && (
-                      <img 
-                        src={item.track.album.images[0].url} 
-                        alt={item.track.album.name || 'Album cover'}
-                        className="w-12 h-12 rounded-lg"
-                      />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{item.track.name || 'Unknown Track'}</p>
-                      <p className="text-sm text-gray-400 truncate">
-                        {item.track.artists?.map((artist: any) => artist?.name || 'Unknown Artist').join(', ') || 'Unknown Artist'}
-                      </p>
-                    </div>
-                    <div className="text-xs text-gray-400">
-                      {item.played_at ? new Date(item.played_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
-                    </div>
-                  </div>
-                );
-              }).filter(Boolean)}
-            </div>
-          )}
-        </motion.div>
+
 
         {/* Discover More Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
+          transition={{ delay: 0.4 }}
           className="bg-gradient-to-r from-[#1DB954]/20 to-[#1ed760]/20 backdrop-blur-sm rounded-2xl p-6 border border-[#1DB954]/30"
         >
           <h3 className="text-xl font-bold mb-2">Discover More</h3>

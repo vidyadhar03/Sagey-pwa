@@ -30,7 +30,7 @@ export default function SpotifyDataView() {
   const { connected, user, loading, connect } = useSpotify();
   const spotify = useSpotify();
   
-  const [activeTab, setActiveTab] = useState<'recent' | 'tracks' | 'artists'>('recent');
+  const [activeTab, setActiveTab] = useState<'recent' | 'tracks' | 'artists' | 'genres'>('recent');
   const [timeRange, setTimeRange] = useState<'short_term' | 'medium_term' | 'long_term'>('medium_term');
   const [recentTracks, setRecentTracks] = useState<SpotifyTrack[]>([]);
   const [topTracks, setTopTracks] = useState<SpotifyTrack[]>([]);
@@ -79,6 +79,26 @@ export default function SpotifyDataView() {
       return `${(num / 1000).toFixed(1)}K`;
     }
     return num.toString();
+  };
+
+  const getTopGenres = () => {
+    if (!topArtists || !Array.isArray(topArtists)) return [];
+    
+    const allGenres = topArtists
+      .filter((artist: any) => artist && Array.isArray(artist.genres))
+      .flatMap((artist: any) => artist.genres || []);
+    
+    const genreCounts = allGenres.reduce((acc: Record<string, number>, genre: string) => {
+      if (genre && typeof genre === 'string') {
+        acc[genre] = (acc[genre] || 0) + 1;
+      }
+      return acc;
+    }, {} as Record<string, number>);
+    
+    return Object.entries(genreCounts)
+      .sort(([,a], [,b]) => (b as number) - (a as number))
+      .slice(0, 20)
+      .map(([genre, count]) => ({ genre, count }));
   };
 
   const getTimeRangeLabel = (range: string) => {
@@ -197,11 +217,21 @@ export default function SpotifyDataView() {
               >
                 Top Artists
               </button>
+              <button
+                onClick={() => setActiveTab('genres')}
+                className={`flex-1 py-2 px-3 rounded-xl text-sm font-medium transition-all ${
+                  activeTab === 'genres'
+                    ? 'bg-[#1DB954] text-white shadow-sm'
+                    : 'text-secondary hover:text-white'
+                }`}
+              >
+                Top Genres
+              </button>
             </div>
           </div>
 
-          {/* Time Range Selector (for tracks and artists) */}
-          {(activeTab === 'tracks' || activeTab === 'artists') && (
+          {/* Time Range Selector (for tracks, artists, and genres) */}
+          {(activeTab === 'tracks' || activeTab === 'artists' || activeTab === 'genres') && (
             <div className="mb-6">
               <div className="flex bg-[#2A2A2D] p-1 rounded-xl border border-white/10 w-fit">
                 <button
@@ -414,6 +444,51 @@ export default function SpotifyDataView() {
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+
+              {/* Top Genres */}
+              {activeTab === 'genres' && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-white font-medium text-lg">Top Genres</h3>
+                    <span className="text-secondary text-sm">Based on your top artists</span>
+                  </div>
+                  
+                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                     {getTopGenres().map(({ genre, count }, index) => {
+                       const genreCount = Number(count);
+                       const maxCount = Math.max(...getTopGenres().map(g => Number(g.count)));
+                       return (
+                         <div key={genre} className="p-4 rounded-2xl bg-[#2A2A2D] border border-white/10 hover:border-[#1DB954]/30 transition-all">
+                           <div className="flex items-center justify-between">
+                             <div className="flex items-center">
+                               <span className="text-[#1DB954] font-bold text-lg mr-4 w-8">#{index + 1}</span>
+                               <div>
+                                 <h4 className="text-white font-medium capitalize">{genre}</h4>
+                                 <p className="text-secondary text-sm">{genreCount} {genreCount === 1 ? 'artist' : 'artists'}</p>
+                               </div>
+                             </div>
+                             <div className="flex items-center">
+                               <div className="w-16 h-2 bg-white/10 rounded-full overflow-hidden">
+                                 <div 
+                                   className="h-full bg-gradient-to-r from-[#1DB954] to-[#1ed760] rounded-full"
+                                   style={{ width: `${Math.min((genreCount / maxCount) * 100, 100)}%` }}
+                                 />
+                               </div>
+                               <span className="text-[#1DB954] text-sm font-medium ml-2">{genreCount}</span>
+                             </div>
+                           </div>
+                         </div>
+                       );
+                     })}
+                  </div>
+                  
+                  {getTopGenres().length === 0 && (
+                    <div className="text-center py-8">
+                      <p className="text-secondary">No genre data available. Listen to more music to see your top genres!</p>
+                    </div>
+                  )}
                 </div>
               )}
             </>
