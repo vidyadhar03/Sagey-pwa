@@ -463,8 +463,15 @@ export default function SpotifyDataView() {
         ]}
       />
       
-      {/* Fixed Filter Chips - Stick directly to top nav bar with no gap */}
-      <div className="fixed top-[60px] left-0 right-0 z-30 bg-[#0A0A0A]/80 backdrop-blur-xl border-b border-white/10">
+      {/* Fixed Filter Chips - Match TopAppBar background styling */}
+      <div 
+        className="fixed top-[60px] left-0 right-0 z-30 border-b border-white/10"
+        style={{
+          background: 'rgba(18, 18, 20, 0.8)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)', // For Safari
+        }}
+      >
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex gap-2 overflow-x-auto scrollbar-none pb-2">
             <button
@@ -524,9 +531,9 @@ export default function SpotifyDataView() {
       <div className="w-full h-screen overflow-y-auto bg-gradient-to-br from-[#0A0A0A] via-[#1A1A1A] to-[#0A0A0A]">
         {/* Content area with proper top padding to account for fixed elements */}
         <div className="pt-[120px] max-w-7xl mx-auto px-4 pb-[120px]">
-          {/* Time Range Selector (for tracks, artists, albums, and genres) */}
+          {/* Time Range Selector (for tracks, artists, albums, and genres) - Position below filter chips */}
           {activeTab !== 'recent' && (
-            <div className="mb-6">
+            <div className="mb-6 mt-6">
               <div className="flex gap-2">
                 <button
                   onClick={() => setTimeRange('short_term')}
