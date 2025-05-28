@@ -463,74 +463,77 @@ export default function SpotifyDataView() {
         ]}
       />
       
-      {/* Fixed Filter Chips - Match TopAppBar background styling */}
+      {/* Merged Filter Chips - Extend TopAppBar downward */}
       <div 
-        className="fixed top-[60px] left-0 right-0 z-30 border-b border-white/10"
+        className="fixed top-[60px] left-0 right-0 z-30"
         style={{
           background: 'rgba(18, 18, 20, 0.8)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)', // For Safari
         }}
       >
-        <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex gap-2 overflow-x-auto scrollbar-none pb-2">
-            <button
-              onClick={() => setActiveTab('tracks')}
-              className={`flex-shrink-0 py-2 px-4 rounded-xl text-sm font-medium transition-all ${
-                activeTab === 'tracks'
-                  ? 'bg-[#1DB954] text-white shadow-sm'
-                  : 'bg-[#2A2A2D] text-gray-400 hover:text-white hover:bg-[#3A3A3D]'
-              }`}
-            >
-              Tracks
-            </button>
-            <button
-              onClick={() => setActiveTab('artists')}
-              className={`flex-shrink-0 py-2 px-4 rounded-xl text-sm font-medium transition-all ${
-                activeTab === 'artists'
-                  ? 'bg-[#1DB954] text-white shadow-sm'
-                  : 'bg-[#2A2A2D] text-gray-400 hover:text-white hover:bg-[#3A3A3D]'
-              }`}
-            >
-              Artists
-            </button>
-            <button
-              onClick={() => setActiveTab('albums')}
-              className={`flex-shrink-0 py-2 px-4 rounded-xl text-sm font-medium transition-all ${
-                activeTab === 'albums'
-                  ? 'bg-[#1DB954] text-white shadow-sm'
-                  : 'bg-[#2A2A2D] text-gray-400 hover:text-white hover:bg-[#3A3A3D]'
-              }`}
-            >
-              Albums
-            </button>
-            <button
-              onClick={() => setActiveTab('genres')}
-              className={`flex-shrink-0 py-2 px-4 rounded-xl text-sm font-medium transition-all ${
-                activeTab === 'genres'
-                  ? 'bg-[#1DB954] text-white shadow-sm'
-                  : 'bg-[#2A2A2D] text-gray-400 hover:text-white hover:bg-[#3A3A3D]'
-              }`}
-            >
-              Genres
-            </button>
-            <button
-              onClick={() => setActiveTab('recent')}
-              className={`flex-shrink-0 py-2 px-4 rounded-xl text-sm font-medium transition-all ${
-                activeTab === 'recent'
-                  ? 'bg-[#1DB954] text-white shadow-sm'
-                  : 'bg-[#2A2A2D] text-gray-400 hover:text-white hover:bg-[#3A3A3D]'
-              }`}
-            >
-              Recent
-            </button>
+        <div className="max-w-7xl mx-auto">
+          {/* Add padding to left but not right to allow Recent chip to reach screen edge */}
+          <div className="pl-4 pr-0 py-3">
+            <div className="flex gap-2 overflow-x-auto scrollbar-none pb-2 pr-4">
+              <button
+                onClick={() => setActiveTab('tracks')}
+                className={`flex-shrink-0 py-2 px-4 rounded-xl text-sm font-medium transition-all ${
+                  activeTab === 'tracks'
+                    ? 'bg-[#1DB954] text-white shadow-sm'
+                    : 'bg-[#2A2A2D] text-gray-400 hover:text-white hover:bg-[#3A3A3D]'
+                }`}
+              >
+                Tracks
+              </button>
+              <button
+                onClick={() => setActiveTab('artists')}
+                className={`flex-shrink-0 py-2 px-4 rounded-xl text-sm font-medium transition-all ${
+                  activeTab === 'artists'
+                    ? 'bg-[#1DB954] text-white shadow-sm'
+                    : 'bg-[#2A2A2D] text-gray-400 hover:text-white hover:bg-[#3A3A3D]'
+                }`}
+              >
+                Artists
+              </button>
+              <button
+                onClick={() => setActiveTab('albums')}
+                className={`flex-shrink-0 py-2 px-4 rounded-xl text-sm font-medium transition-all ${
+                  activeTab === 'albums'
+                    ? 'bg-[#1DB954] text-white shadow-sm'
+                    : 'bg-[#2A2A2D] text-gray-400 hover:text-white hover:bg-[#3A3A3D]'
+                }`}
+              >
+                Albums
+              </button>
+              <button
+                onClick={() => setActiveTab('genres')}
+                className={`flex-shrink-0 py-2 px-4 rounded-xl text-sm font-medium transition-all ${
+                  activeTab === 'genres'
+                    ? 'bg-[#1DB954] text-white shadow-sm'
+                    : 'bg-[#2A2A2D] text-gray-400 hover:text-white hover:bg-[#3A3A3D]'
+                }`}
+              >
+                Genres
+              </button>
+              <button
+                onClick={() => setActiveTab('recent')}
+                className={`flex-shrink-0 py-2 px-4 rounded-xl text-sm font-medium transition-all ${
+                  activeTab === 'recent'
+                    ? 'bg-[#1DB954] text-white shadow-sm'
+                    : 'bg-[#2A2A2D] text-gray-400 hover:text-white hover:bg-[#3A3A3D]'
+                }`}
+              >
+                Recent
+              </button>
+            </div>
           </div>
         </div>
       </div>
       
       <div className="w-full h-screen overflow-y-auto bg-gradient-to-br from-[#0A0A0A] via-[#1A1A1A] to-[#0A0A0A]">
-        {/* Content area with proper top padding to account for fixed elements */}
-        <div className="pt-[120px] max-w-7xl mx-auto px-4 pb-[120px]">
+        {/* Content area with proper top padding to account for fixed elements - increased for merged layout */}
+        <div className="pt-[130px] max-w-7xl mx-auto px-4 pb-[120px]">
           {/* Time Range Selector (for tracks, artists, albums, and genres) - Position below filter chips */}
           {activeTab !== 'recent' && (
             <div className="mb-6 mt-6">
@@ -587,9 +590,9 @@ export default function SpotifyDataView() {
             {/* Content */}
             {!dataLoading && !error && (
               <>
-                {/* Recent Tracks */}
+                {/* Recent Tracks - Add top margin to prevent overlap */}
                 {activeTab === 'recent' && (
-                  <div>
+                  <div className="mt-8">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-white font-medium text-lg">Recently Played</h3>
                     <span className="text-gray-400 text-sm">{recentTracks.length} tracks</span>
