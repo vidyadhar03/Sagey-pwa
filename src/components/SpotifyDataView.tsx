@@ -52,30 +52,39 @@ export default function SpotifyDataView() {
   const [topAlbums, setTopAlbums] = useState<SpotifyAlbum[]>([]);
   const [dataLoading, setDataLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'list' | 'grid' | 'big-grid'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [showShareCards, setShowShareCards] = useState(false);
   const [initialLoadDone, setInitialLoadDone] = useState(false);
+  const [genreRetryCount, setGenreRetryCount] = useState(0);
 
   useEffect(() => {
     checkStatus();
   }, []);
 
+  // Initial load when connected
   useEffect(() => {
     if (connected && !initialLoadDone) {
+      console.log('Initial load triggered');
       loadData();
       setInitialLoadDone(true);
     }
   }, [connected, initialLoadDone]);
 
+  // Load data when filters change (but only after initial load)
   useEffect(() => {
     if (connected && initialLoadDone) {
+      console.log('Filter change load triggered', { activeTab, timeRange });
       loadData();
     }
   }, [activeTab, timeRange]);
 
   const loadData = async () => {
-    if (!connected) return;
+    if (!connected) {
+      console.log('Not connected, skipping load');
+      return;
+    }
     
+    console.log('Loading data for:', activeTab, timeRange);
     setDataLoading(true);
     setError(null);
     
@@ -92,6 +101,10 @@ export default function SpotifyDataView() {
       } else if (activeTab === 'albums') {
         const data = await spotify.getTopAlbums(timeRange);
         setTopAlbums(data || []);
+      } else if (activeTab === 'genres') {
+        // For genres, we need artists data first
+        const data = await spotify.getTopArtists(timeRange);
+        setTopArtists(data || []);
       }
     } catch (err) {
       console.error('Error loading data:', err);
@@ -135,6 +148,33 @@ export default function SpotifyDataView() {
       .slice(0, 20);
   };
 
+  const retryGenreData = async () => {
+    if (genreRetryCount < 3) {
+      setGenreRetryCount(prev => prev + 1);
+      setDataLoading(true);
+      setError(null);
+      
+      try {
+        // Try different time ranges to get genre data
+        const timeRanges: ('short_term' | 'medium_term' | 'long_term')[] = ['long_term', 'medium_term', 'short_term'];
+        
+        for (const range of timeRanges) {
+          const data = await spotify.getTopArtists(range);
+          if (data && data.length > 0) {
+            setTopArtists(data);
+            setTimeRange(range);
+            break;
+          }
+        }
+      } catch (err) {
+        console.error('Error retrying genre data:', err);
+        setError('Failed to load genre data. Please try again.');
+      } finally {
+        setDataLoading(false);
+      }
+    }
+  };
+
   const getTimeRangeLabel = (range: string) => {
     switch (range) {
       case 'short_term': return 'Last 4 weeks';
@@ -162,10 +202,7 @@ export default function SpotifyDataView() {
   };
 
   const toggleViewMode = () => {
-    const modes: ('list' | 'grid' | 'big-grid')[] = ['list', 'grid', 'big-grid'];
-    const currentIndex = modes.indexOf(viewMode);
-    const nextIndex = (currentIndex + 1) % modes.length;
-    setViewMode(modes[nextIndex]);
+    setViewMode(viewMode === 'list' ? 'grid' : 'list');
   };
 
   const handleShare = () => {
@@ -173,42 +210,29 @@ export default function SpotifyDataView() {
   };
 
   const getViewModeIcon = () => {
-    switch (viewMode) {
-      case 'list':
-        return "M3 4h18v2H3V4zm0 7h18v2H3v-2zm0 7h18v2H3v-2z";
-      case 'grid':
-        return "M3 3h7v7H3V3zm11 0h7v7h-7V3zM3 14h7v7H3v-7zm11 0h7v7h-7v-7z";
-      case 'big-grid':
-        return "M3 3h18v7H3V3zm0 11h8v7H3v-7zm12 0h6v7h-6v-7z";
-      default:
-        return "M3 4h18v2H3V4zm0 7h18v2H3v-2zm0 7h18v2H3v-2z";
+    if (viewMode === 'list') {
+      return "M3 4h18v2H3V4zm0 7h18v2H3v-2zm0 7h18v2H3v-2z";
+    } else {
+      return "M3 3h7v7H3V3zm11 0h7v7h-7V3zM3 14h7v7H3v-7zm11 0h7v7h-7v-7z";
     }
   };
 
   const getContainerClasses = () => {
-    switch (viewMode) {
-      case 'grid':
-        return 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4';
-      case 'big-grid':
-        return 'grid grid-cols-1 md:grid-cols-2 gap-6';
-      default:
-        return 'space-y-4';
+    if (viewMode === 'grid') {
+      return 'grid grid-cols-1 md:grid-cols-2 gap-6';
     }
+    return 'space-y-4';
   };
 
   const getItemClasses = () => {
-    switch (viewMode) {
-      case 'grid':
-        return 'p-3 rounded-2xl bg-[#2A2A2D] border border-white/10 hover:border-[#1DB954]/30 transition-all';
-      case 'big-grid':
-        return 'p-4 rounded-2xl bg-[#2A2A2D] border border-white/10 hover:border-[#1DB954]/30 transition-all';
-      default:
-        return 'p-4 rounded-2xl bg-[#2A2A2D] border border-white/10 hover:border-[#1DB954]/30 transition-all';
+    if (viewMode === 'grid') {
+      return 'p-4 rounded-2xl bg-[#2A2A2D] border border-white/10 hover:border-[#1DB954]/30 transition-all';
     }
+    return 'p-4 rounded-2xl bg-[#2A2A2D] border border-white/10 hover:border-[#1DB954]/30 transition-all';
   };
 
   const renderTrackItem = (track: any, index: number) => {
-    const isGrid = viewMode === 'grid' || viewMode === 'big-grid';
+    const isGrid = viewMode === 'grid';
     
     return (
       <div key={track.id} className={getItemClasses()}>
@@ -267,7 +291,7 @@ export default function SpotifyDataView() {
   };
 
   const renderArtistItem = (artist: any, index: number) => {
-    const isGrid = viewMode === 'grid' || viewMode === 'big-grid';
+    const isGrid = viewMode === 'grid';
     
     return (
       <div key={artist.id} className={getItemClasses()}>
@@ -382,7 +406,7 @@ export default function SpotifyDataView() {
               <button
                 onClick={toggleViewMode}
                 className="p-2 rounded-xl bg-[#2A2A2D] hover:bg-[#3A3A3D] transition-all"
-                title={`Switch to ${viewMode === 'list' ? 'grid' : viewMode === 'grid' ? 'big grid' : 'list'} view`}
+                title={`Switch to ${viewMode === 'list' ? 'grid' : 'list'} view`}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-white">
                   <path strokeLinecap="round" strokeLinejoin="round" d={getViewModeIcon()} />
@@ -404,7 +428,7 @@ export default function SpotifyDataView() {
         </div>
       </div>
 
-      {/* Fixed Filter Chips */}
+      {/* Fixed Filter Chips - No space between top bar and filter chips */}
       <div className="sticky top-[73px] z-30 bg-[#0A0A0A]/80 backdrop-blur-xl border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex gap-2 overflow-x-auto scrollbar-none pb-2">
@@ -459,8 +483,8 @@ export default function SpotifyDataView() {
               Recent
             </button>
           </div>
-            </div>
-          </div>
+        </div>
+      </div>
 
       <div className="max-w-7xl mx-auto px-4 pb-[120px]">
         {/* Time Range Selector (for tracks, artists, albums, and genres) */}
@@ -684,7 +708,16 @@ export default function SpotifyDataView() {
                 
                 {getTopGenres().length === 0 && (
                   <div className="text-center py-8">
-                    <p className="text-gray-400">No genre data available. Listen to more music to see your genres!</p>
+                    <div className="mb-4">
+                      <p className="text-gray-400 mb-4">No genre data available for this time period.</p>
+                      <button
+                        onClick={retryGenreData}
+                        className="px-4 py-2 bg-[#1DB954] hover:bg-[#1ed760] text-white rounded-lg transition-colors"
+                        disabled={genreRetryCount >= 3}
+                      >
+                        {genreRetryCount >= 3 ? 'Max retries reached' : 'Try different time period'}
+                      </button>
+                    </div>
                   </div>
                 )}
                 </div>
