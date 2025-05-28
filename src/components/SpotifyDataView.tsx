@@ -463,69 +463,70 @@ export default function SpotifyDataView() {
         ]}
       />
       
-      <div className="pt-[60px] w-full h-screen overflow-y-auto bg-gradient-to-br from-[#0A0A0A] via-[#1A1A1A] to-[#0A0A0A]">
-        {/* Fixed Filter Chips - Stick directly to top nav bar with no gap */}
-        <div className="sticky top-[60px] z-30 bg-[#0A0A0A]/80 backdrop-blur-xl border-b border-white/10">
-          <div className="max-w-7xl mx-auto px-4 py-3">
-            <div className="flex gap-2 overflow-x-auto scrollbar-none pb-2">
-              <button
-                onClick={() => setActiveTab('tracks')}
-                className={`flex-shrink-0 py-2 px-4 rounded-xl text-sm font-medium transition-all ${
-                  activeTab === 'tracks'
-                    ? 'bg-[#1DB954] text-white shadow-sm'
-                    : 'bg-[#2A2A2D] text-gray-400 hover:text-white hover:bg-[#3A3A3D]'
-                }`}
-              >
-                Tracks
-              </button>
-              <button
-                onClick={() => setActiveTab('artists')}
-                className={`flex-shrink-0 py-2 px-4 rounded-xl text-sm font-medium transition-all ${
-                  activeTab === 'artists'
-                    ? 'bg-[#1DB954] text-white shadow-sm'
-                    : 'bg-[#2A2A2D] text-gray-400 hover:text-white hover:bg-[#3A3A3D]'
-                }`}
-              >
-                Artists
-              </button>
-              <button
-                onClick={() => setActiveTab('albums')}
-                className={`flex-shrink-0 py-2 px-4 rounded-xl text-sm font-medium transition-all ${
-                  activeTab === 'albums'
-                    ? 'bg-[#1DB954] text-white shadow-sm'
-                    : 'bg-[#2A2A2D] text-gray-400 hover:text-white hover:bg-[#3A3A3D]'
-                }`}
-              >
-                Albums
-              </button>
-              <button
-                onClick={() => setActiveTab('genres')}
-                className={`flex-shrink-0 py-2 px-4 rounded-xl text-sm font-medium transition-all ${
-                  activeTab === 'genres'
-                    ? 'bg-[#1DB954] text-white shadow-sm'
-                    : 'bg-[#2A2A2D] text-gray-400 hover:text-white hover:bg-[#3A3A3D]'
-                }`}
-              >
-                Genres
-              </button>
-              <button
-                onClick={() => setActiveTab('recent')}
-                className={`flex-shrink-0 py-2 px-4 rounded-xl text-sm font-medium transition-all ${
-                  activeTab === 'recent'
-                    ? 'bg-[#1DB954] text-white shadow-sm'
-                    : 'bg-[#2A2A2D] text-gray-400 hover:text-white hover:bg-[#3A3A3D]'
-                }`}
-              >
-                Recent
-              </button>
-            </div>
+      {/* Fixed Filter Chips - Stick directly to top nav bar with no gap */}
+      <div className="fixed top-[60px] left-0 right-0 z-30 bg-[#0A0A0A]/80 backdrop-blur-xl border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-4 py-3">
+          <div className="flex gap-2 overflow-x-auto scrollbar-none pb-2">
+            <button
+              onClick={() => setActiveTab('tracks')}
+              className={`flex-shrink-0 py-2 px-4 rounded-xl text-sm font-medium transition-all ${
+                activeTab === 'tracks'
+                  ? 'bg-[#1DB954] text-white shadow-sm'
+                  : 'bg-[#2A2A2D] text-gray-400 hover:text-white hover:bg-[#3A3A3D]'
+              }`}
+            >
+              Tracks
+            </button>
+            <button
+              onClick={() => setActiveTab('artists')}
+              className={`flex-shrink-0 py-2 px-4 rounded-xl text-sm font-medium transition-all ${
+                activeTab === 'artists'
+                  ? 'bg-[#1DB954] text-white shadow-sm'
+                  : 'bg-[#2A2A2D] text-gray-400 hover:text-white hover:bg-[#3A3A3D]'
+              }`}
+            >
+              Artists
+            </button>
+            <button
+              onClick={() => setActiveTab('albums')}
+              className={`flex-shrink-0 py-2 px-4 rounded-xl text-sm font-medium transition-all ${
+                activeTab === 'albums'
+                  ? 'bg-[#1DB954] text-white shadow-sm'
+                  : 'bg-[#2A2A2D] text-gray-400 hover:text-white hover:bg-[#3A3A3D]'
+              }`}
+            >
+              Albums
+            </button>
+            <button
+              onClick={() => setActiveTab('genres')}
+              className={`flex-shrink-0 py-2 px-4 rounded-xl text-sm font-medium transition-all ${
+                activeTab === 'genres'
+                  ? 'bg-[#1DB954] text-white shadow-sm'
+                  : 'bg-[#2A2A2D] text-gray-400 hover:text-white hover:bg-[#3A3A3D]'
+              }`}
+            >
+              Genres
+            </button>
+            <button
+              onClick={() => setActiveTab('recent')}
+              className={`flex-shrink-0 py-2 px-4 rounded-xl text-sm font-medium transition-all ${
+                activeTab === 'recent'
+                  ? 'bg-[#1DB954] text-white shadow-sm'
+                  : 'bg-[#2A2A2D] text-gray-400 hover:text-white hover:bg-[#3A3A3D]'
+              }`}
+            >
+              Recent
+            </button>
           </div>
         </div>
-
-        <div className="max-w-7xl mx-auto px-4 pb-[120px]">
+      </div>
+      
+      <div className="w-full h-screen overflow-y-auto bg-gradient-to-br from-[#0A0A0A] via-[#1A1A1A] to-[#0A0A0A]">
+        {/* Content area with proper top padding to account for fixed elements */}
+        <div className="pt-[120px] max-w-7xl mx-auto px-4 pb-[120px]">
           {/* Time Range Selector (for tracks, artists, albums, and genres) */}
           {activeTab !== 'recent' && (
-            <div className="mb-6 pt-6">
+            <div className="mb-6">
               <div className="flex gap-2">
                 <button
                   onClick={() => setTimeRange('short_term')}
@@ -560,8 +561,6 @@ export default function SpotifyDataView() {
                 </div>
               </div>
             )}
-
-            {activeTab === 'recent' && <div className="pt-6"></div>}
 
             {/* Loading State */}
             {dataLoading && (
