@@ -1,86 +1,75 @@
-# Windows-specific build script for Sagey PWA
-# This script handles Windows permission issues with Next.js builds
+# Windows Build Script for Sagey PWA
+# This script handles Windows-specific build issues and permission problems
 
-Write-Host "Starting Windows-optimized build process..." -ForegroundColor Green
+Write-Host "Starting Windows build process..." -ForegroundColor Green
 
-# Set environment variables to prevent permission issues
+# Set error action preference
+$ErrorActionPreference = "Continue"
+
+# Function to safely remove directory
+function Remove-DirectorySafely {
+    param([string]$Path)
+    
+    if (Test-Path $Path) {
+        Write-Host "Removing $Path..." -ForegroundColor Yellow
+        try {
+            # First try normal removal
+            Remove-Item -Path $Path -Recurse -Force -ErrorAction Stop
+            Write-Host "Successfully removed $Path" -ForegroundColor Green
+        }
+        catch {
+            Write-Host "Normal removal failed, trying alternative method..." -ForegroundColor Yellow
+            try {
+                # Alternative method using robocopy to clear directory
+                $emptyDir = Join-Path $env:TEMP "empty_$(Get-Random)"
+                New-Item -ItemType Directory -Path $emptyDir -Force | Out-Null
+                robocopy $emptyDir $Path /MIR /R:0 /W:0 | Out-Null
+                Remove-Item -Path $Path -Force -ErrorAction Stop
+                Remove-Item -Path $emptyDir -Force -ErrorAction SilentlyContinue
+                Write-Host "Successfully removed $Path using alternative method" -ForegroundColor Green
+            }
+            catch {
+                Write-Host "Warning: Could not remove $Path - $($_.Exception.Message)" -ForegroundColor Red
+            }
+        }
+    }
+}
+
+# Clean up build artifacts
+Write-Host "Cleaning build artifacts..." -ForegroundColor Cyan
+Remove-DirectorySafely ".next"
+Remove-DirectorySafely "node_modules\.cache"
+
+# Clean npm cache
+Write-Host "Cleaning npm cache..." -ForegroundColor Cyan
+npm cache clean --force 2>$null
+
+# Set environment variables
 $env:NEXT_TELEMETRY_DISABLED = "1"
 $env:DISABLE_OPENCOLLECTIVE = "1"
 $env:NODE_OPTIONS = "--max-old-space-size=4096"
 $env:CI = "true"
-$env:NEXT_PRIVATE_STANDALONE = "true"
 
-# Function to safely remove directory
-function Remove-DirectorySafely {
-    param($Path)
-    
-    if (Test-Path $Path -ErrorAction SilentlyContinue) {
-        try {
-            # Try to remove read-only attributes first
-            Get-ChildItem -Path $Path -Recurse -Force -ErrorAction SilentlyContinue | ForEach-Object {
-                try {
-                    $_.Attributes = $_.Attributes -band (-bnot [System.IO.FileAttributes]::ReadOnly)
-                } catch {
-                    # Ignore attribute errors
-                }
-            }
-            
-            # Remove the directory
-            Remove-Item -Recurse -Force $Path -ErrorAction Stop
-            Write-Host "Successfully removed $Path" -ForegroundColor Green
-            return $true
-        } catch {
-            Write-Host "Could not remove $Path`: $($_.Exception.Message)" -ForegroundColor Yellow
-            return $false
-        }
-    }
-    return $true
-}
+Write-Host "Environment variables set:" -ForegroundColor Cyan
+Write-Host "  NEXT_TELEMETRY_DISABLED: $env:NEXT_TELEMETRY_DISABLED"
+Write-Host "  DISABLE_OPENCOLLECTIVE: $env:DISABLE_OPENCOLLECTIVE"
+Write-Host "  NODE_OPTIONS: $env:NODE_OPTIONS"
+Write-Host "  CI: $env:CI"
 
-# Clean any existing build artifacts
-Write-Host "Cleaning build artifacts..." -ForegroundColor Yellow
-
-# Try to stop any processes that might be locking files
+# Run the build
+Write-Host "Starting Next.js build..." -ForegroundColor Green
 try {
-    Get-Process -Name "node" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
-} catch {
-    # Ignore process stop errors
-}
-
-# Wait a moment for processes to fully stop
-Start-Sleep -Seconds 2
-
-# Remove .next directory safely
-if (-not (Remove-DirectorySafely ".next")) {
-    Write-Host "Warning: Could not completely clean .next directory. Continuing anyway..." -ForegroundColor Yellow
-}
-
-# Remove cache directory
-Remove-DirectorySafely "node_modules\.cache" | Out-Null
-
-# Create .next directory with proper permissions
-Write-Host "Creating .next directory..." -ForegroundColor Yellow
-try {
-    New-Item -ItemType Directory -Path ".next" -Force -ErrorAction Stop | Out-Null
-} catch {
-    Write-Host "Warning: Could not create .next directory: $($_.Exception.Message)" -ForegroundColor Yellow
-}
-
-# Start the build process
-Write-Host "Starting Next.js build..." -ForegroundColor Yellow
-
-try {
-    # Use npm directly to avoid PowerShell execution policy issues
-    $buildProcess = Start-Process -FilePath "npm" -ArgumentList "run", "build:standard" -NoNewWindow -PassThru -Wait
-    
-    if ($buildProcess.ExitCode -eq 0) {
+    & npm run build:standard
+    if ($LASTEXITCODE -eq 0) {
         Write-Host "Build completed successfully!" -ForegroundColor Green
-        exit 0
     } else {
-        Write-Host "Build failed with exit code: $($buildProcess.ExitCode)" -ForegroundColor Red
-        exit 1
+        Write-Host "Build failed with exit code: $LASTEXITCODE" -ForegroundColor Red
+        exit $LASTEXITCODE
     }
-} catch {
-    Write-Host "Build process encountered an error: $($_.Exception.Message)" -ForegroundColor Red
+}
+catch {
+    Write-Host "Build failed with error: $($_.Exception.Message)" -ForegroundColor Red
     exit 1
-} 
+}
+
+Write-Host "Windows build process completed!" -ForegroundColor Green 

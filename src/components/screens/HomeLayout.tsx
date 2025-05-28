@@ -182,9 +182,9 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-8 h-8 text-white">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-8 h-8 text-white">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
                 )}
               </div>
               <div>
@@ -210,11 +210,11 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                     <div className="w-10 h-10 rounded-full bg-[#1DB954]/20 flex items-center justify-center mr-3">
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-[#1DB954]">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
+                </svg>
+              </div>
                     <div>
                       <p className="text-white font-semibold text-sm">Today</p>
-                    </div>
+            </div>
                   </div>
                   <div className="text-[#1DB954] text-2xl font-bold mb-1">2h 34m</div>
                   <p className="text-gray-400 text-xs">+12% vs yesterday</p>
@@ -225,7 +225,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                     <div className="w-10 h-10 rounded-full bg-[#1ed760]/20 flex items-center justify-center mr-3">
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-[#1ed760]">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 11-.99-3.467l2.31-.66a2.25 2.25 0 001.632-2.163zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 01-.99-3.467l2.31-.66A2.25 2.25 0 009 15.553z" />
-                      </svg>
+                    </svg>
                     </div>
                     <div>
                       <p className="text-white font-semibold text-sm">Top Genre</p>
@@ -234,7 +234,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                   <div className="text-[#1ed760] text-lg font-bold mb-1">Electronic</div>
                   <p className="text-gray-400 text-xs">35% of listening</p>
                 </div>
-              </div>
+            </div>
             ) : (
               <button 
                 onClick={connect}
@@ -262,7 +262,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
               <div className="mb-4">
                 <h3 className="text-white font-semibold text-lg mb-2">🎵 Musical Age Estimator</h3>
                 <p className="text-gray-400 text-sm">Discover your musical DNA and see how your taste compares to your actual age</p>
-              </div>
+                </div>
               <MusicalAgeEstimator />
             </motion.section>
           )}
@@ -284,7 +284,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                   View All
                 </button>
               </div>
-              
+
               {dataLoading ? (
                 <div className="space-y-3">
                   {[...Array(3)].map((_, i) => (
@@ -338,8 +338,8 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                   <div className="flex items-center justify-between mb-4">
                     <h4 className="text-white font-semibold">Top Tracks</h4>
                     <span className="text-[#1DB954] text-xs">This month</span>
-                  </div>
-                  
+              </div>
+
                   {dataLoading ? (
                     <div className="space-y-2">
                       {[...Array(3)].map((_, i) => (
@@ -403,7 +403,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                           </div>
                         </div>
                       ))}
-                    </div>
+                </div>
                   )}
                 </div>
               </div>
@@ -461,7 +461,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 text-[#1AA34A]">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M16 4v10l-4-4-4 4V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2z" />
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18h.01M10 18h.01M14 18h.01M18 18h.01M6 14h12v6H6z" />
-                    </svg>
+                  </svg>
                   </div>
                   <span className="text-white font-semibold text-sm">Full Stats</span>
                   <span className="text-[#1AA34A]/80 text-xs mt-1">Complete data</span>
@@ -475,7 +475,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
 
         </div>
       </div>
-
+      
       {/* User Profile Modal */}
       {showUserProfile && (
         <UserProfile onClose={handleCloseUserProfile} />

@@ -50,8 +50,8 @@ export default function BottomNav({ activeTab, onTabClick }: BottomNavProps) {
           }`}
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-            <path d="M16 4v10l-4-4-4 4V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2z" />
-            <path d="M6 18h.01M10 18h.01M14 18h.01M18 18h.01M6 14h12v6H6z" />
+            <circle cx="11" cy="11" r="8" />
+            <path d="M21 21l-4.35-4.35" />
           </svg>
         </button>
       </nav>

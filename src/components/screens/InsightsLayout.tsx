@@ -213,9 +213,9 @@ export default function InsightsLayout() {
                   <div key={index} className="flex items-center justify-between">
                     <div className="flex items-center">
                       <span className="text-[#1DB954] font-bold text-sm w-6">#{index + 1}</span>
-                      <div>
-                        <p className="text-white text-sm font-medium">{track.name}</p>
-                        <p className="text-secondary text-xs">{track.artist}</p>
+                    <div>
+                      <p className="text-white text-sm font-medium">{track.name}</p>
+                      <p className="text-secondary text-xs">{track.artist}</p>
                       </div>
                     </div>
                     <span className="text-[#1DB954] text-sm font-medium">{track.plays} plays</span>
@@ -312,23 +312,23 @@ export default function InsightsLayout() {
                   <div className="mb-4">
                     <p className="text-white font-medium text-lg mb-2">{insight.insight}</p>
                     <p className="text-secondary text-sm leading-relaxed">{insight.description}</p>
-                  </div>
+            </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
                       <div className="w-2 h-2 rounded-full mr-2" style={{ backgroundColor: insight.color }} />
                       <span className="text-xs text-secondary">Based on your listening patterns</span>
-                    </div>
-                    <button 
+                  </div>
+                  <button 
                       className="text-sm font-medium transition-colors"
                       style={{ color: insight.color }}
-                    >
+                  >
                       Learn More
-                    </button>
+                  </button>
                   </div>
                 </div>
               ))}
-            </div>
+              </div>
 
             {/* Generate More Insights CTA */}
             <div className="p-6 rounded-2xl bg-gradient-to-r from-[#1DB954]/20 to-[#1ED760]/20 border border-[#1DB954]/30 text-center">
