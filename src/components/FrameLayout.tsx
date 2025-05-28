@@ -29,8 +29,7 @@ export default function FrameLayout({}: FrameLayoutProps) {
   let activeTabComponent;
   if (activeTab === 'home') activeTabComponent = <HomeLayout key={`home-${tabKey}`} onTabClick={handleTabClick} />;
   else if (activeTab === 'insights') activeTabComponent = <InsightsLayout key={`insights-${tabKey}`} />;
-  else if (activeTab === 'explore') activeTabComponent = <ExploreLayout key={`explore-${tabKey}`} />;
-  else if (activeTab === 'stats') activeTabComponent = <SpotifyDataView key={`stats-${tabKey}`} />;
+  else if (activeTab === 'explore') activeTabComponent = <SpotifyDataView key={`explore-${tabKey}`} />;
 
   return (
     <div className="w-full h-screen flex flex-col bg-[#0D0D0F] text-white overflow-hidden">

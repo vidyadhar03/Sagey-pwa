@@ -126,6 +126,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
         showLeftIcon={false}
         showRightIcon={true}
         onRightClick={handleAccountClick}
+        titleAlign="left"
       />
       <div className="pt-[60px] w-full h-screen overflow-y-auto bg-gradient-to-br from-[#0A0A0A] via-[#1A1A1A] to-[#0A0A0A]">
         <div className="max-w-7xl mx-auto px-4 pb-[120px]">

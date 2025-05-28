@@ -19,6 +19,12 @@ interface TopAppBarProps {
   rightIconLabel?: string;
   onLeftClick?: () => void;
   onRightClick?: () => void;
+  titleAlign?: 'left' | 'center';
+  rightIcons?: Array<{
+    path: string;
+    label: string;
+    onClick: () => void;
+  }>;
 }
 
 export default function TopAppBar({
@@ -30,7 +36,9 @@ export default function TopAppBar({
   leftIconLabel = "Back",
   rightIconLabel = "Profile",
   onLeftClick,
-  onRightClick
+  onRightClick,
+  titleAlign = 'center',
+  rightIcons = []
 }: TopAppBarProps) {
 
   const handleLeftClick = () => {
@@ -58,24 +66,42 @@ export default function TopAppBar({
     >
       <div className="w-full max-w-7xl mx-auto px-4 flex items-center justify-between">
         {/* Left Icon (Optional) */}
-        <div className="w-10 flex justify-start">
-          {showLeftIcon ? (
-            <button className="p-2" aria-label={leftIconLabel} onClick={handleLeftClick}>
+        <div className="flex items-center">
+          {showLeftIcon && (
+            <button className="p-2 mr-2" aria-label={leftIconLabel} onClick={handleLeftClick}>
               <Icon path={leftIconPath} />
             </button>
-          ) : <div />}
+          )}
+          
+          {/* Title - Left aligned when titleAlign is 'left' */}
+          {titleAlign === 'left' && (
+            <h1 className="text-xl font-medium text-white">{title}</h1>
+          )}
         </div>
 
-        {/* Title - Centered */}
-        <h1 className="text-xl font-medium text-white">{title}</h1>
+        {/* Title - Centered when titleAlign is 'center' */}
+        {titleAlign === 'center' && (
+          <h1 className="text-xl font-medium text-white">{title}</h1>
+        )}
 
-        {/* Right Icon (Optional) */}
-        <div className="w-10 flex justify-end">
-          {showRightIcon ? (
+        {/* Right Icons */}
+        <div className="flex items-center space-x-2">
+          {rightIcons.map((icon, index) => (
+            <button 
+              key={index}
+              className="p-2" 
+              aria-label={icon.label} 
+              onClick={icon.onClick}
+            >
+              <Icon path={icon.path} className="w-6 h-6" />
+            </button>
+          ))}
+          
+          {showRightIcon && (
             <button className="p-2" aria-label={rightIconLabel} onClick={handleRightClick}>
               <Icon path={rightIconPath} className="w-7 h-7" />
             </button>
-          ) : <div />}
+          )}
         </div>
       </div>
     </header>
