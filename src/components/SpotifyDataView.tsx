@@ -44,15 +44,17 @@ export default function SpotifyDataView() {
   const { connected, user, loading, connect, checkStatus } = useSpotify();
   const spotify = useSpotify();
   
+  // Set default filter to tracks and default time range to short_term (4 weeks)
   const [activeTab, setActiveTab] = useState<'tracks' | 'artists' | 'genres' | 'albums' | 'recent'>('tracks');
-  const [timeRange, setTimeRange] = useState<'short_term' | 'medium_term' | 'long_term'>('medium_term');
+  const [timeRange, setTimeRange] = useState<'short_term' | 'medium_term' | 'long_term'>('short_term');
   const [recentTracks, setRecentTracks] = useState<SpotifyTrack[]>([]);
   const [topTracks, setTopTracks] = useState<SpotifyTrack[]>([]);
   const [topArtists, setTopArtists] = useState<SpotifyArtist[]>([]);
   const [topAlbums, setTopAlbums] = useState<SpotifyAlbum[]>([]);
   const [dataLoading, setDataLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  // Set default view mode to grid
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
   const [showShareCards, setShowShareCards] = useState(false);
   const [initialLoadDone, setInitialLoadDone] = useState(false);
   const [genreRetryCount, setGenreRetryCount] = useState(0);
@@ -61,10 +63,10 @@ export default function SpotifyDataView() {
     checkStatus();
   }, []);
 
-  // Initial load when connected
+  // Initial load when connected - ensure tracks data loads first
   useEffect(() => {
     if (connected && !initialLoadDone) {
-      console.log('Initial load triggered');
+      console.log('Initial load triggered - loading tracks data');
       loadData();
       setInitialLoadDone(true);
     }
@@ -219,7 +221,8 @@ export default function SpotifyDataView() {
 
   const getContainerClasses = () => {
     if (viewMode === 'grid') {
-      return 'grid grid-cols-1 md:grid-cols-2 gap-6';
+      // Change to 2 columns for grid view
+      return 'grid grid-cols-2 gap-4';
     }
     return 'space-y-4';
   };
@@ -255,6 +258,13 @@ export default function SpotifyDataView() {
                 <>
                   <span className="text-gray-400 mx-1">•</span>
                   <span className="text-xs text-[#1DB954]">{track.popularity}% popularity</span>
+                </>
+              )}
+              {/* Add played_at time for recent tracks */}
+              {track.played_at && (
+                <>
+                  <span className="text-gray-400 mx-1">•</span>
+                  <span className="text-xs text-orange-400">{formatPlayedAt(track.played_at)}</span>
                 </>
               )}
             </div>
@@ -428,7 +438,7 @@ export default function SpotifyDataView() {
         </div>
       </div>
 
-      {/* Fixed Filter Chips - No space between top bar and filter chips */}
+      {/* Fixed Filter Chips - Remove all spacing between top bar and filter chips */}
       <div className="sticky top-[73px] z-30 bg-[#0A0A0A]/80 backdrop-blur-xl border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex gap-2 overflow-x-auto scrollbar-none pb-2">
