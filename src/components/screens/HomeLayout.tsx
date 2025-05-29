@@ -5,7 +5,9 @@ import { motion } from 'framer-motion';
 import TopAppBar from '../TopAppBar';
 import MusicalAgeEstimator from '../MusicalAgeEstimator';
 import UserProfile from '../UserProfile';
+import SpotifyDebugPanel from '../SpotifyDebugPanel';
 import { useSpotify } from '../../hooks/useSpotify';
+import { useSpotifyDebug } from '../../hooks/useSpotifyDebug';
 
 interface HomeLayoutProps {
   onTabClick?: (tab: string) => void;
@@ -13,18 +15,45 @@ interface HomeLayoutProps {
 
 export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
   const { connected, user, loading, getTopTracks, getTopArtists, getRecentTracks, connect } = useSpotify();
+  const { addLog } = useSpotifyDebug();
   const [recentTracks, setRecentTracks] = useState<any[]>([]);
   const [topTracks, setTopTracks] = useState<any[]>([]);
   const [topArtists, setTopArtists] = useState<any[]>([]);
   const [dataLoading, setDataLoading] = useState(false);
   const [spotifyError, setSpotifyError] = useState<string | null>(null);
   const [showUserProfile, setShowUserProfile] = useState(false);
+  const [showDebugPanel, setShowDebugPanel] = useState(false);
+
+  // Log HomeLayout initialization
+  useEffect(() => {
+    addLog('info', 'status', 'HomeLayout component mounted', {
+      connected,
+      hasUser: !!user,
+      loading
+    });
+  }, []); // Only run once on mount
+
+  // Log connection state changes
+  useEffect(() => {
+    addLog('info', 'status', 'Spotify connection state changed', {
+      connected,
+      hasUser: !!user,
+      loading,
+      userId: user?.id
+    });
+  }, [connected, user, loading]);
 
   useEffect(() => {
     // Check for Spotify authentication errors in URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     const spotifyStatus = urlParams.get('spotify');
     const errorReason = urlParams.get('reason');
+
+    addLog('info', 'redirect', 'HomeLayout checking URL parameters', {
+      spotifyStatus,
+      errorReason,
+      fullUrl: window.location.href
+    });
 
     if (spotifyStatus === 'error') {
       let errorMessage = 'Failed to connect to Spotify. Please try again.';
@@ -53,18 +82,31 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
           break;
       }
       
+      addLog('error', 'auth', `Spotify authentication error: ${errorReason}`, {
+        errorMessage,
+        errorReason,
+        url: window.location.href
+      });
+      
       setSpotifyError(errorMessage);
+      
+      // Auto-show debug panel on error for easier troubleshooting
+      setShowDebugPanel(true);
       
       // Clear the error parameters from URL after showing the error
       const newUrl = window.location.pathname;
       window.history.replaceState({}, '', newUrl);
     } else if (spotifyStatus === 'connected') {
+      addLog('success', 'auth', 'Spotify authentication successful', {
+        url: window.location.href
+      });
+      
       setSpotifyError(null);
       // Clear the success parameter from URL
       const newUrl = window.location.pathname;
       window.history.replaceState({}, '', newUrl);
     }
-  }, []);
+  }, [addLog]);
 
   useEffect(() => {
     if (connected && user) {
@@ -479,6 +521,11 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
       {/* User Profile Modal */}
       {showUserProfile && (
         <UserProfile onClose={handleCloseUserProfile} />
+      )}
+      
+      {/* Spotify Debug Panel - Show on errors or manually */}
+      {(showDebugPanel || spotifyError) && (
+        <SpotifyDebugPanel />
       )}
     </>
   );
