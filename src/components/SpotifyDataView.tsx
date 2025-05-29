@@ -94,67 +94,6 @@ export default function SpotifyDataView() {
   const [topArtists, setTopArtists] = useState<SpotifyArtist[]>([]);
   const [topAlbums, setTopAlbums] = useState<SpotifyAlbum[]>([]);
 
-  // Optimized data loading functions with caching
-  const loadTracksData = useCallback(async (range: 'short_term' | 'medium_term' | 'long_term') => {
-    const cacheKey = range as keyof DataCache['tracks'];
-    
-    // Return cached data if available
-    if (dataCache.current.tracks[cacheKey]) {
-      console.log(`✅ Using cached tracks data for ${range}`);
-      return dataCache.current.tracks[cacheKey];
-    }
-
-    console.log(`🔄 Loading fresh tracks data for ${range}`);
-    const data = await getTopTracks(range);
-    
-    // Cache the result
-    dataCache.current.tracks[cacheKey] = data || [];
-    return data || [];
-  }, [getTopTracks]);
-
-  const loadArtistsData = useCallback(async (range: 'short_term' | 'medium_term' | 'long_term') => {
-    const cacheKey = range as keyof DataCache['artists'];
-    
-    if (dataCache.current.artists[cacheKey]) {
-      console.log(`✅ Using cached artists data for ${range}`);
-      return dataCache.current.artists[cacheKey];
-    }
-
-    console.log(`🔄 Loading fresh artists data for ${range}`);
-    const data = await getTopArtists(range);
-    
-    dataCache.current.artists[cacheKey] = data || [];
-    return data || [];
-  }, [getTopArtists]);
-
-  const loadAlbumsData = useCallback(async (range: 'short_term' | 'medium_term' | 'long_term') => {
-    const cacheKey = range as keyof DataCache['albums'];
-    
-    if (dataCache.current.albums[cacheKey]) {
-      console.log(`✅ Using cached albums data for ${range}`);
-      return dataCache.current.albums[cacheKey];
-    }
-
-    console.log(`🔄 Loading fresh albums data for ${range}`);
-    const data = await getTopAlbums(range);
-    
-    dataCache.current.albums[cacheKey] = data || [];
-    return data || [];
-  }, [getTopAlbums]);
-
-  const loadRecentData = useCallback(async () => {
-    if (dataCache.current.recent) {
-      console.log('✅ Using cached recent tracks data');
-      return dataCache.current.recent;
-    }
-
-    console.log('🔄 Loading fresh recent tracks data');
-    const data = await getRecentTracks();
-    
-    dataCache.current.recent = data || [];
-    return data || [];
-  }, [getRecentTracks]);
-
   // Initial data load - only once when connected
   const initializeData = useCallback(async () => {
     // Prevent concurrent initialization
@@ -169,9 +108,13 @@ export default function SpotifyDataView() {
     setError(null);
     
     try {
-      // Load default tab data (tracks, short_term)
-      const tracksData = await loadTracksData('short_term');
-      setTopTracks(tracksData);
+      // Load default tab data (tracks, short_term) directly without cache check
+      console.log('🔄 Loading fresh tracks data for short_term (initial)');
+      const tracksData = await getTopTracks('short_term');
+      
+      // Cache and set the result
+      dataCache.current.tracks.short_term = tracksData || [];
+      setTopTracks(tracksData || []);
       
       console.log('✅ SpotifyDataView initialization complete');
       setIsInitialized(true);
@@ -182,120 +125,159 @@ export default function SpotifyDataView() {
       setDataLoading(false);
       loadingStates.current.initializing = false;
     }
-  }, [loadTracksData]);
+  }, [getTopTracks]); // Only depend on the direct API call
 
-  // Optimized data loading for tab/time range changes
-  const loadDataForCurrentSelection = useCallback(async () => {
-    const loadingKey = `${activeTab}-${timeRange}`;
+  // Load data when tab/time range changes (after initialization)
+  useEffect(() => {
+    if (!connected) {
+      console.log('⚠️ Not connected, skipping data load');
+      return;
+    }
     
-    // Prevent concurrent loading of the same data
-    if (loadingStates.current.loadingTabs.has(loadingKey)) {
-      console.log(`⚠️ Already loading ${loadingKey}, skipping`);
+    if (!isInitialized) {
+      console.log('⚠️ Not initialized, skipping data load');
       return;
     }
 
-    console.log(`📊 Loading data for ${activeTab} (${timeRange})`);
-    loadingStates.current.loadingTabs.add(loadingKey);
-    setDataLoading(true);
-    setError(null);
-    
-    try {
-      let data;
-      
+    // Check if we already have the data cached
+    const needsLoading = (() => {
       switch (activeTab) {
         case 'tracks':
-          data = await loadTracksData(timeRange);
-          setTopTracks(data);
-          break;
-          
+          return !dataCache.current.tracks[timeRange as keyof DataCache['tracks']];
         case 'artists':
-          data = await loadArtistsData(timeRange);
-          setTopArtists(data);
-          break;
-          
-        case 'albums':
-          data = await loadAlbumsData(timeRange);
-          setTopAlbums(data);
-          break;
-          
         case 'genres':
-          // For genres, we need artists data
-          data = await loadArtistsData(timeRange);
-          setTopArtists(data);
-          break;
-          
+          return !dataCache.current.artists[timeRange as keyof DataCache['artists']];
+        case 'albums':
+          return !dataCache.current.albums[timeRange as keyof DataCache['albums']];
         case 'recent':
-          data = await loadRecentData();
-          setRecentTracks(data);
+          return !dataCache.current.recent;
+        default:
+          return true;
+      }
+    })();
+
+    if (needsLoading) {
+      console.log(`📊 Loading fresh data for ${activeTab} (${timeRange})`);
+      // Call the function directly instead of relying on dependency
+      const loadData = async () => {
+        const loadingKey = `${activeTab}-${timeRange}`;
+        
+        // Prevent concurrent loading of the same data
+        if (loadingStates.current.loadingTabs.has(loadingKey)) {
+          console.log(`⚠️ Already loading ${loadingKey}, skipping`);
+          return;
+        }
+
+        console.log(`📊 Loading data for ${activeTab} (${timeRange})`);
+        loadingStates.current.loadingTabs.add(loadingKey);
+        setDataLoading(true);
+        setError(null);
+        
+        try {
+          let data;
+          
+          switch (activeTab) {
+            case 'tracks': {
+              const cacheKey = timeRange as keyof DataCache['tracks'];
+              console.log(`🔄 Loading fresh tracks data for ${timeRange}`);
+              data = await getTopTracks(timeRange);
+              dataCache.current.tracks[cacheKey] = data || [];
+              setTopTracks(data || []);
+              break;
+            }
+              
+            case 'artists': {
+              const cacheKey = timeRange as keyof DataCache['artists'];
+              console.log(`🔄 Loading fresh artists data for ${timeRange}`);
+              data = await getTopArtists(timeRange);
+              dataCache.current.artists[cacheKey] = data || [];
+              setTopArtists(data || []);
+              break;
+            }
+              
+            case 'albums': {
+              const cacheKey = timeRange as keyof DataCache['albums'];
+              console.log(`🔄 Loading fresh albums data for ${timeRange}`);
+              data = await getTopAlbums(timeRange);
+              dataCache.current.albums[cacheKey] = data || [];
+              setTopAlbums(data || []);
+              break;
+            }
+              
+            case 'genres': {
+              // For genres, we need artists data
+              const cacheKey = timeRange as keyof DataCache['artists'];
+              console.log(`🔄 Loading fresh artists data for ${timeRange} (genres)`);
+              data = await getTopArtists(timeRange);
+              dataCache.current.artists[cacheKey] = data || [];
+              setTopArtists(data || []);
+              break;
+            }
+              
+            case 'recent': {
+              console.log('🔄 Loading fresh recent tracks data');
+              data = await getRecentTracks();
+              dataCache.current.recent = data || [];
+              setRecentTracks(data || []);
+              break;
+            }
+          }
+          
+          console.log(`✅ ${activeTab} data loaded successfully (${data?.length || 0} items)`);
+        } catch (err) {
+          console.error(`❌ Failed to load ${activeTab} data:`, err);
+          setError(`Failed to load ${activeTab} data. Please try again.`);
+        } finally {
+          setDataLoading(false);
+          loadingStates.current.loadingTabs.delete(loadingKey);
+        }
+      };
+      
+      loadData();
+    } else {
+      // Update display state with cached data
+      console.log(`✅ Using cached data for ${activeTab} (${timeRange})`);
+      switch (activeTab) {
+        case 'tracks':
+          setTopTracks(dataCache.current.tracks[timeRange as keyof DataCache['tracks']] || []);
+          break;
+        case 'artists':
+        case 'genres':
+          setTopArtists(dataCache.current.artists[timeRange as keyof DataCache['artists']] || []);
+          break;
+        case 'albums':
+          setTopAlbums(dataCache.current.albums[timeRange as keyof DataCache['albums']] || []);
+          break;
+        case 'recent':
+          setRecentTracks(dataCache.current.recent || []);
           break;
       }
-      
-      console.log(`✅ ${activeTab} data loaded successfully (${data?.length || 0} items)`);
-    } catch (err) {
-      console.error(`❌ Failed to load ${activeTab} data:`, err);
-      setError(`Failed to load ${activeTab} data. Please try again.`);
-    } finally {
-      setDataLoading(false);
-      loadingStates.current.loadingTabs.delete(loadingKey);
     }
-  }, [activeTab, timeRange, loadTracksData, loadArtistsData, loadAlbumsData, loadRecentData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connected, isInitialized, activeTab, timeRange]); // Remove all function dependencies
 
   // Check connection status on mount only
   useEffect(() => {
     console.log('🔍 Checking Spotify connection status...');
     checkStatus();
-  }, [checkStatus]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Intentionally empty dependency array
 
   // Initialize data when connected (only once)
   useEffect(() => {
-    if (connected && !isInitialized && !loadingStates.current.initializing) {
-      initializeData();
-    }
-  }, [connected, isInitialized, initializeData]);
-
-  // Load data when tab/time range changes (after initialization)
-  useEffect(() => {
-    if (connected && isInitialized) {
-      // Check if we already have the data cached
-      const needsLoading = (() => {
-        switch (activeTab) {
-          case 'tracks':
-            return !dataCache.current.tracks[timeRange as keyof DataCache['tracks']];
-          case 'artists':
-          case 'genres':
-            return !dataCache.current.artists[timeRange as keyof DataCache['artists']];
-          case 'albums':
-            return !dataCache.current.albums[timeRange as keyof DataCache['albums']];
-          case 'recent':
-            return !dataCache.current.recent;
-          default:
-            return true;
-        }
-      })();
-
-      if (needsLoading) {
-        loadDataForCurrentSelection();
+    console.log('🔄 Connection state change:', { connected, isInitialized, initializing: loadingStates.current.initializing });
+    
+    if (connected && !isInitialized) {
+      // Prevent multiple initialization attempts
+      if (!loadingStates.current.initializing) {
+        console.log('🚀 Starting initialization...');
+        initializeData();
       } else {
-        // Update display state with cached data
-        console.log(`✅ Using cached data for ${activeTab} (${timeRange})`);
-        switch (activeTab) {
-          case 'tracks':
-            setTopTracks(dataCache.current.tracks[timeRange as keyof DataCache['tracks']] || []);
-            break;
-          case 'artists':
-          case 'genres':
-            setTopArtists(dataCache.current.artists[timeRange as keyof DataCache['artists']] || []);
-            break;
-          case 'albums':
-            setTopAlbums(dataCache.current.albums[timeRange as keyof DataCache['albums']] || []);
-            break;
-          case 'recent':
-            setRecentTracks(dataCache.current.recent || []);
-            break;
-        }
+        console.log('⚠️ Initialization already in progress, waiting...');
       }
     }
-  }, [connected, isInitialized, activeTab, timeRange, loadDataForCurrentSelection]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connected, isInitialized]); // Remove initializeData dependency to prevent loops
 
   const formatDuration = (ms: number) => {
     const minutes = Math.floor(ms / 60000);
@@ -342,7 +324,7 @@ export default function SpotifyDataView() {
         const timeRanges: ('short_term' | 'medium_term' | 'long_term')[] = ['long_term', 'medium_term', 'short_term'];
         
         for (const range of timeRanges) {
-          const data = await loadArtistsData(range);
+          const data = await getTopArtists(range);
           if (data && data.length > 0) {
             setTopArtists(data);
             setTimeRange(range);
@@ -356,7 +338,7 @@ export default function SpotifyDataView() {
         setDataLoading(false);
       }
     }
-  }, [genreRetryCount, loadArtistsData]);
+  }, [genreRetryCount, getTopArtists]);
 
   const getTimeRangeLabel = (range: string) => {
     switch (range) {
