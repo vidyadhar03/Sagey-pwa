@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSpotify } from '../hooks/useSpotify';
 import ShareableCards from './ShareableCards';
 import TopAppBar from './TopAppBar';
@@ -41,109 +41,261 @@ interface SpotifyAlbum {
   track_count: number;
 }
 
+// Data cache interface for better organization
+interface DataCache {
+  tracks: {
+    short_term?: SpotifyTrack[];
+    medium_term?: SpotifyTrack[];
+    long_term?: SpotifyTrack[];
+  };
+  artists: {
+    short_term?: SpotifyArtist[];
+    medium_term?: SpotifyArtist[];
+    long_term?: SpotifyArtist[];
+  };
+  albums: {
+    short_term?: SpotifyAlbum[];
+    medium_term?: SpotifyAlbum[];
+    long_term?: SpotifyAlbum[];
+  };
+  recent?: SpotifyTrack[];
+}
+
 export default function SpotifyDataView() {
   const { connected, user, loading, connect, checkStatus, getTopTracks, getTopArtists, getTopAlbums, getRecentTracks } = useSpotify();
   
-  // Set default filter to tracks and default time range to short_term (4 weeks)
+  // Core state management
   const [activeTab, setActiveTab] = useState<'tracks' | 'artists' | 'genres' | 'albums' | 'recent'>('tracks');
   const [timeRange, setTimeRange] = useState<'short_term' | 'medium_term' | 'long_term'>('short_term');
+  const [dataLoading, setDataLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [showShareCards, setShowShareCards] = useState(false);
+  const [genreRetryCount, setGenreRetryCount] = useState(0);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Data cache using useRef for persistence
+  const dataCache = useRef<DataCache>({
+    tracks: {},
+    artists: {},
+    albums: {},
+    recent: undefined
+  });
+
+  // Loading state management using useRef
+  const loadingStates = useRef({
+    initializing: false,
+    loadingTabs: new Set<string>()
+  });
+
+  // Current data state - computed from cache
   const [recentTracks, setRecentTracks] = useState<SpotifyTrack[]>([]);
   const [topTracks, setTopTracks] = useState<SpotifyTrack[]>([]);
   const [topArtists, setTopArtists] = useState<SpotifyArtist[]>([]);
   const [topAlbums, setTopAlbums] = useState<SpotifyAlbum[]>([]);
-  const [dataLoading, setDataLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  // Set default view mode to list (changed from grid)
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
-  const [showShareCards, setShowShareCards] = useState(false);
-  const [genreRetryCount, setGenreRetryCount] = useState(0);
-  
-  // New simplified data loading state
-  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Check connection status on mount
-  useEffect(() => {
-    checkStatus();
-  }, []);
-
-  // NEW ARCHITECTURE: Single effect for data loading when connected
-  useEffect(() => {
-    if (connected && !isInitialized) {
-      console.log('🚀 Initializing data load for connected user');
-      initializeData();
+  // Optimized data loading functions with caching
+  const loadTracksData = useCallback(async (range: 'short_term' | 'medium_term' | 'long_term') => {
+    const cacheKey = range as keyof DataCache['tracks'];
+    
+    // Return cached data if available
+    if (dataCache.current.tracks[cacheKey]) {
+      console.log(`✅ Using cached tracks data for ${range}`);
+      return dataCache.current.tracks[cacheKey];
     }
-  }, [connected]);
 
-  // Load data when tab or time range changes (only after initialization)
-  useEffect(() => {
-    if (connected && isInitialized) {
-      console.log('🔄 Loading data for tab/time change:', { activeTab, timeRange });
-      loadDataForCurrentTab();
+    console.log(`🔄 Loading fresh tracks data for ${range}`);
+    const data = await getTopTracks(range);
+    
+    // Cache the result
+    dataCache.current.tracks[cacheKey] = data || [];
+    return data || [];
+  }, [getTopTracks]);
+
+  const loadArtistsData = useCallback(async (range: 'short_term' | 'medium_term' | 'long_term') => {
+    const cacheKey = range as keyof DataCache['artists'];
+    
+    if (dataCache.current.artists[cacheKey]) {
+      console.log(`✅ Using cached artists data for ${range}`);
+      return dataCache.current.artists[cacheKey];
     }
-  }, [activeTab, timeRange, connected, isInitialized]);
 
-  const initializeData = async () => {
-    console.log('🎯 Starting initial data load...');
+    console.log(`🔄 Loading fresh artists data for ${range}`);
+    const data = await getTopArtists(range);
+    
+    dataCache.current.artists[cacheKey] = data || [];
+    return data || [];
+  }, [getTopArtists]);
+
+  const loadAlbumsData = useCallback(async (range: 'short_term' | 'medium_term' | 'long_term') => {
+    const cacheKey = range as keyof DataCache['albums'];
+    
+    if (dataCache.current.albums[cacheKey]) {
+      console.log(`✅ Using cached albums data for ${range}`);
+      return dataCache.current.albums[cacheKey];
+    }
+
+    console.log(`🔄 Loading fresh albums data for ${range}`);
+    const data = await getTopAlbums(range);
+    
+    dataCache.current.albums[cacheKey] = data || [];
+    return data || [];
+  }, [getTopAlbums]);
+
+  const loadRecentData = useCallback(async () => {
+    if (dataCache.current.recent) {
+      console.log('✅ Using cached recent tracks data');
+      return dataCache.current.recent;
+    }
+
+    console.log('🔄 Loading fresh recent tracks data');
+    const data = await getRecentTracks();
+    
+    dataCache.current.recent = data || [];
+    return data || [];
+  }, [getRecentTracks]);
+
+  // Initial data load - only once when connected
+  const initializeData = useCallback(async () => {
+    // Prevent concurrent initialization
+    if (loadingStates.current.initializing) {
+      console.log('⚠️ Initialization already in progress, skipping');
+      return;
+    }
+
+    console.log('🚀 Starting SpotifyDataView initialization...');
+    loadingStates.current.initializing = true;
     setDataLoading(true);
     setError(null);
     
     try {
-      // Load tracks data first (default tab)
-      const tracksData = await getTopTracks('short_term');
-      console.log('✅ Initial tracks loaded:', tracksData?.length || 0);
-      setTopTracks(tracksData || []);
+      // Load default tab data (tracks, short_term)
+      const tracksData = await loadTracksData('short_term');
+      setTopTracks(tracksData);
+      
+      console.log('✅ SpotifyDataView initialization complete');
       setIsInitialized(true);
     } catch (err) {
-      console.error('❌ Initial data load failed:', err);
+      console.error('❌ SpotifyDataView initialization failed:', err);
       setError('Failed to load initial data. Please try again.');
     } finally {
       setDataLoading(false);
+      loadingStates.current.initializing = false;
     }
-  };
+  }, [loadTracksData]);
 
-  const loadDataForCurrentTab = async () => {
+  // Optimized data loading for tab/time range changes
+  const loadDataForCurrentSelection = useCallback(async () => {
+    const loadingKey = `${activeTab}-${timeRange}`;
+    
+    // Prevent concurrent loading of the same data
+    if (loadingStates.current.loadingTabs.has(loadingKey)) {
+      console.log(`⚠️ Already loading ${loadingKey}, skipping`);
+      return;
+    }
+
+    console.log(`📊 Loading data for ${activeTab} (${timeRange})`);
+    loadingStates.current.loadingTabs.add(loadingKey);
     setDataLoading(true);
     setError(null);
     
     try {
-      console.log(`📊 Loading ${activeTab} data for ${timeRange}`);
+      let data;
       
       switch (activeTab) {
         case 'tracks':
-          const tracksData = await getTopTracks(timeRange);
-          setTopTracks(tracksData || []);
+          data = await loadTracksData(timeRange);
+          setTopTracks(data);
           break;
           
         case 'artists':
-          const artistsData = await getTopArtists(timeRange);
-          setTopArtists(artistsData || []);
+          data = await loadArtistsData(timeRange);
+          setTopArtists(data);
           break;
           
         case 'albums':
-          const albumsData = await getTopAlbums(timeRange);
-          setTopAlbums(albumsData || []);
+          data = await loadAlbumsData(timeRange);
+          setTopAlbums(data);
           break;
           
         case 'genres':
           // For genres, we need artists data
-          const genreArtistsData = await getTopArtists(timeRange);
-          setTopArtists(genreArtistsData || []);
+          data = await loadArtistsData(timeRange);
+          setTopArtists(data);
           break;
           
         case 'recent':
-          const recentData = await getRecentTracks();
-          setRecentTracks(recentData || []);
+          data = await loadRecentData();
+          setRecentTracks(data);
           break;
       }
       
-      console.log(`✅ ${activeTab} data loaded successfully`);
+      console.log(`✅ ${activeTab} data loaded successfully (${data?.length || 0} items)`);
     } catch (err) {
       console.error(`❌ Failed to load ${activeTab} data:`, err);
       setError(`Failed to load ${activeTab} data. Please try again.`);
     } finally {
       setDataLoading(false);
+      loadingStates.current.loadingTabs.delete(loadingKey);
     }
-  };
+  }, [activeTab, timeRange, loadTracksData, loadArtistsData, loadAlbumsData, loadRecentData]);
+
+  // Check connection status on mount only
+  useEffect(() => {
+    console.log('🔍 Checking Spotify connection status...');
+    checkStatus();
+  }, [checkStatus]);
+
+  // Initialize data when connected (only once)
+  useEffect(() => {
+    if (connected && !isInitialized && !loadingStates.current.initializing) {
+      initializeData();
+    }
+  }, [connected, isInitialized, initializeData]);
+
+  // Load data when tab/time range changes (after initialization)
+  useEffect(() => {
+    if (connected && isInitialized) {
+      // Check if we already have the data cached
+      const needsLoading = (() => {
+        switch (activeTab) {
+          case 'tracks':
+            return !dataCache.current.tracks[timeRange as keyof DataCache['tracks']];
+          case 'artists':
+          case 'genres':
+            return !dataCache.current.artists[timeRange as keyof DataCache['artists']];
+          case 'albums':
+            return !dataCache.current.albums[timeRange as keyof DataCache['albums']];
+          case 'recent':
+            return !dataCache.current.recent;
+          default:
+            return true;
+        }
+      })();
+
+      if (needsLoading) {
+        loadDataForCurrentSelection();
+      } else {
+        // Update display state with cached data
+        console.log(`✅ Using cached data for ${activeTab} (${timeRange})`);
+        switch (activeTab) {
+          case 'tracks':
+            setTopTracks(dataCache.current.tracks[timeRange as keyof DataCache['tracks']] || []);
+            break;
+          case 'artists':
+          case 'genres':
+            setTopArtists(dataCache.current.artists[timeRange as keyof DataCache['artists']] || []);
+            break;
+          case 'albums':
+            setTopAlbums(dataCache.current.albums[timeRange as keyof DataCache['albums']] || []);
+            break;
+          case 'recent':
+            setRecentTracks(dataCache.current.recent || []);
+            break;
+        }
+      }
+    }
+  }, [connected, isInitialized, activeTab, timeRange, loadDataForCurrentSelection]);
 
   const formatDuration = (ms: number) => {
     const minutes = Math.floor(ms / 60000);
@@ -160,7 +312,7 @@ export default function SpotifyDataView() {
     return num.toString();
   };
 
-  const getTopGenres = () => {
+  const getTopGenres = useCallback(() => {
     if (!topArtists || !Array.isArray(topArtists)) return [];
     
     const genreCounts: { [key: string]: number } = {};
@@ -177,20 +329,20 @@ export default function SpotifyDataView() {
       .map(([genre, count]) => ({ genre, count }))
       .sort((a, b) => Number(b.count) - Number(a.count))
       .slice(0, 20);
-  };
+  }, [topArtists]);
 
-  const retryGenreData = async () => {
+  const retryGenreData = useCallback(async () => {
     if (genreRetryCount < 3) {
       setGenreRetryCount(prev => prev + 1);
       setDataLoading(true);
       setError(null);
       
       try {
-        // Try different time ranges to get genre data
+        // Try different time ranges to get genre data using our optimized loading
         const timeRanges: ('short_term' | 'medium_term' | 'long_term')[] = ['long_term', 'medium_term', 'short_term'];
         
         for (const range of timeRanges) {
-          const data = await getTopArtists(range);
+          const data = await loadArtistsData(range);
           if (data && data.length > 0) {
             setTopArtists(data);
             setTimeRange(range);
@@ -204,7 +356,7 @@ export default function SpotifyDataView() {
         setDataLoading(false);
       }
     }
-  };
+  }, [genreRetryCount, loadArtistsData]);
 
   const getTimeRangeLabel = (range: string) => {
     switch (range) {
@@ -232,13 +384,13 @@ export default function SpotifyDataView() {
     }
   };
 
-  const toggleViewMode = () => {
+  const toggleViewMode = useCallback(() => {
     setViewMode(viewMode === 'list' ? 'grid' : 'list');
-  };
+  }, [viewMode]);
 
-  const handleShare = () => {
+  const handleShare = useCallback(() => {
     setShowShareCards(true);
-  };
+  }, []);
 
   const getViewModeIcon = () => {
     if (viewMode === 'list') {
@@ -263,7 +415,7 @@ export default function SpotifyDataView() {
     return 'p-4 rounded-2xl bg-[#2A2A2D] border border-white/10 hover:border-[#1DB954]/30 transition-all';
   };
 
-  const renderTrackItem = (track: any, index: number) => {
+  const renderTrackItem = useCallback((track: any, index: number) => {
     const isGrid = viewMode === 'grid';
     
     return (
@@ -331,9 +483,9 @@ export default function SpotifyDataView() {
         )}
       </div>
     );
-  };
+  }, [viewMode, formatDuration, formatPlayedAt, getItemClasses]);
 
-  const renderArtistItem = (artist: any, index: number) => {
+  const renderArtistItem = useCallback((artist: any, index: number) => {
     const isGrid = viewMode === 'grid';
     
     return (
@@ -406,7 +558,7 @@ export default function SpotifyDataView() {
         )}
       </div>
     );
-  };
+  }, [viewMode, formatNumber, getItemClasses]);
 
   if (loading) {
     return (
