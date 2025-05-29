@@ -6,10 +6,10 @@ export async function GET(request: NextRequest) {
   console.log('Request method:', request.method);
   
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const code = searchParams.get('code');
-    const state = searchParams.get('state');
-    const error = searchParams.get('error');
+  const searchParams = request.nextUrl.searchParams;
+  const code = searchParams.get('code');
+  const state = searchParams.get('state');
+  const error = searchParams.get('error');
 
     console.log('URL Search Params:', {
       code: code ? `${code.substring(0, 10)}...` : null,
@@ -18,16 +18,16 @@ export async function GET(request: NextRequest) {
       allParams: Object.fromEntries(searchParams.entries())
     });
 
-    // Check for authorization errors
-    if (error) {
+  // Check for authorization errors
+  if (error) {
       console.error('❌ Spotify authorization error:', error);
       return NextResponse.redirect(new URL('/?spotify=error&reason=auth_error', request.url));
-    }
+  }
 
-    if (!code || !state) {
+  if (!code || !state) {
       console.error('❌ Missing required parameters:', { hasCode: !!code, hasState: !!state });
       return NextResponse.redirect(new URL('/?spotify=error&reason=missing_params', request.url));
-    }
+  }
 
     // Check environment variables
     console.log('🔍 Checking environment variables...');
@@ -45,17 +45,17 @@ export async function GET(request: NextRequest) {
     const allCookies = request.cookies.getAll();
     console.log('All cookies:', allCookies.map(c => ({ name: c.name, hasValue: !!c.value })));
     
-    const storedState = request.cookies.get('spotify_auth_state')?.value;
+  const storedState = request.cookies.get('spotify_auth_state')?.value;
     console.log('State verification:', { 
       receivedState: state ? `${state.substring(0, 10)}...` : null,
       storedState: storedState ? `${storedState.substring(0, 10)}...` : null,
       match: state === storedState
     });
     
-    if (state !== storedState) {
+  if (state !== storedState) {
       console.error('❌ State mismatch in Spotify callback');
       return NextResponse.redirect(new URL('/?spotify=error&reason=state_mismatch', request.url));
-    }
+  }
 
     // Environment detection
     console.log('🌍 Environment detection...');
@@ -213,7 +213,7 @@ export async function GET(request: NextRequest) {
     // Set refresh token cookie
     if (tokenData.refresh_token) {
       try {
-        response.cookies.set('spotify_refresh_token', tokenData.refresh_token, {
+    response.cookies.set('spotify_refresh_token', tokenData.refresh_token, {
           ...cookieOptions,
           maxAge: 60 * 60 * 24 * 30 // 30 days
         });
@@ -226,9 +226,9 @@ export async function GET(request: NextRequest) {
     // Set user info cookie
     try {
       const userInfo = JSON.stringify({
-        user_id: profileData.id,
-        display_name: profileData.display_name,
-        email: profileData.email
+      user_id: profileData.id,
+      display_name: profileData.display_name,
+      email: profileData.email
       });
       response.cookies.set('spotify_user_info', userInfo, {
         httpOnly: false,
@@ -236,7 +236,7 @@ export async function GET(request: NextRequest) {
         maxAge: 60 * 60 * 24 * 30,
         sameSite: 'lax',
         path: '/'
-      });
+    });
       console.log('✅ User info cookie set');
     } catch (cookieError) {
       console.error('❌ Failed to set user info cookie:', cookieError);

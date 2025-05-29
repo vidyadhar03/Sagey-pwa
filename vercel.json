@@ -1,26 +1,32 @@
 {
   "framework": "nextjs",
-  "buildCommand": "npm run build:standard",
-  "installCommand": "npm ci",
+  "buildCommand": "npm run build",
+  "installCommand": "npm ci --legacy-peer-deps",
+  "outputDirectory": ".next/standalone",
   "env": {
     "NEXT_TELEMETRY_DISABLED": "1",
     "DISABLE_OPENCOLLECTIVE": "1",
-    "NODE_OPTIONS": "--max-old-space-size=4096",
-    "CI": "true"
+    "NODE_OPTIONS": "--max-old-space-size=8192 --no-warnings",
+    "CI": "true",
+    "VERCEL": "1"
   },
   "build": {
     "env": {
       "NEXT_TELEMETRY_DISABLED": "1",
       "DISABLE_OPENCOLLECTIVE": "1",
-      "NODE_OPTIONS": "--max-old-space-size=4096"
+      "NODE_OPTIONS": "--max-old-space-size=8192 --no-warnings",
+      "CI": "true",
+      "VERCEL": "1"
     }
   },
   "functions": {
     "app/api/**/*.ts": {
-      "maxDuration": 30
+      "maxDuration": 30,
+      "memory": 1024
     },
     "app/api/**/*.js": {
-      "maxDuration": 30
+      "maxDuration": 30,
+      "memory": 1024
     }
   },
   "regions": ["iad1"],
@@ -39,6 +45,10 @@
         {
           "key": "Access-Control-Allow-Headers",
           "value": "Content-Type, Authorization"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
         }
       ]
     },
@@ -66,6 +76,19 @@
           "value": "camera=(), microphone=(), geolocation=()"
         }
       ]
+    },
+    {
+      "source": "/manifest.json",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/manifest+json"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
     }
   ],
   "rewrites": [
@@ -73,5 +96,7 @@
       "source": "/spotify-data",
       "destination": "/"
     }
-  ]
+  ],
+  "cleanUrls": true,
+  "trailingSlash": false
 } 

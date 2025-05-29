@@ -81,7 +81,7 @@ export default function TopAppBar({
 
         {/* Title - Centered when titleAlign is 'center' */}
         {titleAlign === 'center' && (
-          <h1 className="text-xl font-medium text-white">{title}</h1>
+        <h1 className="text-xl font-medium text-white">{title}</h1>
         )}
 
         {/* Right Icons */}

@@ -25,19 +25,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/?spotify=error&reason=config_error', request.url));
     }
 
-    const scopes = [
-      'user-read-email',
-      'user-read-recently-played',
-      'user-top-read',
-      'user-library-read',
-      'playlist-read-private',
-      'user-read-currently-playing'
-    ].join(' ');
+  const scopes = [
+    'user-read-email',
+    'user-read-recently-played',
+    'user-top-read',
+    'user-library-read',
+    'playlist-read-private',
+    'user-read-currently-playing'
+  ].join(' ');
 
     console.log('📋 Spotify scopes:', scopes);
 
-    // Generate a random state for security
-    const state = Math.random().toString(36).substring(2, 15);
+  // Generate a random state for security
+  const state = Math.random().toString(36).substring(2, 15);
     console.log('🔐 Generated state:', `${state.substring(0, 10)}...`);
     
     // Determine redirect URI based on environment
@@ -52,34 +52,34 @@ export async function GET(request: NextRequest) {
       redirectUri,
       explicitRedirectUri: process.env.SPOTIFY_REDIRECT_URI
     });
-    
-    const params = new URLSearchParams({
+  
+  const params = new URLSearchParams({
       client_id: process.env.SPOTIFY_CLIENT_ID!,
-      response_type: 'code',
+    response_type: 'code',
       redirect_uri: redirectUri,
-      scope: scopes,
-      state: state,
-      show_dialog: 'true' // Force user to see consent screen
-    });
+    scope: scopes,
+    state: state,
+    show_dialog: 'true' // Force user to see consent screen
+  });
 
-    const authUrl = `https://accounts.spotify.com/authorize?${params.toString()}`;
+  const authUrl = `https://accounts.spotify.com/authorize?${params.toString()}`;
     
     console.log('🔗 Spotify authorization URL generated');
     console.log('Auth URL length:', authUrl.length);
     console.log('Auth URL params:', Object.fromEntries(params.entries()));
-    
-    // Store state in cookie for verification
+  
+  // Store state in cookie for verification
     console.log('🍪 Setting state cookie...');
-    const response = NextResponse.redirect(authUrl);
+  const response = NextResponse.redirect(authUrl);
     
     try {
-      response.cookies.set('spotify_auth_state', state, {
-        httpOnly: true,
+  response.cookies.set('spotify_auth_state', state, {
+    httpOnly: true,
         secure: isProduction,
-        maxAge: 600, // 10 minutes
+    maxAge: 600, // 10 minutes
         sameSite: 'lax',
         path: '/'
-      });
+  });
       console.log('✅ State cookie set successfully');
     } catch (cookieError) {
       console.error('❌ Failed to set state cookie:', cookieError);
@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
 
     console.log('🚀 Redirecting to Spotify authorization...');
     console.log('=== SPOTIFY AUTH SUCCESS ===');
-    return response;
+  return response;
     
   } catch (error: unknown) {
     console.error('💥 CRITICAL ERROR in Spotify auth:');

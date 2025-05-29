@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useSpotify } from '../../hooks/useSpotify';
 
@@ -8,7 +8,7 @@ export default function ExploreLayout() {
   const { 
     connected,
     user,
-    loading,
+    loading: spotifyLoading,
     error,
     getTopTracks,
     getTopArtists,
@@ -22,20 +22,33 @@ export default function ExploreLayout() {
   const [topArtists, setTopArtists] = useState<any>({});
   const [recentTracks, setRecentTracks] = useState<any[]>([]);
   const [dataLoading, setDataLoading] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  
+  // Use refs to track loading state and prevent duplicate calls
+  const loadingRef = useRef(false);
+  const initializedRef = useRef(false);
 
-  useEffect(() => {
-    if (connected && user) {
-      loadData();
+  const loadData = useCallback(async (timeRange: string, forceRefresh = false) => {
+    // Prevent duplicate calls
+    if (loadingRef.current && !forceRefresh) return;
+    
+    // Check if we already have data for this time range and it's not a forced refresh
+    if (!forceRefresh && 
+        topTracks[timeRange]?.length > 0 && 
+        topArtists[timeRange]?.length > 0 && 
+        recentTracks.length > 0) {
+      return;
     }
-  }, [connected, user, selectedTimeRange]);
-
-  const loadData = async () => {
+    
+    loadingRef.current = true;
     setDataLoading(true);
+    
     try {
       const [tracks, artists, recent] = await Promise.all([
-        getTopTracks(selectedTimeRange).catch(() => []),
-        getTopArtists(selectedTimeRange).catch(() => []),
-        getRecentTracks().catch(() => [])
+        getTopTracks(timeRange as any).catch(() => []),
+        getTopArtists(timeRange as any).catch(() => []),
+        // Only fetch recent tracks if we don't have them or it's a forced refresh
+        recentTracks.length === 0 || forceRefresh ? getRecentTracks().catch(() => []) : Promise.resolve(recentTracks)
       ]);
       
       // Ensure we have valid arrays with proper data structure
@@ -43,19 +56,42 @@ export default function ExploreLayout() {
       const validArtists = Array.isArray(artists) ? artists.filter(artist => artist && artist.id) : [];
       const validRecent = Array.isArray(recent) ? recent.filter((item: any) => item && item.track && item.track.id) : [];
       
-      setTopTracks((prev: any) => ({ ...prev, [selectedTimeRange]: validTracks }));
-      setTopArtists((prev: any) => ({ ...prev, [selectedTimeRange]: validArtists }));
-      setRecentTracks(validRecent);
+      setTopTracks((prev: any) => ({ ...prev, [timeRange]: validTracks }));
+      setTopArtists((prev: any) => ({ ...prev, [timeRange]: validArtists }));
+      
+      // Only update recent tracks if we fetched new data
+      if (recentTracks.length === 0 || forceRefresh) {
+        setRecentTracks(validRecent);
+      }
     } catch (error) {
       console.error('Failed to load data:', error);
       // Set empty arrays as fallback
-      setTopTracks((prev: any) => ({ ...prev, [selectedTimeRange]: [] }));
-      setTopArtists((prev: any) => ({ ...prev, [selectedTimeRange]: [] }));
-      setRecentTracks([]);
+      setTopTracks((prev: any) => ({ ...prev, [timeRange]: [] }));
+      setTopArtists((prev: any) => ({ ...prev, [timeRange]: [] }));
+      if (recentTracks.length === 0) {
+        setRecentTracks([]);
+      }
     } finally {
       setDataLoading(false);
+      loadingRef.current = false;
+      setIsInitialLoad(false);
     }
-  };
+  }, [getTopTracks, getTopArtists, getRecentTracks, topTracks, topArtists, recentTracks]);
+
+  // Initial data load - only trigger once when connected and user are available
+  useEffect(() => {
+    if (connected && user && !spotifyLoading && !initializedRef.current) {
+      initializedRef.current = true;
+      loadData(selectedTimeRange);
+    }
+  }, [connected, user, spotifyLoading, selectedTimeRange, loadData]);
+
+  // Handle time range changes for already loaded component
+  useEffect(() => {
+    if (connected && user && !spotifyLoading && !isInitialLoad && initializedRef.current) {
+      loadData(selectedTimeRange);
+    }
+  }, [selectedTimeRange, connected, user, spotifyLoading, isInitialLoad, loadData]);
 
   const timeRangeLabels = {
     short_term: 'Last 4 Weeks',
@@ -91,6 +127,18 @@ export default function ExploreLayout() {
     }
     return seeds.slice(0, 5);
   };
+
+  // Show loading screen only during initial Spotify connection check
+  if (spotifyLoading) {
+    return (
+      <div className="h-full flex items-center justify-center p-6">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1DB954] mx-auto mb-4"></div>
+          <p className="text-gray-400">Checking Spotify connection...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!connected || !user) {
     return (
@@ -135,7 +183,8 @@ export default function ExploreLayout() {
               <button
                 key={range}
                 onClick={() => setSelectedTimeRange(range as any)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                disabled={dataLoading}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50 ${
                   selectedTimeRange === range
                     ? 'bg-[#1DB954] text-white'
                     : 'bg-white/10 text-gray-300 hover:bg-white/20'
@@ -320,8 +369,6 @@ export default function ExploreLayout() {
             </div>
           )}
         </motion.div>
-
-
 
         {/* Discover More Section */}
         <motion.div

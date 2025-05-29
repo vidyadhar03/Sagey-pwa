@@ -4,14 +4,18 @@
   "private": true,
   "scripts": {
     "dev": "cross-env NEXT_TELEMETRY_DISABLED=1 next dev -H 0.0.0.0",
-    "build": "cross-env NODE_OPTIONS=\"--max-old-space-size=4096\" NEXT_TELEMETRY_DISABLED=1 DISABLE_OPENCOLLECTIVE=1 CI=true next build --no-lint",
-    "build:standard": "cross-env NODE_OPTIONS=\"--max-old-space-size=4096\" NEXT_TELEMETRY_DISABLED=1 DISABLE_OPENCOLLECTIVE=1 next build --no-lint",
-    "build:debug": "cross-env NODE_OPTIONS=\"--max-old-space-size=4096 --inspect\" NEXT_TELEMETRY_DISABLED=1 DISABLE_OPENCOLLECTIVE=1 next build --no-lint",
-    "build:clean": "rimraf .next && npm run build",
+    "build": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192 --no-warnings\" NEXT_TELEMETRY_DISABLED=1 DISABLE_OPENCOLLECTIVE=1 CI=true next build",
+    "build:standard": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192 --no-warnings\" NEXT_TELEMETRY_DISABLED=1 DISABLE_OPENCOLLECTIVE=1 CI=true next build",
+    "build:debug": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192 --no-warnings --inspect\" NEXT_TELEMETRY_DISABLED=1 DISABLE_OPENCOLLECTIVE=1 CI=true next build",
+    "build:clean": "npm run cleanup && npm run build",
     "build:windows": "powershell -ExecutionPolicy Bypass -File build-windows.ps1",
     "start": "cross-env NEXT_TELEMETRY_DISABLED=1 next start",
-    "lint": "next lint",
-    "clean": "rimraf .next node_modules/.cache"
+    "lint": "next lint --fix",
+    "lint:check": "next lint",
+    "cleanup": "node scripts/cleanup.js",
+    "clean": "npm run cleanup",
+    "clean:all": "npm run cleanup && rimraf node_modules package-lock.json && npm cache clean --force",
+    "postinstall": "npm audit fix --force || true"
   },
   "dependencies": {
     "framer-motion": "^12.12.1",
@@ -33,5 +37,13 @@
     "rimraf": "^5.0.5",
     "tailwindcss": "^3.3.0",
     "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=18.17.0",
+    "npm": ">=9.0.0"
+  },
+  "overrides": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   }
 }

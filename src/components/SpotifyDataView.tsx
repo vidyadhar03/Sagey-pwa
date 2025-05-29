@@ -528,9 +528,9 @@ export default function SpotifyDataView() {
               </button>
             </div>
           </div>
-        </div>
-      </div>
-      
+            </div>
+          </div>
+
       <div className="w-full h-screen overflow-y-auto bg-gradient-to-br from-[#0A0A0A] via-[#1A1A1A] to-[#0A0A0A]">
         {/* Content area with proper top padding to account for fixed elements - increased for merged layout */}
         <div className="pt-[130px] max-w-7xl mx-auto px-4 pb-[120px]">
@@ -567,34 +567,34 @@ export default function SpotifyDataView() {
                   }`}
                 >
                   All time
-                  </button>
-                </div>
+                </button>
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Loading State */}
-            {dataLoading && (
+          {/* Loading State */}
+          {dataLoading && (
             <div className="flex items-center justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1DB954]"></div>
               <span className="ml-3 text-gray-400">Loading...</span>
-              </div>
-            )}
+            </div>
+          )}
 
-            {/* Error State */}
-            {error && (
+          {/* Error State */}
+          {error && (
             <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 mb-6">
               <p className="text-red-400">{error}</p>
-              </div>
-            )}
+            </div>
+          )}
 
-            {/* Content */}
-            {!dataLoading && !error && (
-              <>
+          {/* Content */}
+          {!dataLoading && !error && (
+            <>
                 {/* Recent Tracks - Add top margin to prevent overlap */}
-                {activeTab === 'recent' && (
+              {activeTab === 'recent' && (
                   <div className="mt-8">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-white font-medium text-lg">Recently Played</h3>
+                    <h3 className="text-white font-medium text-lg">Recently Played</h3>
                     <span className="text-gray-400 text-sm">{recentTracks.length} tracks</span>
                     </div>
                     
@@ -624,14 +624,14 @@ export default function SpotifyDataView() {
                       {topTracks.map((track: any, index: number) => (
                         renderTrackItem(track, index)
                       ))}
-                    </div>
-
+                  </div>
+                  
                   {topTracks.length === 0 && (
                     <div className="text-center py-8">
                       <p className="text-gray-400">No tracks found for this time period. Listen to more music to see your top tracks!</p>
                     </div>
-                  )}
-                  </div>
+                            )}
+                          </div>
                 )}
 
                 {/* Top Artists */}
@@ -640,13 +640,13 @@ export default function SpotifyDataView() {
                     <div className="flex items-center justify-between mb-4">
                     <h3 className="text-white font-medium text-lg">Artists</h3>
                     <span className="text-gray-400 text-sm">{getTimeRangeLabel(timeRange)}</span>
-                    </div>
+                        </div>
                     
                     <div className={getContainerClasses()}>
                       {topArtists.map((artist: any, index: number) => (
                         renderArtistItem(artist, index)
                       ))}
-                    </div>
+                      </div>
 
                   {topArtists.length === 0 && (
                     <div className="text-center py-8">
@@ -674,39 +674,39 @@ export default function SpotifyDataView() {
                         <div className={`flex ${viewMode === 'grid' ? 'flex-col' : 'items-center'}`}>
                           {viewMode === 'list' && <span className="text-[#1DB954] font-bold text-lg mr-4 w-6">#{index + 1}</span>}
                           {album.image_url && (
-                            <img 
+                          <img 
                               src={album.image_url} 
                               alt={album.name}
                               className={`${viewMode === 'grid' ? 'w-full aspect-square mb-3' : 'w-12 h-12 mr-4'} rounded-lg`}
-                            />
-                          )}
+                          />
+                        )}
                           <div className={`${viewMode === 'grid' ? '' : 'flex-1 min-w-0'}`}>
                             {viewMode === 'grid' && <span className="text-[#1DB954] font-bold text-sm mb-1 block">#{index + 1}</span>}
                             <h4 className={`text-white font-medium ${viewMode === 'grid' ? 'text-sm mb-1' : ''} truncate`}>{album.name}</h4>
                             <p className={`text-gray-400 text-sm truncate ${viewMode === 'grid' ? 'mb-2' : ''}`}>{album.artists}</p>
-                            <div className="flex items-center mt-1">
+                          <div className="flex items-center mt-1">
                               <span className="text-xs text-gray-400">{album.total_tracks} tracks</span>
                               <span className="text-gray-400 mx-1">•</span>
                               <span className="text-xs text-[#1DB954]">{album.track_count} in your top tracks</span>
                               {album.release_date && (
-                                <>
+                              <>
                                   <span className="text-gray-400 mx-1">•</span>
                                   <span className="text-xs text-gray-400">{new Date(album.release_date).getFullYear()}</span>
-                                </>
-                              )}
-                            </div>
+                              </>
+                            )}
                           </div>
+                        </div>
                           {viewMode === 'list' && (
-                            <a 
+                        <a 
                               href={album.external_urls.spotify}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="ml-2 p-2 rounded-full bg-[#1DB954]/20 hover:bg-[#1DB954]/30 transition-all"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-4 h-4 text-[#1DB954]">
-                                <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.84-.179-.959-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.361 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.42 1.56-.299.421-1.02.599-1.559.3z"/>
-                              </svg>
-                            </a>
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="ml-2 p-2 rounded-full bg-[#1DB954]/20 hover:bg-[#1DB954]/30 transition-all"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-4 h-4 text-[#1DB954]">
+                            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.84-.179-.959-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.361 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.42 1.56-.299.421-1.02.599-1.559.3z"/>
+                          </svg>
+                        </a>
                           )}
                         </div>
                         {viewMode === 'grid' && (
@@ -741,8 +741,8 @@ export default function SpotifyDataView() {
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-white font-medium text-lg">Genres</h3>
                     <span className="text-gray-400 text-sm">Based on your artists</span>
-                    </div>
-                    
+                  </div>
+                  
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {getTopGenres().map(({ genre, count }, index) => {
                       const genreCount = Number(count);
@@ -761,13 +761,13 @@ export default function SpotifyDataView() {
                                 <p className="text-gray-400 text-sm">{genreCount} {genreCount === 1 ? 'artist' : 'artists'}</p>
                               </div>
                             </div>
-                            <div className="flex items-center">
+                      <div className="flex items-center">
                               <div className="w-16 h-2 bg-white/10 rounded-full overflow-hidden">
                                 <div 
                                   className="h-full bg-gradient-to-r from-[#1DB954] to-[#1ed760] rounded-full"
                                   style={{ width: `${Math.min((genreCount / maxCount) * 100, 100)}%` }}
                                 />
-                              </div>
+                          </div>
                               <span className="text-[#1DB954] text-sm font-medium ml-2">{genreCount}</span>
                             </div>
                           </div>
@@ -790,10 +790,10 @@ export default function SpotifyDataView() {
                       </div>
                     </div>
                   )}
-                  </div>
-                )}
-              </>
-            )}
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         {/* Shareable Cards Modal */}
