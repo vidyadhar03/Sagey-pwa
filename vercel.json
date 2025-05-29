@@ -2,7 +2,6 @@
   "framework": "nextjs",
   "buildCommand": "npm run build",
   "installCommand": "npm ci --legacy-peer-deps",
-  "outputDirectory": ".next/standalone",
   "env": {
     "NEXT_TELEMETRY_DISABLED": "1",
     "DISABLE_OPENCOLLECTIVE": "1",

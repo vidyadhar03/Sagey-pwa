@@ -194,9 +194,6 @@ const nextConfig = {
     return config
   },
   
-  // Output configuration for better compatibility
-  output: 'standalone',
-  
   // Compress output
   compress: true,
   
