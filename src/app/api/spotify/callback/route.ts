@@ -190,54 +190,89 @@ export async function GET(request: NextRequest) {
     console.log('🍪 Setting cookies...');
     const response = NextResponse.redirect(new URL('/?spotify=connected', request.url));
     
+    // Enhanced cookie options for mobile compatibility
+    const userAgent = request.headers.get('user-agent') || '';
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+    const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+    const isAndroid = /Android/.test(userAgent);
+    
+    console.log('🔍 User agent info:', {
+      userAgent: userAgent.substring(0, 100),
+      isMobile,
+      isIOS,
+      isAndroid,
+      isProduction
+    });
+    
+    // Optimized cookie options for mobile browsers
     const cookieOptions = {
       httpOnly: true,
       secure: isProduction,
-      sameSite: 'lax' as const,
-      path: '/'
+      sameSite: isMobile ? 'none' as const : 'lax' as const, // Use 'none' for mobile cross-site requests
+      path: '/',
+      domain: isProduction ? '.vercel.app' : undefined, // Set domain for production
     };
+    
+    // For mobile, we need secure + sameSite=none for cross-site cookies
+    if (isMobile && isProduction) {
+      cookieOptions.sameSite = 'none';
+      cookieOptions.secure = true;
+    }
 
     console.log('Cookie options:', cookieOptions);
 
-    // Set access token cookie
+    // Set access token cookie with mobile optimization
     try {
-      response.cookies.set('spotify_access_token', tokenData.access_token, {
+      const accessTokenOptions = {
         ...cookieOptions,
         maxAge: tokenData.expires_in || 3600
-      });
-      console.log('✅ Access token cookie set');
+      };
+      
+      response.cookies.set('spotify_access_token', tokenData.access_token, accessTokenOptions);
+      console.log('✅ Access token cookie set with options:', accessTokenOptions);
     } catch (cookieError) {
       console.error('❌ Failed to set access token cookie:', cookieError);
     }
 
-    // Set refresh token cookie
+    // Set refresh token cookie with mobile optimization  
     if (tokenData.refresh_token) {
       try {
-    response.cookies.set('spotify_refresh_token', tokenData.refresh_token, {
+        const refreshTokenOptions = {
           ...cookieOptions,
           maxAge: 60 * 60 * 24 * 30 // 30 days
-        });
-        console.log('✅ Refresh token cookie set');
+        };
+        
+        response.cookies.set('spotify_refresh_token', tokenData.refresh_token, refreshTokenOptions);
+        console.log('✅ Refresh token cookie set with options:', refreshTokenOptions);
       } catch (cookieError) {
         console.error('❌ Failed to set refresh token cookie:', cookieError);
       }
     }
 
-    // Set user info cookie
+    // Set user info cookie (needs to be accessible to client-side)
     try {
       const userInfo = JSON.stringify({
-      user_id: profileData.id,
-      display_name: profileData.display_name,
-      email: profileData.email
+        user_id: profileData.id,
+        display_name: profileData.display_name,
+        email: profileData.email
       });
-      response.cookies.set('spotify_user_info', userInfo, {
-        httpOnly: false,
+      
+      const userInfoOptions = {
+        httpOnly: false, // Allow client-side access
         secure: isProduction,
         maxAge: 60 * 60 * 24 * 30,
-        sameSite: 'lax',
-        path: '/'
-    });
-      console.log('✅ User info cookie set');
+        sameSite: isMobile ? 'none' as const : 'lax' as const,
+        path: '/',
+        domain: isProduction ? '.vercel.app' : undefined,
+      };
+      
+      if (isMobile && isProduction) {
+        userInfoOptions.sameSite = 'none';
+        userInfoOptions.secure = true;
+      }
+      
+      response.cookies.set('spotify_user_info', userInfo, userInfoOptions);
+      console.log('✅ User info cookie set with options:', userInfoOptions);
     } catch (cookieError) {
       console.error('❌ Failed to set user info cookie:', cookieError);
     }

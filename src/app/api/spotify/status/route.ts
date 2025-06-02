@@ -6,18 +6,39 @@ export async function GET(request: NextRequest) {
   console.log('Request headers:', Object.fromEntries(request.headers.entries()));
   
   try {
-    // Check all cookies
+    // Enhanced mobile detection and debugging
+    const userAgent = request.headers.get('user-agent') || '';
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+    const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+    const isAndroid = /Android/.test(userAgent);
+    
+    console.log('🔍 User agent analysis:', {
+      userAgent: userAgent.substring(0, 100),
+      isMobile,
+      isIOS,
+      isAndroid
+    });
+    
+    // Check all cookies with enhanced logging
     console.log('🍪 Checking cookies...');
     const allCookies = request.cookies.getAll();
-    console.log('All cookies found:', allCookies.map(c => ({ name: c.name, hasValue: !!c.value, valueLength: c.value?.length })));
+    console.log('All cookies found:', allCookies.map(c => ({ 
+      name: c.name, 
+      hasValue: !!c.value, 
+      valueLength: c.value?.length,
+      valuePreview: c.value?.substring(0, 20) + '...'
+    })));
     
     const accessToken = request.cookies.get('spotify_access_token')?.value;
     const userInfo = request.cookies.get('spotify_user_info')?.value;
+    const authState = request.cookies.get('spotify_auth_state')?.value;
     
-    console.log('🔑 Token check:', {
+    console.log('🔑 Cookie analysis:', {
       hasAccessToken: !!accessToken,
       tokenLength: accessToken?.length,
-      hasUserInfo: !!userInfo
+      hasUserInfo: !!userInfo,
+      hasAuthState: !!authState,
+      cookieCount: allCookies.length
     });
     
     if (!accessToken) {
