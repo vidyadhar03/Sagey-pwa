@@ -4,7 +4,7 @@ import React, { ReactNode, useState } from 'react';
 import BottomNav from './BottomNav';
 import HomeLayout from './screens/HomeLayout';
 import InsightsLayout from './screens/InsightsLayout';
-import ExploreLayout from './screens/ExploreLayout';
+import SpotifyDataView from './SpotifyDataView';
 
 interface FrameLayoutProps {
   // Removed unused children prop
@@ -29,7 +29,7 @@ export default function FrameLayout({}: FrameLayoutProps) {
       case 'insights':
         return <InsightsLayout />;
       case 'explore':
-        return <ExploreLayout />;
+        return <SpotifyDataView />;
       default:
         return <HomeLayout onTabClick={handleTabClick} />;
     }
