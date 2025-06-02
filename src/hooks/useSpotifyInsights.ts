@@ -44,7 +44,10 @@ export function useSpotifyInsights() {
   });
 
   const calculateListeningTime = useCallback((tracks: any[]) => {
+    console.log('⏰ Calculating listening time for tracks:', tracks?.length);
+    
     if (!tracks || tracks.length === 0) {
+      console.log('⚠️ No tracks provided for calculation');
       return { todayMinutes: 0, comparison: '+0%' };
     }
 
@@ -54,31 +57,53 @@ export function useSpotifyInsights() {
     
     let todayTracks = 0;
     let yesterdayTracks = 0;
-    let totalDuration = 0;
+    let todayDuration = 0;
+    let yesterdayDuration = 0;
 
-    tracks.forEach(track => {
-      if (track.played_at) {
-        const playedDate = new Date(track.played_at).toDateString();
-        const duration = track.duration_ms || 180000; // Default 3 minutes
+    tracks.forEach((trackItem, index) => {
+      // Handle both direct tracks and recent tracks format
+      const track = trackItem.track || trackItem;
+      const playedAt = trackItem.played_at || track.played_at;
+      
+      if (!playedAt) {
+        console.log(`⚠️ Track ${index} missing played_at:`, trackItem);
+        return;
+      }
+
+      try {
+        const playedDate = new Date(playedAt).toDateString();
+        const duration = track.duration_ms || trackItem.duration_ms || 180000; // Default 3 minutes
         
         if (playedDate === today) {
           todayTracks++;
-          totalDuration += duration;
+          todayDuration += duration;
+          console.log(`📅 Today track: ${track.name || 'Unknown'} - ${Math.round(duration/1000/60)}min`);
         } else if (playedDate === yesterday) {
           yesterdayTracks++;
+          yesterdayDuration += duration;
         }
+      } catch (error) {
+        console.error(`❌ Error processing track ${index}:`, error, trackItem);
       }
     });
 
     // Convert to minutes
-    const todayMinutes = Math.round(totalDuration / (1000 * 60));
+    const todayMinutes = Math.round(todayDuration / (1000 * 60));
+    const yesterdayMinutes = Math.round(yesterdayDuration / (1000 * 60));
     
-    // Calculate comparison with yesterday
+    console.log('📊 Listening calculation results:', {
+      todayTracks,
+      todayMinutes,
+      yesterdayTracks,
+      yesterdayMinutes
+    });
+    
+    // Calculate comparison with yesterday (based on minutes, not tracks)
     let comparison = '+0%';
-    if (yesterdayTracks > 0) {
-      const percentChange = Math.round(((todayTracks - yesterdayTracks) / yesterdayTracks) * 100);
+    if (yesterdayMinutes > 0) {
+      const percentChange = Math.round(((todayMinutes - yesterdayMinutes) / yesterdayMinutes) * 100);
       comparison = percentChange >= 0 ? `+${percentChange}%` : `${percentChange}%`;
-    } else if (todayTracks > 0) {
+    } else if (todayMinutes > 0) {
       comparison = '+100%';
     }
 
@@ -165,40 +190,48 @@ export function useSpotifyInsights() {
       return;
     }
 
+    // Set loading state
+    setInsights(prev => ({ ...prev, loading: true, error: null }));
+    console.log('🔄 Fetching Spotify data for insights...');
+
     try {
-      setInsights(prev => ({ ...prev, loading: true, error: null }));
+      // Only fetch recent tracks - this is the primary data we need
+      // The genre calculation will fetch top artists when needed
+      const recentTracks = await getRecentTracks();
+      console.log('📈 Recent tracks fetched:', recentTracks?.length);
+      
+      // Debug: Log first few tracks to understand data structure
+      if (recentTracks?.length > 0) {
+        const firstTrack: any = recentTracks[0];
+        console.log('🔍 Sample recent track data:', {
+          first: firstTrack,
+          hasTrackProperty: !!firstTrack?.track,
+          hasPlayedAt: !!firstTrack?.played_at
+        });
+      }
 
-      console.log('🔄 Fetching Spotify data...');
-
-      // Fetch data in parallel with proper error handling
-      const [recentTracks, topTracks, genreData] = await Promise.all([
-        getRecentTracks().catch(error => {
-          console.error('❌ Failed to get recent tracks:', error);
-          return [];
-        }),
-        getTopTracks('short_term').catch(error => {
-          console.error('❌ Failed to get top tracks:', error);
-          return [];
-        }),
-        calculateTopGenre().catch(error => {
-          console.error('❌ Failed to calculate top genre:', error);
-          return { topGenre: 'Unknown', topGenrePercentage: 0 };
-        })
-      ]);
-
-      console.log('📈 Data fetched:', {
-        recentTracksCount: recentTracks.length,
-        topTracksCount: topTracks.length,
-        genreData
-      });
-
-      // Calculate listening time
+      // Calculate today's listening time from recent tracks
       const { todayMinutes, comparison } = calculateListeningTime(recentTracks);
+      console.log('⏰ Today listening calculated:', { todayMinutes, comparison });
 
-      // Calculate additional stats - extract artist names safely
+      // Calculate additional stats from recent tracks
       const uniqueArtists = new Set(
-        recentTracks.map(track => track.artist).filter(Boolean)
+        recentTracks.map((trackItem: any) => {
+          // Handle both track formats - recent tracks vs direct tracks
+          if (trackItem.track) {
+            // Recent track format: { track: { artists: [...] }, played_at: ... }
+            return trackItem.track.artists?.[0]?.name;
+          } else {
+            // Direct track format: { artist: "...", name: "..." }
+            return trackItem.artist;
+          }
+        }).filter(Boolean)
       ).size;
+
+      // Calculate top genre (this will use cached data if available)
+      console.log('🎵 Starting genre calculation...');
+      const genreData = await calculateTopGenre();
+      console.log('🎯 Genre data calculated:', genreData);
 
       const newInsights = {
         todayMinutes,
@@ -211,7 +244,7 @@ export function useSpotifyInsights() {
         error: null
       };
 
-      console.log('✅ Final insights:', newInsights);
+      console.log('✅ Final insights calculated:', newInsights);
       setInsights(newInsights);
 
     } catch (error) {
@@ -219,10 +252,10 @@ export function useSpotifyInsights() {
       setInsights(prev => ({
         ...prev,
         loading: false,
-        error: 'Failed to load insights. Please try again.'
+        error: error instanceof Error ? error.message : 'Failed to load insights. Please try again.'
       }));
     }
-  }, [connected, getRecentTracks, getTopTracks, calculateTopGenre, calculateListeningTime]);
+  }, [connected, getRecentTracks, calculateTopGenre, calculateListeningTime]);
 
   // Load insights when component mounts and when connection status changes
   useEffect(() => {
