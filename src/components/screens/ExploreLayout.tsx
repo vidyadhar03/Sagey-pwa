@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
+import TopAppBar from '../TopAppBar';
 import { useSpotify } from '../../hooks/useSpotify';
 
 export default function ExploreLayout() {
@@ -29,26 +30,29 @@ export default function ExploreLayout() {
   const initializedRef = useRef(false);
 
   const loadData = useCallback(async (timeRange: string, forceRefresh = false) => {
-    // Prevent duplicate calls
-    if (loadingRef.current && !forceRefresh) return;
-    
-    // Check if we already have data for this time range and it's not a forced refresh
-    if (!forceRefresh && 
-        topTracks[timeRange]?.length > 0 && 
-        topArtists[timeRange]?.length > 0 && 
-        recentTracks.length > 0) {
+    if (!connected || !user || spotifyLoading) {
+      return;
+    }
+
+    // Only set loading if we don't have cached data
+    const hasTrackData = topTracks[timeRange]?.length > 0;
+    const hasArtistData = topArtists[timeRange]?.length > 0;
+    const hasRecentData = recentTracks.length > 0;
+
+    if (!forceRefresh && hasTrackData && hasArtistData && hasRecentData) {
+      console.log('📊 ExploreLayout: Using existing data for', timeRange);
       return;
     }
     
-    loadingRef.current = true;
     setDataLoading(true);
     
     try {
+      console.log('🔄 ExploreLayout: Loading data for', timeRange);
+      
       const [tracks, artists, recent] = await Promise.all([
-        getTopTracks(timeRange as any).catch(() => []),
-        getTopArtists(timeRange as any).catch(() => []),
-        // Only fetch recent tracks if we don't have them or it's a forced refresh
-        recentTracks.length === 0 || forceRefresh ? getRecentTracks().catch(() => []) : Promise.resolve(recentTracks)
+        !hasTrackData || forceRefresh ? getTopTracks(timeRange as any) : Promise.resolve(topTracks[timeRange] || []),
+        !hasArtistData || forceRefresh ? getTopArtists(timeRange as any) : Promise.resolve(topArtists[timeRange] || []),
+        !hasRecentData || forceRefresh ? getRecentTracks() : Promise.resolve(recentTracks)
       ]);
       
       // Ensure we have valid arrays with proper data structure
@@ -59,24 +63,34 @@ export default function ExploreLayout() {
       setTopTracks((prev: any) => ({ ...prev, [timeRange]: validTracks }));
       setTopArtists((prev: any) => ({ ...prev, [timeRange]: validArtists }));
       
-      // Only update recent tracks if we fetched new data
-      if (recentTracks.length === 0 || forceRefresh) {
+      // Only update recent tracks if we fetched new data or don't have any
+      if (!hasRecentData || forceRefresh) {
         setRecentTracks(validRecent);
       }
+
+      console.log('✅ ExploreLayout: Data loaded successfully', {
+        tracks: validTracks.length,
+        artists: validArtists.length,
+        recent: validRecent.length
+      });
+      
     } catch (error) {
-      console.error('Failed to load data:', error);
-      // Set empty arrays as fallback
-      setTopTracks((prev: any) => ({ ...prev, [timeRange]: [] }));
-      setTopArtists((prev: any) => ({ ...prev, [timeRange]: [] }));
-      if (recentTracks.length === 0) {
+      console.error('❌ ExploreLayout: Failed to load data:', error);
+      // Set empty arrays as fallback only if we don't have existing data
+      if (!hasTrackData) {
+        setTopTracks((prev: any) => ({ ...prev, [timeRange]: [] }));
+      }
+      if (!hasArtistData) {
+        setTopArtists((prev: any) => ({ ...prev, [timeRange]: [] }));
+      }
+      if (!hasRecentData) {
         setRecentTracks([]);
       }
     } finally {
       setDataLoading(false);
-      loadingRef.current = false;
       setIsInitialLoad(false);
     }
-  }, [getTopTracks, getTopArtists, getRecentTracks, topTracks, topArtists, recentTracks]);
+  }, [connected, user, spotifyLoading, getTopTracks, getTopArtists, getRecentTracks, topTracks, topArtists, recentTracks]);
 
   // Initial data load - only trigger once when connected and user are available
   useEffect(() => {
@@ -142,12 +156,25 @@ export default function ExploreLayout() {
 
   if (!connected || !user) {
     return (
-      <div className="h-full flex items-center justify-center p-6">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Connect Spotify to Explore</h2>
-          <p className="text-gray-400 mb-6">
-            Connect your Spotify account to discover personalized music recommendations and explore your musical taste.
-          </p>
+      <div className="h-full overflow-y-auto bg-gradient-to-br from-[#0A0A0A] via-[#1A1A1A] to-[#0A0A0A]">
+        <TopAppBar
+          title="Explore"
+          showLeftIcon={false}
+          showRightIcon={false}
+          titleAlign="left"
+        />
+        <div className="pt-[60px] h-full flex items-center justify-center p-6">
+          <div className="text-center">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-r from-[#1DB954] to-[#1ed760] flex items-center justify-center mx-auto mb-6">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-10 h-10 text-white">
+                <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.84-.179-.959-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.361 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.42 1.56-.299.421-1.02.599-1.559.3z"/>
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold mb-4">Connect Spotify to Explore</h2>
+            <p className="text-gray-400 mb-6 max-w-md">
+              Connect your Spotify account to discover personalized music recommendations and explore your musical taste.
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -155,7 +182,13 @@ export default function ExploreLayout() {
 
   return (
     <div className="h-full overflow-y-auto bg-gradient-to-br from-[#0A0A0A] via-[#1A1A1A] to-[#0A0A0A]">
-      <div className="p-6 space-y-6">
+      <TopAppBar
+        title="Explore"
+        showLeftIcon={false}
+        showRightIcon={false}
+        titleAlign="left"
+      />
+      <div className="pt-[60px] p-6 space-y-6">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

@@ -76,6 +76,70 @@ interface AudioFeatures {
   mood_score: number;
 }
 
+// Global data cache to prevent duplicate API calls across components
+const globalDataCache = {
+  recentTracks: null as any[] | null,
+  topTracks: {} as Record<string, any[]>,
+  topArtists: {} as Record<string, any[]>,
+  topAlbums: {} as Record<string, any[]>,
+  lastFetch: {} as Record<string, number>,
+  isLoading: {} as Record<string, boolean>
+};
+
+// Cache duration in milliseconds (5 minutes)
+const CACHE_DURATION = 5 * 60 * 1000;
+
+// Check if cached data is still valid
+const isCacheValid = (key: string): boolean => {
+  const lastFetch = globalDataCache.lastFetch[key];
+  return !!(lastFetch && (Date.now() - lastFetch) < CACHE_DURATION);
+};
+
+// Set cache data with timestamp
+const setCacheData = (key: string, data: any): void => {
+  globalDataCache.lastFetch[key] = Date.now();
+  if (key === 'recent-tracks') {
+    globalDataCache.recentTracks = data;
+  } else if (key.startsWith('top-tracks-')) {
+    const timeRange = key.replace('top-tracks-', '');
+    globalDataCache.topTracks[timeRange] = data;
+  } else if (key.startsWith('top-artists-')) {
+    const timeRange = key.replace('top-artists-', '');
+    globalDataCache.topArtists[timeRange] = data;
+  } else if (key.startsWith('top-albums-')) {
+    const timeRange = key.replace('top-albums-', '');
+    globalDataCache.topAlbums[timeRange] = data;
+  }
+};
+
+// Clear all cached data
+const clearCache = (): void => {
+  console.log('🧹 Clearing global data cache');
+  globalDataCache.recentTracks = null;
+  globalDataCache.topTracks = {};
+  globalDataCache.topArtists = {};
+  globalDataCache.topAlbums = {};
+  globalDataCache.lastFetch = {};
+  globalDataCache.isLoading = {};
+};
+
+// Get cached data
+const getCacheData = (key: string): any => {
+  if (key === 'recent-tracks') {
+    return globalDataCache.recentTracks;
+  } else if (key.startsWith('top-tracks-')) {
+    const timeRange = key.replace('top-tracks-', '');
+    return globalDataCache.topTracks[timeRange];
+  } else if (key.startsWith('top-artists-')) {
+    const timeRange = key.replace('top-artists-', '');
+    return globalDataCache.topArtists[timeRange];
+  } else if (key.startsWith('top-albums-')) {
+    const timeRange = key.replace('top-albums-', '');
+    return globalDataCache.topAlbums[timeRange];
+  }
+  return null;
+};
+
 export function useSpotify() {
   const [status, setStatus] = useState<SpotifyStatus>({
     connected: false,
@@ -221,48 +285,84 @@ export function useSpotify() {
       throw new Error('Spotify not connected');
     }
 
-    console.log('📡 getRecentTracks: Making API request');
-    const response = await fetch('/api/spotify/recent-tracks', {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      }
-    });
+    const cacheKey = 'recent-tracks';
     
-    console.log('📡 getRecentTracks: Response received', {
-      status: response.status,
-      statusText: response.statusText,
-      ok: response.ok
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('❌ getRecentTracks: API error', errorData);
-      
-      // Handle specific error cases
-      if (response.status === 403 && errorData.shouldReconnect) {
-        // Clear current connection status to force reconnection
-        setStatus({
-          connected: false,
-          user: null,
-          loading: false,
-          error: 'Please reconnect your Spotify account to grant updated permissions.'
-        });
+    // Check cache first
+    if (isCacheValid(cacheKey)) {
+      const cachedData = getCacheData(cacheKey);
+      if (cachedData) {
+        console.log('✅ getRecentTracks: Using cached data');
+        return cachedData;
       }
-      
-      throw new Error(errorData.error || 'Failed to fetch recent tracks');
     }
 
-    const data = await response.json();
-    console.log('✅ getRecentTracks: Data received', {
-      tracksCount: data.tracks?.length,
-      total: data.total,
-      firstTrack: data.tracks?.[0]
-    });
-    
-    return data.tracks;
+    // Prevent duplicate API calls
+    if (globalDataCache.isLoading[cacheKey]) {
+      console.log('⏳ getRecentTracks: Already loading, waiting...');
+      // Wait for the current request to complete
+      while (globalDataCache.isLoading[cacheKey]) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      // Return cached data after waiting
+      const cachedData = getCacheData(cacheKey);
+      if (cachedData) {
+        return cachedData;
+      }
+    }
+
+    globalDataCache.isLoading[cacheKey] = true;
+
+    try {
+      console.log('📡 getRecentTracks: Making API request');
+      const response = await fetch('/api/spotify/recent-tracks', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('📡 getRecentTracks: Response received', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('❌ getRecentTracks: API error', errorData);
+        
+        // Handle specific error cases
+        if (response.status === 403 && errorData.shouldReconnect) {
+          // Clear current connection status to force reconnection
+          setStatus({
+            connected: false,
+            user: null,
+            loading: false,
+            error: 'Please reconnect your Spotify account to grant updated permissions.'
+          });
+        }
+        
+        throw new Error(errorData.error || 'Failed to fetch recent tracks');
+      }
+
+      const data = await response.json();
+      const tracks = data.tracks || [];
+      
+      console.log('✅ getRecentTracks: Data received', {
+        tracksCount: tracks.length,
+        total: data.total,
+        firstTrack: tracks[0]
+      });
+      
+      // Cache the data
+      setCacheData(cacheKey, tracks);
+      
+      return tracks;
+    } finally {
+      globalDataCache.isLoading[cacheKey] = false;
+    }
   };
 
   // Fetch top tracks
@@ -274,49 +374,85 @@ export function useSpotify() {
       throw new Error('Spotify not connected');
     }
 
-    console.log('📡 getTopTracks: Making API request');
-    const response = await fetch(`/api/spotify/top-tracks?time_range=${timeRange}`, {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      }
-    });
+    const cacheKey = `top-tracks-${timeRange}`;
     
-    console.log('📡 getTopTracks: Response received', {
-      status: response.status,
-      statusText: response.statusText,
-      ok: response.ok
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('❌ getTopTracks: API error', errorData);
-      
-      // Handle specific error cases
-      if (response.status === 403 && errorData.shouldReconnect) {
-        // Clear current connection status to force reconnection
-        setStatus({
-          connected: false,
-          user: null,
-          loading: false,
-          error: 'Please reconnect your Spotify account to grant updated permissions.'
-        });
+    // Check cache first
+    if (isCacheValid(cacheKey)) {
+      const cachedData = getCacheData(cacheKey);
+      if (cachedData) {
+        console.log('✅ getTopTracks: Using cached data for', timeRange);
+        return cachedData;
       }
-      
-      throw new Error(errorData.error || 'Failed to fetch top tracks');
     }
 
-    const data = await response.json();
-    console.log('✅ getTopTracks: Data received', {
-      tracksCount: data.tracks?.length,
-      total: data.total,
-      timeRange: data.time_range,
-      firstTrack: data.tracks?.[0]
-    });
-    
-    return data.tracks;
+    // Prevent duplicate API calls
+    if (globalDataCache.isLoading[cacheKey]) {
+      console.log('⏳ getTopTracks: Already loading, waiting...', timeRange);
+      // Wait for the current request to complete
+      while (globalDataCache.isLoading[cacheKey]) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      // Return cached data after waiting
+      const cachedData = getCacheData(cacheKey);
+      if (cachedData) {
+        return cachedData;
+      }
+    }
+
+    globalDataCache.isLoading[cacheKey] = true;
+
+    try {
+      console.log('📡 getTopTracks: Making API request');
+      const response = await fetch(`/api/spotify/top-tracks?time_range=${timeRange}`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('📡 getTopTracks: Response received', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('❌ getTopTracks: API error', errorData);
+        
+        // Handle specific error cases
+        if (response.status === 403 && errorData.shouldReconnect) {
+          // Clear current connection status to force reconnection
+          setStatus({
+            connected: false,
+            user: null,
+            loading: false,
+            error: 'Please reconnect your Spotify account to grant updated permissions.'
+          });
+        }
+        
+        throw new Error(errorData.error || 'Failed to fetch top tracks');
+      }
+
+      const data = await response.json();
+      const tracks = data.tracks || [];
+      
+      console.log('✅ getTopTracks: Data received', {
+        tracksCount: tracks.length,
+        total: data.total,
+        timeRange: data.time_range,
+        firstTrack: tracks[0]
+      });
+      
+      // Cache the data
+      setCacheData(cacheKey, tracks);
+      
+      return tracks;
+    } finally {
+      globalDataCache.isLoading[cacheKey] = false;
+    }
   };
 
   // Fetch top artists
@@ -328,49 +464,85 @@ export function useSpotify() {
       throw new Error('Spotify not connected');
     }
 
-    console.log('📡 getTopArtists: Making API request');
-    const response = await fetch(`/api/spotify/top-artists?time_range=${timeRange}`, {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      }
-    });
+    const cacheKey = `top-artists-${timeRange}`;
     
-    console.log('📡 getTopArtists: Response received', {
-      status: response.status,
-      statusText: response.statusText,
-      ok: response.ok
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('❌ getTopArtists: API error', errorData);
-      
-      // Handle specific error cases
-      if (response.status === 403 && errorData.shouldReconnect) {
-        // Clear current connection status to force reconnection
-        setStatus({
-          connected: false,
-          user: null,
-          loading: false,
-          error: 'Please reconnect your Spotify account to grant updated permissions.'
-        });
+    // Check cache first
+    if (isCacheValid(cacheKey)) {
+      const cachedData = getCacheData(cacheKey);
+      if (cachedData) {
+        console.log('✅ getTopArtists: Using cached data for', timeRange);
+        return cachedData;
       }
-      
-      throw new Error(errorData.error || 'Failed to fetch top artists');
     }
 
-    const data = await response.json();
-    console.log('✅ getTopArtists: Data received', {
-      artistsCount: data.artists?.length,
-      total: data.total,
-      timeRange: data.time_range,
-      firstArtist: data.artists?.[0]
-    });
-    
-    return data.artists;
+    // Prevent duplicate API calls
+    if (globalDataCache.isLoading[cacheKey]) {
+      console.log('⏳ getTopArtists: Already loading, waiting...', timeRange);
+      // Wait for the current request to complete
+      while (globalDataCache.isLoading[cacheKey]) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      // Return cached data after waiting
+      const cachedData = getCacheData(cacheKey);
+      if (cachedData) {
+        return cachedData;
+      }
+    }
+
+    globalDataCache.isLoading[cacheKey] = true;
+
+    try {
+      console.log('📡 getTopArtists: Making API request');
+      const response = await fetch(`/api/spotify/top-artists?time_range=${timeRange}`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('📡 getTopArtists: Response received', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('❌ getTopArtists: API error', errorData);
+        
+        // Handle specific error cases
+        if (response.status === 403 && errorData.shouldReconnect) {
+          // Clear current connection status to force reconnection
+          setStatus({
+            connected: false,
+            user: null,
+            loading: false,
+            error: 'Please reconnect your Spotify account to grant updated permissions.'
+          });
+        }
+        
+        throw new Error(errorData.error || 'Failed to fetch top artists');
+      }
+
+      const data = await response.json();
+      const artists = data.artists || [];
+      
+      console.log('✅ getTopArtists: Data received', {
+        artistsCount: artists.length,
+        total: data.total,
+        timeRange: data.time_range,
+        firstArtist: artists[0]
+      });
+      
+      // Cache the data
+      setCacheData(cacheKey, artists);
+      
+      return artists;
+    } finally {
+      globalDataCache.isLoading[cacheKey] = false;
+    }
   };
 
   // Fetch top albums
@@ -495,6 +667,9 @@ export function useSpotify() {
         console.warn('⚠️ useSpotify: Failed to clear local storage:', error);
       }
       
+      // Clear all cached data
+      clearCache();
+      
     } catch (error) {
       console.error('💥 useSpotify: Failed to logout:', error);
       
@@ -506,6 +681,18 @@ export function useSpotify() {
         error: 'Logout failed, but session cleared locally'
       });
     }
+  };
+
+  // Get cache status for debugging
+  const getCacheStatus = () => {
+    return {
+      recentTracks: !!globalDataCache.recentTracks,
+      topTracks: Object.keys(globalDataCache.topTracks),
+      topArtists: Object.keys(globalDataCache.topArtists),
+      topAlbums: Object.keys(globalDataCache.topAlbums),
+      lastFetch: globalDataCache.lastFetch,
+      isLoading: globalDataCache.isLoading
+    };
   };
 
   useEffect(() => {
@@ -522,6 +709,8 @@ export function useSpotify() {
     getTopArtists,
     getTopAlbums,
     getAudioFeatures,
-    getMusicInsights
+    getMusicInsights,
+    clearCache,
+    getCacheStatus
   };
 } 
