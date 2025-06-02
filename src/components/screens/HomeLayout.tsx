@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import TopAppBar from '../TopAppBar';
 import MusicalAgeEstimator from '../MusicalAgeEstimator';
@@ -32,6 +32,9 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
   const [spotifyError, setSpotifyError] = useState<string | null>(null);
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
+
+  // Track if data has been loaded to prevent re-loading on tab switches
+  const dataLoadedRef = useRef(false);
 
   // Combine errors from URL params and hook
   const displayError = spotifyError || spotifyHookError;
@@ -134,10 +137,15 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
   }, [addLog]);
 
   useEffect(() => {
-    if (connected && user) {
+    // Only load data if connected, has user, and haven't loaded data before
+    if (connected && user && !dataLoadedRef.current) {
+      console.log('🏠 HomeLayout: Loading quick data for first time');
+      dataLoadedRef.current = true;
       loadQuickData();
-    } else {
-      // Clear data when disconnected
+    } else if (!connected) {
+      // Reset data and flag when disconnected
+      console.log('🏠 HomeLayout: Disconnected, clearing data');
+      dataLoadedRef.current = false;
       setRecentTracks([]);
       setTopTracks([]);
       setTopArtists([]);
@@ -146,19 +154,28 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
   }, [connected, user]);
 
   const loadQuickData = async () => {
+    console.log('🏠 HomeLayout: Starting loadQuickData');
     setDataLoading(true);
     try {
+      // Use cached data efficiently - these will return cached data if available
       const [recent, tracks, artists] = await Promise.all([
         getRecentTracks(),
         getTopTracks('short_term'),
         getTopArtists('short_term')
       ]);
       
+      console.log('🏠 HomeLayout: Quick data loaded', {
+        recent: recent?.length,
+        tracks: tracks?.length,
+        artists: artists?.length
+      });
+      
       setRecentTracks(recent?.slice(0, 3) || []);
       setTopTracks(tracks?.slice(0, 3) || []);
       setTopArtists(artists?.slice(0, 3) || []);
     } catch (error) {
-      console.error('Failed to load quick data:', error);
+      console.error('🏠 HomeLayout: Failed to load quick data:', error);
+      // Don't reset dataLoadedRef on error, allow retry
     } finally {
       setDataLoading(false);
     }

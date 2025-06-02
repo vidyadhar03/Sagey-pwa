@@ -257,23 +257,13 @@ export function useSpotifyInsights() {
     }
   }, [connected, getRecentTracks, calculateTopGenre, calculateListeningTime]);
 
-  // Load insights when component mounts and when connection status changes
+  // Load insights only when component mounts or connection changes
   useEffect(() => {
-    console.log('🎯 useEffect triggered, connected:', connected);
-    loadInsights();
-  }, [loadInsights]);
-
-  // Don't auto-refresh if not connected
-  useEffect(() => {
-    if (!connected) return;
-
-    const interval = setInterval(() => {
-      console.log('🔄 Auto-refreshing insights...');
+    console.log('🎯 useSpotifyInsights: useEffect triggered, connected:', connected);
+    if (connected) {
       loadInsights();
-    }, 15 * 60 * 1000); // 15 minutes - increased from 5 minutes
-
-    return () => clearInterval(interval);
-  }, [connected, loadInsights]);
+    }
+  }, [connected]); // Only depend on connected state
 
   return {
     ...insights,
