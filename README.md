@@ -1,8 +1,34 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sagey PWA
 
-## Getting Started
+A Progressive Web App for Spotify music insights and analysis.
 
-First, run the development server:
+## Troubleshooting
+
+### Persistent Loading State or 403 Forbidden Errors
+
+If you're experiencing persistent loading states in the home tab layout or seeing 403 Forbidden errors in the console after a recent update, this is likely due to updated Spotify permissions. Here's how to fix it:
+
+1. **Disconnect your Spotify account:**
+   - Go to the app settings or profile section
+   - Click "Disconnect" or "Logout" from Spotify
+
+2. **Reconnect your Spotify account:**
+   - Click "Connect Spotify" again
+   - You'll be redirected to Spotify's authorization page
+   - Make sure to grant all requested permissions, including:
+     - Access to your recently played tracks
+     - Access to your top tracks and artists
+     - Access to your currently playing track
+
+3. **Clear browser cache (if needed):**
+   - Clear your browser's cookies and cache for the app
+   - Refresh the page and try connecting again
+
+The app now requires additional permissions to show your listening statistics and top genres. These permissions are necessary for the home tab insights to work properly.
+
+## Development
+
+To run the development server:
 
 ```bash
 npm run dev
@@ -10,8 +36,6 @@ npm run dev
 yarn dev
 # or
 pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.

@@ -180,7 +180,10 @@ export function useSpotifyInsights() {
           console.error('❌ Failed to get top tracks:', error);
           return [];
         }),
-        calculateTopGenre()
+        calculateTopGenre().catch(error => {
+          console.error('❌ Failed to calculate top genre:', error);
+          return { topGenre: 'Unknown', topGenrePercentage: 0 };
+        })
       ]);
 
       console.log('📈 Data fetched:', {
@@ -234,7 +237,7 @@ export function useSpotifyInsights() {
     const interval = setInterval(() => {
       console.log('🔄 Auto-refreshing insights...');
       loadInsights();
-    }, 5 * 60 * 1000); // 5 minutes
+    }, 15 * 60 * 1000); // 15 minutes - increased from 5 minutes
 
     return () => clearInterval(interval);
   }, [connected, loadInsights]);

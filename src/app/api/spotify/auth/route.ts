@@ -28,14 +28,13 @@ export async function GET(request: NextRequest) {
   const scopes = [
     'user-read-email',
     'user-library-read',
-    'playlist-read-private'
-    // Removed potentially premium-only scopes for testing:
-    // 'user-read-recently-played',
-    // 'user-top-read', 
-    // 'user-read-currently-playing'
+    'playlist-read-private',
+    'user-read-recently-played',
+    'user-top-read',
+    'user-read-currently-playing'
   ].join(' ');
 
-    console.log('📋 Spotify scopes (free account compatible):', scopes);
+    console.log('📋 Spotify scopes (with necessary permissions):', scopes);
 
   // Generate a random state for security
   const state = Math.random().toString(36).substring(2, 15);

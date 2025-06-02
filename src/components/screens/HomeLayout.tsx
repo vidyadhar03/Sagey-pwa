@@ -15,7 +15,7 @@ interface HomeLayoutProps {
 }
 
 export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
-  const { connected, user, loading, getTopTracks, getTopArtists, getRecentTracks, connect } = useSpotify();
+  const { connected, user, loading, error: spotifyHookError, getTopTracks, getTopArtists, getRecentTracks, connect } = useSpotify();
   const { addLog } = useSpotifyDebug();
   const { 
     todayMinutes, 
@@ -33,11 +33,16 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
 
+  // Combine errors from URL params and hook
+  const displayError = spotifyError || spotifyHookError;
+
   console.log('🏠 HomeLayout rendering:', { 
     connected, 
     loading, 
     hasUser: !!user, 
     spotifyError,
+    spotifyHookError,
+    displayError,
     todayMinutes,
     topGenre,
     insightsLoading
@@ -177,6 +182,8 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
 
   const dismissError = () => {
     setSpotifyError(null);
+    // Note: We can't clear spotifyHookError as it's managed by the hook
+    // Users will need to reconnect to clear permission-related errors
   };
 
   const handleAccountClick = () => {
@@ -199,7 +206,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
       <div className="pt-[60px] w-full h-screen overflow-y-auto bg-gradient-to-br from-[#0A0A0A] via-[#1A1A1A] to-[#0A0A0A]">
         <div className="max-w-7xl mx-auto px-4 pb-[120px]">
           {/* Spotify Error Alert */}
-          {spotifyError && (
+          {displayError && (
             <motion.div 
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -214,7 +221,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                   </div>
                   <div>
                     <h4 className="text-red-400 font-medium text-sm mb-1">Spotify Connection Failed</h4>
-                    <p className="text-red-300/80 text-sm">{spotifyError}</p>
+                    <p className="text-red-300/80 text-sm">{displayError}</p>
                     <button 
                       onClick={connect}
                       className="mt-2 text-red-400 text-sm font-medium hover:text-red-300 underline"

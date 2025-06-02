@@ -31,6 +31,17 @@ export async function GET(request: NextRequest) {
         );
       }
       
+      if (response.status === 403) {
+        // Insufficient permissions - user needs to reconnect with updated scopes
+        return NextResponse.json(
+          { 
+            error: 'Insufficient permissions. Please disconnect and reconnect your Spotify account to grant the required permissions.',
+            shouldReconnect: true 
+          },
+          { status: 403 }
+        );
+      }
+      
       const errorData = await response.text();
       console.error('Spotify API error:', errorData);
       return NextResponse.json(

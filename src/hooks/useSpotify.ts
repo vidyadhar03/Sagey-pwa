@@ -240,6 +240,18 @@ export function useSpotify() {
     if (!response.ok) {
       const errorData = await response.json();
       console.error('❌ getRecentTracks: API error', errorData);
+      
+      // Handle specific error cases
+      if (response.status === 403 && errorData.shouldReconnect) {
+        // Clear current connection status to force reconnection
+        setStatus({
+          connected: false,
+          user: null,
+          loading: false,
+          error: 'Please reconnect your Spotify account to grant updated permissions.'
+        });
+      }
+      
       throw new Error(errorData.error || 'Failed to fetch recent tracks');
     }
 
@@ -281,6 +293,18 @@ export function useSpotify() {
     if (!response.ok) {
       const errorData = await response.json();
       console.error('❌ getTopTracks: API error', errorData);
+      
+      // Handle specific error cases
+      if (response.status === 403 && errorData.shouldReconnect) {
+        // Clear current connection status to force reconnection
+        setStatus({
+          connected: false,
+          user: null,
+          loading: false,
+          error: 'Please reconnect your Spotify account to grant updated permissions.'
+        });
+      }
+      
       throw new Error(errorData.error || 'Failed to fetch top tracks');
     }
 
@@ -323,6 +347,18 @@ export function useSpotify() {
     if (!response.ok) {
       const errorData = await response.json();
       console.error('❌ getTopArtists: API error', errorData);
+      
+      // Handle specific error cases
+      if (response.status === 403 && errorData.shouldReconnect) {
+        // Clear current connection status to force reconnection
+        setStatus({
+          connected: false,
+          user: null,
+          loading: false,
+          error: 'Please reconnect your Spotify account to grant updated permissions.'
+        });
+      }
+      
       throw new Error(errorData.error || 'Failed to fetch top artists');
     }
 
