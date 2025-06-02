@@ -73,16 +73,41 @@ export async function GET(request: NextRequest) {
     console.log('🍪 Setting state cookie...');
   const response = NextResponse.redirect(authUrl);
   
-  // Simple, reliable cookie options that work everywhere
-  const cookieOptions = {
-    httpOnly: true,
-    secure: isProduction,
-    maxAge: 600, // 10 minutes
-    sameSite: 'lax' as const,
-    path: '/',
-  };
+  // iOS Safari compatibility detection
+  const userAgent = request.headers.get('user-agent') || '';
+  const isIOSSafari = /iPhone|iPad|iPod/.test(userAgent) && /Safari/.test(userAgent);
+  const isIOSChrome = /iPhone|iPad|iPod/.test(userAgent) && /CriOS/.test(userAgent);
+  const isIOS = isIOSSafari || isIOSChrome;
   
-  console.log('🔍 State cookie options:', cookieOptions);
+  console.log('🍎 iOS detection:', {
+    userAgent: userAgent.substring(0, 100),
+    isIOSSafari,
+    isIOSChrome,
+    isIOS
+  });
+  
+  // Simple, reliable cookie options that work everywhere
+  let cookieOptions;
+  if (isIOS) {
+    // iOS-specific: Most permissive settings to bypass privacy restrictions
+    cookieOptions = {
+      httpOnly: false, // Allow client-side access for iOS compatibility
+      secure: isProduction,
+      maxAge: 600, // 10 minutes
+      sameSite: 'none' as const, // Required for iOS cross-site requests
+      path: '/',
+    };
+    console.log('🍎 Using iOS-compatible cookie settings');
+  } else {
+    cookieOptions = {
+      httpOnly: true,
+      secure: isProduction,
+      maxAge: 600, // 10 minutes
+      sameSite: 'lax' as const,
+      path: '/',
+    };
+    console.log('🖥️ Using standard cookie settings');
+  }
   
   try {
     response.cookies.set('spotify_auth_state', state, cookieOptions);

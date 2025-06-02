@@ -52,6 +52,16 @@ export async function GET(request: NextRequest) {
       match: state === storedState
     });
     
+  // Enhanced iOS debugging for state issues
+  const userAgent = request.headers.get('user-agent') || '';
+  const isIOS = /iPhone|iPad|iPod/.test(userAgent);
+  if (isIOS && !storedState) {
+    console.error('🍎 iOS STATE COOKIE MISSING:');
+    console.error('🍎 This suggests iOS privacy settings are blocking cookies');
+    console.error('🍎 All cookies:', allCookies.map(c => c.name));
+    console.error('🍎 User Agent:', userAgent);
+  }
+  
   if (state !== storedState) {
       console.error('❌ State mismatch in Spotify callback');
       return NextResponse.redirect(new URL('/?spotify=error&reason=state_mismatch', request.url));
@@ -150,7 +160,6 @@ export async function GET(request: NextRequest) {
     console.log('🔑 Using access token for profile fetch:', `${tokenData.access_token.substring(0, 20)}...`);
     
     // Android-specific retry logic
-    const userAgent = request.headers.get('user-agent') || '';
     const isAndroid = /Android/.test(userAgent);
     
     let profileResponse;
