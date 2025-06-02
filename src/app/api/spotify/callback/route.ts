@@ -147,16 +147,37 @@ export async function GET(request: NextRequest) {
 
     // Get user profile
     console.log('👤 Fetching user profile...');
-    const profileResponse = await fetch('https://api.spotify.com/v1/me', {
-      headers: {
-        'Authorization': `Bearer ${tokenData.access_token}`
-      }
-    });
+    console.log('🔑 Using access token for profile fetch:', `${tokenData.access_token.substring(0, 20)}...`);
+    
+    // Android-specific retry logic
+    const userAgent = request.headers.get('user-agent') || '';
+    const isAndroid = /Android/.test(userAgent);
+    
+    let profileResponse;
+    if (isAndroid) {
+      console.log('🤖 Android detected: Using enhanced profile fetch');
+      // Try with additional headers for Android compatibility
+      profileResponse = await fetch('https://api.spotify.com/v1/me', {
+        headers: {
+          'Authorization': `Bearer ${tokenData.access_token}`,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'User-Agent': userAgent
+        }
+      });
+    } else {
+      profileResponse = await fetch('https://api.spotify.com/v1/me', {
+        headers: {
+          'Authorization': `Bearer ${tokenData.access_token}`
+        }
+      });
+    }
 
     console.log('Profile response received:', {
       status: profileResponse.status,
       statusText: profileResponse.statusText,
-      ok: profileResponse.ok
+      ok: profileResponse.ok,
+      headers: Object.fromEntries(profileResponse.headers.entries())
     });
 
     if (!profileResponse.ok) {
@@ -164,8 +185,25 @@ export async function GET(request: NextRequest) {
       console.error('❌ Failed to fetch Spotify profile:', {
         status: profileResponse.status,
         statusText: profileResponse.statusText,
-        errorBody: profileErrorText
+        errorBody: profileErrorText,
+        tokenLength: tokenData.access_token?.length,
+        tokenType: tokenData.token_type,
+        scope: tokenData.scope
       });
+      
+      // Enhanced Android debugging
+      if (isAndroid) {
+        console.error('🤖 ANDROID PROFILE FETCH FAILURE:');
+        console.error('🤖 User Agent:', userAgent);
+        console.error('🤖 Token Info:', {
+          hasToken: !!tokenData.access_token,
+          tokenPrefix: tokenData.access_token?.substring(0, 10),
+          expiresIn: tokenData.expires_in,
+          tokenType: tokenData.token_type
+        });
+        console.error('🤖 Profile Error Details:', profileErrorText);
+      }
+      
       return NextResponse.redirect(new URL('/?spotify=error&reason=profile_fetch', request.url));
     }
 
