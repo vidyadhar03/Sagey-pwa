@@ -33,7 +33,15 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
 
-  console.log('🏠 HomeLayout rendering:', { connected, loading, hasUser: !!user, spotifyError });
+  console.log('🏠 HomeLayout rendering:', { 
+    connected, 
+    loading, 
+    hasUser: !!user, 
+    spotifyError,
+    todayMinutes,
+    topGenre,
+    insightsLoading
+  });
 
   // Log HomeLayout initialization
   useEffect(() => {
@@ -123,6 +131,12 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
   useEffect(() => {
     if (connected && user) {
       loadQuickData();
+    } else {
+      // Clear data when disconnected
+      setRecentTracks([]);
+      setTopTracks([]);
+      setTopArtists([]);
+      setDataLoading(false);
     }
   }, [connected, user]);
 
@@ -280,6 +294,20 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                     </svg>
                   </button>
                 </div>
+                
+                {/* Debug Info (Development Only) */}
+                {process.env.NODE_ENV === 'development' && (
+                  <div className="mb-4 p-3 bg-blue-900/20 rounded-lg border border-blue-500/30 text-xs">
+                    <p className="text-blue-400 mb-1">Debug Info:</p>
+                    <ul className="text-blue-300 space-y-1">
+                      <li>Connected: {connected ? '✅' : '❌'}</li>
+                      <li>Loading: {insightsLoading ? '⏳' : '✅'}</li>
+                      <li>Today Minutes: {todayMinutes}</li>
+                      <li>Top Genre: {topGenre}</li>
+                      <li>Genre %: {topGenrePercentage}</li>
+                    </ul>
+                  </div>
+                )}
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">

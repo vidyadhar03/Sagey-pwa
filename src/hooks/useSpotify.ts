@@ -214,52 +214,126 @@ export function useSpotify() {
 
   // Fetch recent tracks
   const getRecentTracks = async (): Promise<SpotifyTrack[]> => {
+    console.log('🎵 getRecentTracks: Starting fetch');
+    
     if (!status.connected) {
+      console.log('❌ getRecentTracks: Not connected');
       throw new Error('Spotify not connected');
     }
 
-    const response = await fetch('/api/spotify/recent-tracks');
+    console.log('📡 getRecentTracks: Making API request');
+    const response = await fetch('/api/spotify/recent-tracks', {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    console.log('📡 getRecentTracks: Response received', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok
+    });
     
     if (!response.ok) {
       const errorData = await response.json();
+      console.error('❌ getRecentTracks: API error', errorData);
       throw new Error(errorData.error || 'Failed to fetch recent tracks');
     }
 
     const data = await response.json();
+    console.log('✅ getRecentTracks: Data received', {
+      tracksCount: data.tracks?.length,
+      total: data.total,
+      firstTrack: data.tracks?.[0]
+    });
+    
     return data.tracks;
   };
 
   // Fetch top tracks
   const getTopTracks = async (timeRange: 'short_term' | 'medium_term' | 'long_term' = 'medium_term'): Promise<SpotifyTrack[]> => {
+    console.log('🎵 getTopTracks: Starting fetch with timeRange:', timeRange);
+    
     if (!status.connected) {
+      console.log('❌ getTopTracks: Not connected');
       throw new Error('Spotify not connected');
     }
 
-    const response = await fetch(`/api/spotify/top-tracks?time_range=${timeRange}`);
+    console.log('📡 getTopTracks: Making API request');
+    const response = await fetch(`/api/spotify/top-tracks?time_range=${timeRange}`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    console.log('📡 getTopTracks: Response received', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok
+    });
     
     if (!response.ok) {
       const errorData = await response.json();
+      console.error('❌ getTopTracks: API error', errorData);
       throw new Error(errorData.error || 'Failed to fetch top tracks');
     }
 
     const data = await response.json();
+    console.log('✅ getTopTracks: Data received', {
+      tracksCount: data.tracks?.length,
+      total: data.total,
+      timeRange: data.time_range,
+      firstTrack: data.tracks?.[0]
+    });
+    
     return data.tracks;
   };
 
   // Fetch top artists
   const getTopArtists = async (timeRange: 'short_term' | 'medium_term' | 'long_term' = 'medium_term'): Promise<SpotifyArtist[]> => {
+    console.log('🎤 getTopArtists: Starting fetch with timeRange:', timeRange);
+    
     if (!status.connected) {
+      console.log('❌ getTopArtists: Not connected');
       throw new Error('Spotify not connected');
     }
 
-    const response = await fetch(`/api/spotify/top-artists?time_range=${timeRange}`);
+    console.log('📡 getTopArtists: Making API request');
+    const response = await fetch(`/api/spotify/top-artists?time_range=${timeRange}`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    console.log('📡 getTopArtists: Response received', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok
+    });
     
     if (!response.ok) {
       const errorData = await response.json();
+      console.error('❌ getTopArtists: API error', errorData);
       throw new Error(errorData.error || 'Failed to fetch top artists');
     }
 
     const data = await response.json();
+    console.log('✅ getTopArtists: Data received', {
+      artistsCount: data.artists?.length,
+      total: data.total,
+      timeRange: data.time_range,
+      firstArtist: data.artists?.[0]
+    });
+    
     return data.artists;
   };
 
