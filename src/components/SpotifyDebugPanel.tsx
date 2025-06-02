@@ -4,6 +4,31 @@ import React, { useState } from 'react';
 import { useSpotifyDebug } from '../hooks/useSpotifyDebug';
 
 export default function SpotifyDebugPanel() {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [activeTab, setActiveTab] = useState<'overview' | 'logs' | 'cookies' | 'network'>('overview');
+  
+  // Add error handling for the debug hook
+  let debugData;
+  try {
+    debugData = useSpotifyDebug();
+  } catch (error) {
+    console.error('SpotifyDebugPanel: Error using debug hook:', error);
+    // Return a simple debug button if hook fails
+    return (
+      <div className="fixed bottom-4 right-4 z-50">
+        <button
+          onClick={() => console.log('Debug hook failed to load')}
+          className="bg-red-500 hover:bg-red-600 text-white p-3 rounded-full shadow-lg transition-all"
+          title="Debug panel error"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+          </svg>
+        </button>
+      </div>
+    );
+  }
+  
   const {
     logs,
     debugInfo,
@@ -14,10 +39,7 @@ export default function SpotifyDebugPanel() {
     initiateAuth,
     clearLogs,
     exportLogs
-  } = useSpotifyDebug();
-  
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'logs' | 'cookies' | 'network'>('overview');
+  } = debugData;
 
   const getLogTypeIcon = (type: string) => {
     switch (type) {

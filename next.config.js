@@ -4,6 +4,15 @@ const path = require('path')
 const nextConfig = {
   reactStrictMode: false,
   
+  // Experimental features optimized for Next.js 15
+  experimental: {
+    optimizePackageImports: ['framer-motion'],
+    // Only include valid experimental options for Next.js 15
+  },
+  
+  // Server external packages (moved from experimental)
+  serverExternalPackages: [],
+  
   // Explicitly set TypeScript config path
   typescript: {
     tsconfigPath: './tsconfig.json',
@@ -15,12 +24,6 @@ const nextConfig = {
   eslint: {
     // Disable ESLint during builds to prevent blocking
     ignoreDuringBuilds: true,
-  },
-  
-  // Experimental features optimized for Next.js 15
-  experimental: {
-    optimizePackageImports: ['framer-motion'],
-    // Remove deprecated turbo config
   },
   
   // Compiler options
@@ -101,19 +104,19 @@ const nextConfig = {
       publicPath: false,
     }
     
-    // Universal Windows and permission issue fixes
+    // Aggressive Windows and permission issue fixes
     if (process.platform === 'win32' || process.env.CI) {
-      // Disable file system caching to prevent permission issues
+      // Completely disable file system caching
       config.cache = false
       
       // Optimize watch options for Windows
       config.watchOptions = {
         poll: 1000,
         aggregateTimeout: 300,
-        ignored: ['**/node_modules/**', '**/.next/**', '**/.git/**'],
+        ignored: ['**/node_modules/**', '**/.next/**', '**/.git/**', '**/trace'],
       }
       
-      // Disable snapshots to prevent permission issues
+      // Completely disable snapshots to prevent permission issues
       config.snapshot = {
         managedPaths: [],
         immutablePaths: [],
@@ -121,6 +124,24 @@ const nextConfig = {
           hash: false,
           timestamp: false,
         },
+        module: {
+          timestamp: false,
+          hash: false,
+        },
+        resolve: {
+          timestamp: false,
+          hash: false,
+        },
+        resolveBuildDependencies: {
+          timestamp: false,
+          hash: false,
+        },
+      }
+      
+      // Disable node profiling and tracing
+      config.node = {
+        ...config.node,
+        global: false,
       }
     }
     
@@ -160,23 +181,39 @@ const nextConfig = {
       },
     }
     
-    // Add fallbacks for Node.js modules
+    // Add fallbacks for Node.js modules (only essential ones)
     config.resolve.fallback = {
       ...config.resolve.fallback,
       fs: false,
       net: false,
       tls: false,
-      crypto: false,
-      path: false,
-      os: false,
-      stream: false,
-      util: false,
-      http: false,
-      https: false,
-      url: false,
-      assert: false,
-      buffer: false,
-      process: false,
+    }
+    
+    // Only add essential polyfills for client-side builds
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        crypto: require.resolve('crypto-browserify'),
+        stream: require.resolve('stream-browserify'),
+        util: require.resolve('util'),
+        buffer: require.resolve('buffer'),
+        process: require.resolve('process/browser'),
+      }
+      
+      // Provide necessary globals for browser environment
+      config.plugins.push(
+        new webpack.ProvidePlugin({
+          process: 'process/browser',
+          Buffer: ['buffer', 'Buffer'],
+        })
+      )
+      
+      // Define global for browser
+      config.plugins.push(
+        new webpack.DefinePlugin({
+          global: 'globalThis',
+        })
+      )
     }
     
     // Ignore specific warnings that are safe to ignore

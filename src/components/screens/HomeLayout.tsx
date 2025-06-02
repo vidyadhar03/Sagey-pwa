@@ -24,8 +24,11 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
 
+  console.log('🏠 HomeLayout rendering:', { connected, loading, hasUser: !!user, spotifyError });
+
   // Log HomeLayout initialization
   useEffect(() => {
+    console.log('🏠 HomeLayout mounted');
     addLog('info', 'status', 'HomeLayout component mounted', {
       connected,
       hasUser: !!user,
@@ -523,10 +526,8 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
         <UserProfile onClose={handleCloseUserProfile} />
       )}
       
-      {/* Spotify Debug Panel - Show on errors or manually */}
-      {(showDebugPanel || spotifyError) && (
-        <SpotifyDebugPanel />
-      )}
+      {/* Spotify Debug Panel - Always visible with improved error handling */}
+      <SpotifyDebugPanel />
     </>
   );
 } 

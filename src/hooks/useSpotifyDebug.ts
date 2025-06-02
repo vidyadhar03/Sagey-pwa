@@ -323,18 +323,18 @@ export function useSpotifyDebug() {
   // Initialize debug info on mount
   useEffect(() => {
     updateDebugInfo();
-  }, [updateDebugInfo]);
+  }, []);
 
-  // Auto-refresh debug info every 5 seconds
+  // Auto-refresh debug info every 10 seconds (increased from 5)
   useEffect(() => {
     if (!isCollecting) return;
     
     const interval = setInterval(() => {
       updateDebugInfo();
-    }, 5000);
+    }, 10000); // Increased interval to reduce load
     
     return () => clearInterval(interval);
-  }, [isCollecting, updateDebugInfo]);
+  }, [isCollecting]);
 
   return {
     logs,
