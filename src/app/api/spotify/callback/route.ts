@@ -194,12 +194,24 @@ export async function GET(request: NextRequest) {
     console.log('🔍 Environment:', { isProduction });
     
     // Basic cookie options that work on all platforms
-    const cookieOptions = {
+    const cookieOptions: {
+      httpOnly: boolean;
+      secure: boolean;
+      sameSite: 'lax' | 'none';
+      path: string;
+    } = {
       httpOnly: true,
       secure: isProduction,
       sameSite: 'lax' as const,
       path: '/',
     };
+    
+    // More permissive settings if we're having issues
+    if (isProduction) {
+      // In production, try more permissive settings
+      cookieOptions.sameSite = 'none';
+      cookieOptions.secure = true;
+    }
 
     console.log('Cookie options:', cookieOptions);
 
@@ -210,10 +222,24 @@ export async function GET(request: NextRequest) {
         maxAge: tokenData.expires_in || 3600
       };
       
+      console.log('🔑 Setting access token cookie with options:', accessTokenOptions);
+      console.log('🔑 Access token length:', tokenData.access_token?.length);
+      console.log('🔑 Token expires in:', tokenData.expires_in, 'seconds');
+      
       response.cookies.set('spotify_access_token', tokenData.access_token, accessTokenOptions);
-      console.log('✅ Access token cookie set');
+      console.log('✅ Access token cookie set successfully');
+      
+      // Verify the cookie was set by reading it back
+      const setCookieHeader = response.headers.get('Set-Cookie');
+      console.log('🍪 Set-Cookie header:', setCookieHeader?.substring(0, 100) + '...');
+      
     } catch (cookieError) {
-      console.error('❌ Failed to set access token cookie:', cookieError);
+      console.error('❌ CRITICAL: Failed to set access token cookie:', cookieError);
+      console.error('❌ Error details:', {
+        message: cookieError instanceof Error ? cookieError.message : 'Unknown error',
+        tokenLength: tokenData.access_token?.length,
+        cookieOptions
+      });
     }
 
     // Set refresh token cookie
