@@ -72,37 +72,24 @@ export async function GET(request: NextRequest) {
     console.log('🍪 Setting state cookie...');
   const response = NextResponse.redirect(authUrl);
   
-  // Enhanced cookie options for mobile compatibility
-  const userAgent = request.headers.get('user-agent') || '';
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
-  
-  console.log('🔍 User agent info:', {
-    userAgent: userAgent.substring(0, 100),
-    isMobile,
-    isProduction
-  });
-  
-  // Mobile-optimized cookie options
+  // Simple, reliable cookie options that work everywhere
   const cookieOptions = {
     httpOnly: true,
     secure: isProduction,
     maxAge: 600, // 10 minutes
-    sameSite: isMobile ? 'none' as const : 'lax' as const,
+    sameSite: 'lax' as const,
     path: '/',
-    domain: isProduction ? '.vercel.app' : undefined,
   };
   
-  // For mobile, we need secure + sameSite=none for cross-site cookies
-  if (isMobile && isProduction) {
-    cookieOptions.sameSite = 'none';
-    cookieOptions.secure = true;
-  }
+  console.log('🔍 State cookie options:', cookieOptions);
   
   try {
     response.cookies.set('spotify_auth_state', state, cookieOptions);
-    console.log('✅ State cookie set successfully with options:', cookieOptions);
+    console.log('✅ State cookie set successfully');
+    console.log('🔐 State value stored:', `${state.substring(0, 10)}...`);
   } catch (cookieError) {
-    console.error('❌ Failed to set state cookie:', cookieError);
+    console.error('❌ CRITICAL: Failed to set state cookie:', cookieError);
+    console.error('❌ This will cause state_mismatch errors!');
   }
 
     console.log('🚀 Redirecting to Spotify authorization...');
