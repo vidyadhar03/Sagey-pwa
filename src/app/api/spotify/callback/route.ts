@@ -221,7 +221,10 @@ export async function GET(request: NextRequest) {
       id: profileData.id,
       displayName: profileData.display_name,
       email: profileData.email,
-      hasImages: !!profileData.images?.length
+      hasImages: !!profileData.images?.length,
+      accountType: profileData.product, // 'free' or 'premium'
+      country: profileData.country,
+      followers: profileData.followers?.total
     });
 
     // Create response
