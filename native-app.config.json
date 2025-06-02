@@ -1,0 +1,94 @@
+{
+  "expo": {
+    "name": "Sagey - Musical Age Estimator",
+    "slug": "sagey-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./public/icons/icon-512x512.png",
+    "userInterfaceStyle": "automatic",
+    "scheme": "com.sagey.app",
+    "splash": {
+      "image": "./public/icons/splash-1024x1024.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.sagey.app",
+      "config": {
+        "usesNonExemptEncryption": false
+      },
+      "infoPlist": {
+        "LSApplicationQueriesSchemes": [
+          "spotify"
+        ],
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLName": "Spotify Auth",
+            "CFBundleURLSchemes": ["com.sagey.app"]
+          }
+        ]
+      },
+      "associatedDomains": [
+        "applinks:sagey-pwa.vercel.app"
+      ]
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./public/icons/icon-512x512.png",
+        "backgroundColor": "#000000"
+      },
+      "package": "com.sagey.app",
+      "permissions": [
+        "android.permission.INTERNET",
+        "android.permission.ACCESS_NETWORK_STATE"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "category": ["DEFAULT", "BROWSABLE"],
+          "data": {
+            "scheme": "com.sagey.app"
+          }
+        },
+        {
+          "action": "VIEW",
+          "category": ["DEFAULT", "BROWSABLE"],
+          "data": {
+            "scheme": "https",
+            "host": "sagey-pwa.vercel.app"
+          }
+        }
+      ]
+    },
+    "web": {
+      "favicon": "./public/favicon.ico",
+      "bundler": "metro"
+    },
+    "plugins": [
+      [
+        "expo-auth-session",
+        {
+          "schemes": ["com.sagey.app"]
+        }
+      ],
+      [
+        "expo-secure-store"
+      ],
+      [
+        "expo-linking",
+        {
+          "scheme": "com.sagey.app"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "your-project-id-here"
+      }
+    }
+  }
+} 
