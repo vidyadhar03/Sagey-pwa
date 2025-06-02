@@ -340,6 +340,64 @@ export function useSpotify() {
     }
   };
 
+  // Logout/Disconnect from Spotify
+  const logout = async () => {
+    console.log('🚪 useSpotify: Starting logout process');
+    
+    try {
+      setStatus(prev => ({ ...prev, loading: true }));
+      
+      // Call logout API endpoint
+      const response = await fetch('/api/spotify/logout', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('📡 useSpotify: Logout API response', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+      
+      // Reset state regardless of API response (ensure local state is clean)
+      setStatus({
+        connected: false,
+        user: null,
+        loading: false,
+        error: undefined
+      });
+      
+      if (response.ok) {
+        console.log('✅ useSpotify: Successfully logged out from Spotify');
+      } else {
+        console.warn('⚠️ useSpotify: Logout API failed, but local state cleared');
+      }
+      
+      // Optional: Clear any cached data from localStorage/sessionStorage
+      try {
+        localStorage.removeItem('spotify_cache');
+        sessionStorage.removeItem('spotify_temp');
+      } catch (error) {
+        console.warn('⚠️ useSpotify: Failed to clear local storage:', error);
+      }
+      
+    } catch (error) {
+      console.error('💥 useSpotify: Failed to logout:', error);
+      
+      // Still reset state even if API call fails
+      setStatus({
+        connected: false,
+        user: null,
+        loading: false,
+        error: 'Logout failed, but session cleared locally'
+      });
+    }
+  };
+
   useEffect(() => {
     checkStatus();
   }, []);
@@ -347,6 +405,7 @@ export function useSpotify() {
   return {
     ...status,
     connect,
+    logout,
     checkStatus,
     getRecentTracks,
     getTopTracks,

@@ -8,6 +8,7 @@ import UserProfile from '../UserProfile';
 import SpotifyDebugPanel from '../SpotifyDebugPanel';
 import { useSpotify } from '../../hooks/useSpotify';
 import { useSpotifyDebug } from '../../hooks/useSpotifyDebug';
+import { useSpotifyInsights } from '../../hooks/useSpotifyInsights';
 
 interface HomeLayoutProps {
   onTabClick?: (tab: string) => void;
@@ -16,6 +17,14 @@ interface HomeLayoutProps {
 export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
   const { connected, user, loading, getTopTracks, getTopArtists, getRecentTracks, connect } = useSpotify();
   const { addLog } = useSpotifyDebug();
+  const { 
+    todayMinutes, 
+    todayComparison, 
+    topGenre, 
+    topGenrePercentage,
+    loading: insightsLoading,
+    refresh: refreshInsights
+  } = useSpotifyInsights();
   const [recentTracks, setRecentTracks] = useState<any[]>([]);
   const [topTracks, setTopTracks] = useState<any[]>([]);
   const [topArtists, setTopArtists] = useState<any[]>([]);
@@ -249,37 +258,81 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
             className="mt-6 mb-8"
           >
             {connected ? (
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">
-                  <div className="flex items-center mb-3">
-                    <div className="w-10 h-10 rounded-full bg-[#1DB954]/20 flex items-center justify-center mr-3">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-[#1DB954]">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-                    <div>
-                      <p className="text-white font-semibold text-sm">Today</p>
-            </div>
-                  </div>
-                  <div className="text-[#1DB954] text-2xl font-bold mb-1">2h 34m</div>
-                  <p className="text-gray-400 text-xs">+12% vs yesterday</p>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">
-                  <div className="flex items-center mb-3">
-                    <div className="w-10 h-10 rounded-full bg-[#1ed760]/20 flex items-center justify-center mr-3">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-[#1ed760]">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 11-.99-3.467l2.31-.66a2.25 2.25 0 001.632-2.163zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 01-.99-3.467l2.31-.66A2.25 2.25 0 009 15.553z" />
+              <>
+                {/* Quick Stats Header with Refresh Button */}
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-white font-semibold text-lg">Today's Stats</h3>
+                  <button 
+                    onClick={refreshInsights}
+                    disabled={insightsLoading}
+                    className="p-2 rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-50 transition-colors"
+                    title="Refresh stats"
+                  >
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      strokeWidth={2} 
+                      stroke="currentColor" 
+                      className={`w-4 h-4 text-white ${insightsLoading ? 'animate-spin' : ''}`}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
                     </svg>
-                    </div>
-                    <div>
-                      <p className="text-white font-semibold text-sm">Top Genre</p>
-                    </div>
-                  </div>
-                  <div className="text-[#1ed760] text-lg font-bold mb-1">Electronic</div>
-                  <p className="text-gray-400 text-xs">35% of listening</p>
+                  </button>
                 </div>
-            </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">
+                    <div className="flex items-center mb-3">
+                      <div className="w-10 h-10 rounded-full bg-[#1DB954]/20 flex items-center justify-center mr-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-[#1DB954]">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-white font-semibold text-sm">Today</p>
+                      </div>
+                    </div>
+                    {insightsLoading ? (
+                      <>
+                        <div className="animate-pulse bg-[#1DB954]/20 h-8 w-20 rounded mb-1"></div>
+                        <div className="animate-pulse bg-gray-600/20 h-3 w-24 rounded"></div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-[#1DB954] text-2xl font-bold mb-1">
+                          {todayMinutes > 0 ? `${Math.floor(todayMinutes / 60)}h ${todayMinutes % 60}m` : `${todayMinutes}m`}
+                        </div>
+                        <p className="text-gray-400 text-xs">{todayComparison} vs yesterday</p>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">
+                    <div className="flex items-center mb-3">
+                      <div className="w-10 h-10 rounded-full bg-[#1ed760]/20 flex items-center justify-center mr-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-[#1ed760]">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 11-.99-3.467l2.31-.66a2.25 2.25 0 001.632-2.163zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 01-.99-3.467l2.31-.66A2.25 2.25 0 009 15.553z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-white font-semibold text-sm">Top Genre</p>
+                      </div>
+                    </div>
+                    {insightsLoading ? (
+                      <>
+                        <div className="animate-pulse bg-[#1ed760]/20 h-6 w-24 rounded mb-1"></div>
+                        <div className="animate-pulse bg-gray-600/20 h-3 w-20 rounded"></div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-[#1ed760] text-lg font-bold mb-1">{topGenre}</div>
+                        <p className="text-gray-400 text-xs">{topGenrePercentage}% of listening</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </>
             ) : (
               <button 
                 onClick={connect}
@@ -506,7 +559,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 text-[#1AA34A]">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M16 4v10l-4-4-4 4V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2z" />
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18h.01M10 18h.01M14 18h.01M18 18h.01M6 14h12v6H6z" />
-                  </svg>
+                    </svg>
                   </div>
                   <span className="text-white font-semibold text-sm">Full Stats</span>
                   <span className="text-[#1AA34A]/80 text-xs mt-1">Complete data</span>
