@@ -33,16 +33,48 @@ export async function GET(request: NextRequest) {
     const userInfo = request.cookies.get('spotify_user_info')?.value;
     const authState = request.cookies.get('spotify_auth_state')?.value;
     
-    console.log('🔑 Cookie analysis:', {
+    // Check for mobile fallback token in user info cookie
+    let mobileToken = null;
+    let userInfoData = null;
+    if (userInfo) {
+      try {
+        userInfoData = JSON.parse(decodeURIComponent(userInfo));
+        if (userInfoData.mobile_fallback && userInfoData.access_token) {
+          // Check if mobile token is still valid
+          const expiresAt = userInfoData.expires_at;
+          if (expiresAt && Date.now() < expiresAt) {
+            mobileToken = userInfoData.access_token;
+            console.log('📱 Found valid mobile fallback token');
+          } else {
+            console.log('⏰ Mobile fallback token expired');
+          }
+        }
+      } catch (parseError) {
+        console.log('❌ Failed to parse user info cookie:', parseError);
+      }
+    }
+    
+    // Use primary token or mobile fallback
+    const effectiveToken = accessToken || mobileToken;
+    
+    console.log('🔑 Token analysis:', {
       hasAccessToken: !!accessToken,
       tokenLength: accessToken?.length,
+      hasMobileToken: !!mobileToken,
+      mobileTokenLength: mobileToken?.length,
       hasUserInfo: !!userInfo,
       hasAuthState: !!authState,
-      cookieCount: allCookies.length
+      cookieCount: allCookies.length,
+      userInfoData: userInfoData ? {
+        userId: userInfoData.user_id,
+        displayName: userInfoData.display_name,
+        hasMobileFallback: !!userInfoData.mobile_fallback,
+        tokenExpiry: userInfoData.expires_at ? new Date(userInfoData.expires_at).toISOString() : null
+      } : null
     });
     
-    if (!accessToken) {
-      console.log('❌ No access token found');
+    if (!effectiveToken) {
+      console.log('❌ No access token found (neither primary nor mobile fallback)');
       return NextResponse.json({
         connected: false,
         user: null,
@@ -50,6 +82,8 @@ export async function GET(request: NextRequest) {
           reason: 'no_access_token',
           cookieCount: allCookies.length,
           hasUserInfo: !!userInfo,
+          isMobile,
+          checkedMobileFallback: !!userInfo,
           timestamp: new Date().toISOString()
         }
       });
@@ -59,7 +93,7 @@ export async function GET(request: NextRequest) {
     console.log('🔄 Verifying token with Spotify API...');
     const response = await fetch('https://api.spotify.com/v1/me', {
       headers: {
-        'Authorization': `Bearer ${accessToken}`
+        'Authorization': `Bearer ${effectiveToken}`
       }
     });
 

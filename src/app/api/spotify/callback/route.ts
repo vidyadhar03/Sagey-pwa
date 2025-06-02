@@ -230,6 +230,32 @@ export async function GET(request: NextRequest) {
       
       response.cookies.set('spotify_access_token', tokenData.access_token, accessTokenOptions);
       console.log('✅ Access token cookie set with options:', accessTokenOptions);
+      
+      // For mobile, also store in user info cookie as backup (since httpOnly cookies may be blocked)
+      if (isMobile) {
+        console.log('📱 Mobile detected: Adding access token to user info for fallback');
+        const mobileUserInfo = JSON.stringify({
+          user_id: profileData.id,
+          display_name: profileData.display_name,
+          email: profileData.email,
+          access_token: tokenData.access_token, // Add token for mobile
+          expires_at: Date.now() + (tokenData.expires_in * 1000), // Add expiry
+          mobile_fallback: true
+        });
+        
+        // Set enhanced user info cookie for mobile
+        const mobileUserInfoOptions = {
+          httpOnly: false, // Allow client-side access
+          secure: isProduction,
+          maxAge: tokenData.expires_in || 3600, // Match token expiry
+          sameSite: 'none' as const,
+          path: '/',
+          domain: isProduction ? '.vercel.app' : undefined,
+        };
+        
+        response.cookies.set('spotify_user_info', mobileUserInfo, mobileUserInfoOptions);
+        console.log('✅ Mobile user info with token set');
+      }
     } catch (cookieError) {
       console.error('❌ Failed to set access token cookie:', cookieError);
     }
@@ -271,8 +297,13 @@ export async function GET(request: NextRequest) {
         userInfoOptions.secure = true;
       }
       
-      response.cookies.set('spotify_user_info', userInfo, userInfoOptions);
-      console.log('✅ User info cookie set with options:', userInfoOptions);
+      // Only set basic user info for desktop (mobile already has enhanced version)
+      if (!isMobile) {
+        response.cookies.set('spotify_user_info', userInfo, userInfoOptions);
+        console.log('✅ User info cookie set with options:', userInfoOptions);
+      } else {
+        console.log('📱 Skipping basic user info cookie for mobile (enhanced version already set)');
+      }
     } catch (cookieError) {
       console.error('❌ Failed to set user info cookie:', cookieError);
     }

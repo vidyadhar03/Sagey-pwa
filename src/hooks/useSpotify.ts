@@ -153,28 +153,62 @@ export function useSpotify() {
   const connect = () => {
     console.log('🚀 useSpotify: Starting Spotify authentication process');
     
+    // Enhanced mobile debugging
+    const userAgent = navigator.userAgent;
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+    const isAndroid = /Android/.test(userAgent);
+    const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+    
     // Log current environment info
     console.log('🌍 useSpotify: Environment info', {
-      userAgent: navigator.userAgent,
+      userAgent: userAgent.substring(0, 100),
       platform: navigator.platform,
-      isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
+      isMobile,
+      isAndroid, 
+      isIOS,
       online: navigator.onLine,
       url: window.location.href,
-      referrer: document.referrer
+      referrer: document.referrer,
+      cookiesEnabled: navigator.cookieEnabled
     });
     
     // Log cookie information
     console.log('🍪 useSpotify: Current cookies', {
       allCookies: document.cookie,
-      cookieCount: document.cookie.split(';').length - 1
+      cookieCount: document.cookie ? document.cookie.split(';').length : 0,
+      domain: window.location.hostname,
+      protocol: window.location.protocol
     });
+    
+    // Log touch/click capability for mobile
+    if (isMobile) {
+      console.log('📱 useSpotify: Mobile-specific info', {
+        touchSupport: 'ontouchstart' in window,
+        screenSize: `${screen.width}x${screen.height}`,
+        viewportSize: `${window.innerWidth}x${window.innerHeight}`,
+        devicePixelRatio: window.devicePixelRatio
+      });
+    }
     
     console.log('🔗 useSpotify: Redirecting to /api/spotify/auth');
     
     try {
-      window.location.href = '/api/spotify/auth';
+      // Add a small delay for mobile to ensure logging is captured
+      if (isMobile) {
+        setTimeout(() => {
+          console.log('🔀 useSpotify: Mobile redirect executing...');
+          window.location.href = '/api/spotify/auth';
+        }, 100);
+      } else {
+        window.location.href = '/api/spotify/auth';
+      }
     } catch (error) {
       console.error('💥 useSpotify: Failed to redirect to auth endpoint:', error);
+      console.error('🔍 useSpotify: Error details:', {
+        errorType: error?.constructor?.name,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
     }
   };
 
