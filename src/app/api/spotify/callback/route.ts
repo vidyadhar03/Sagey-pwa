@@ -323,6 +323,7 @@ export async function GET(request: NextRequest) {
     }
 
     console.log('🎉 Spotify authentication successful for user:', profileData.display_name);
+    console.log('📱 Mobile token fallback system active - deployment timestamp:', Date.now());
     console.log('=== SPOTIFY CALLBACK SUCCESS ===');
     return response;
 
