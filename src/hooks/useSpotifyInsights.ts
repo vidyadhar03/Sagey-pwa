@@ -88,14 +88,14 @@ export function useSpotifyInsights() {
 
   // Calculate musical age from track data
   const calculateMusicalAge = useCallback((tracks: any[]) => {
-    console.warn('🎂 SAGEY: calculateMusicalAge - processing', tracks?.length, 'tracks');
+    console.error('🎂 SAGEY DEBUG: calculateMusicalAge - processing', tracks?.length, 'tracks');
     
     if (!tracks || tracks.length === 0) {
-      console.warn('❌ SAGEY: calculateMusicalAge - No tracks provided');
+      console.error('❌ SAGEY DEBUG: calculateMusicalAge - No tracks provided');
       return DEFAULT_INSIGHTS.musicalAge;
     }
 
-    console.warn('🔍 SAGEY: Extracting release years from track data...');
+    console.error('🔍 SAGEY DEBUG: Extracting release years from track data...');
     
     const releaseYears: number[] = [];
     
@@ -105,38 +105,46 @@ export function useSpotifyInsights() {
         const actualTrack = track.track || track;
         const album = actualTrack.album;
         
-        if (index < 3) { // Log first 3 tracks for debugging
-          console.warn(`SAGEY Track ${index + 1}:`, {
-            name: actualTrack.name,
+        if (index < 5) { // Log first 5 tracks for debugging
+          console.error(`SAGEY DEBUG Track ${index + 1}:`, {
+            name: actualTrack?.name,
             hasAlbum: !!album,
-            releaseDate: album?.release_date
+            albumType: typeof album,
+            releaseDate: album?.release_date,
+            fullAlbum: album
           });
         }
         
-        if (album?.release_date) {
+        if (album && typeof album === 'object' && 'release_date' in album && typeof album.release_date === 'string') {
           const year = parseInt(album.release_date.substring(0, 4));
           if (year > 1900 && year <= new Date().getFullYear()) {
             releaseYears.push(year);
-          } else if (index < 3) {
-            console.warn(`SAGEY: Invalid year ${year} for track:`, actualTrack.name);
+            if (index < 5) {
+              console.error(`SAGEY DEBUG: ✅ Valid year ${year} extracted from track:`, actualTrack?.name);
+            }
+          } else if (index < 5) {
+            console.error(`SAGEY DEBUG: ❌ Invalid year ${year} for track:`, actualTrack?.name);
           }
+        } else if (index < 5) {
+          console.error(`SAGEY DEBUG: ❌ No valid release date for track:`, actualTrack?.name, 'album:', album);
         }
       } catch (error) {
-        if (index < 3) {
-          console.warn(`SAGEY: Error processing track ${index + 1}:`, error);
+        if (index < 5) {
+          console.error(`SAGEY DEBUG: ❌ Error processing track ${index + 1}:`, error);
         }
       }
     });
 
-    console.warn('📊 SAGEY: Release years extracted:', {
+    console.error('📊 SAGEY DEBUG: Release years extracted:', {
       totalTracks: tracks.length,
       validYears: releaseYears.length,
       yearRange: releaseYears.length > 0 ? 
-        `${Math.min(...releaseYears)}-${Math.max(...releaseYears)}` : 'none'
+        `${Math.min(...releaseYears)}-${Math.max(...releaseYears)}` : 'none',
+      firstFewYears: releaseYears.slice(0, 10)
     });
 
     if (releaseYears.length === 0) {
-      console.warn('❌ SAGEY: No valid release years found - using current year');
+      console.error('❌ SAGEY DEBUG: No valid release years found - using current year as fallback');
       const currentYear = new Date().getFullYear();
       return {
         age: 0,
@@ -169,10 +177,11 @@ export function useSpotifyInsights() {
       trackCount: tracks.length
     };
 
-    console.warn('✅ SAGEY: Musical Age calculated successfully!', {
+    console.error('✅ SAGEY DEBUG: Musical Age calculated successfully!', {
       age: result.age,
       averageYear: result.averageYear,
-      trackCount: result.trackCount
+      trackCount: result.trackCount,
+      validYearsCount: releaseYears.length
     });
     
     return result;
@@ -410,14 +419,14 @@ export function useSpotifyInsights() {
     
     // Circuit breaker: prevent API spam
     if (now - lastLoadTime < MIN_LOAD_INTERVAL) {
-      console.warn('🚫 SAGEY: Rate limited - too soon since last load');
+      console.error('🚫 SAGEY DEBUG: Rate limited - too soon since last load');
       return;
     }
     
-    console.warn('🔄 SAGEY: loadInsights started, connected:', connected);
+    console.error('🔄 SAGEY DEBUG: loadInsights started, connected:', connected);
     
     if (!connected) {
-      console.warn('❌ SAGEY: Not connected to Spotify, using defaults');
+      console.error('❌ SAGEY DEBUG: Not connected to Spotify, using defaults');
       setInsights(DEFAULT_INSIGHTS);
       setIsLoading(false);
       setError(null);
@@ -429,72 +438,76 @@ export function useSpotifyInsights() {
     setLastLoadTime(now);
 
     try {
-      console.warn('🔄 SAGEY: Fetching Spotify data...');
+      console.error('🔄 SAGEY DEBUG: Fetching Spotify data...');
       
       // Fetch data in parallel
       const [recentTracks, topTracks] = await Promise.all([
         getRecentTracks().catch(error => {
-          console.error('SAGEY: Failed to fetch recent tracks:', error);
+          console.error('SAGEY DEBUG: Failed to fetch recent tracks:', error);
           return [];
         }),
         getTopTracks('medium_term').catch(error => {
-          console.error('SAGEY: Failed to fetch top tracks:', error);
+          console.error('SAGEY DEBUG: Failed to fetch top tracks:', error);
           return [];
         })
       ]);
 
-      console.warn('📊 SAGEY: Data fetched - recent:', recentTracks?.length, 'top:', topTracks?.length);
+      console.error('📊 SAGEY DEBUG: Data fetched - recent:', recentTracks?.length, 'top:', topTracks?.length);
 
       // Use top tracks for more comprehensive analysis, fallback to recent tracks
       const tracksToAnalyze = topTracks && topTracks.length > 0 ? topTracks : recentTracks;
       
-      console.warn('🎯 SAGEY: Analyzing', tracksToAnalyze?.length, 'tracks from', 
+      console.error('🎯 SAGEY DEBUG: Analyzing', tracksToAnalyze?.length, 'tracks from', 
         topTracks && topTracks.length > 0 ? 'top tracks' : 'recent tracks');
       
+      // Debug: Log first track structure
+      if (tracksToAnalyze && tracksToAnalyze.length > 0) {
+        const firstTrack = tracksToAnalyze[0];
+        const album = firstTrack?.album;
+        console.error('🔍 SAGEY DEBUG: First track structure:', {
+          track: firstTrack,
+          hasAlbum: !!album,
+          albumReleaseDate: album && typeof album === 'object' && 'release_date' in album ? (album as any).release_date : 'N/A',
+          trackName: firstTrack?.name
+        });
+      }
+      
       if (!tracksToAnalyze || tracksToAnalyze.length === 0) {
-        console.warn('⚠️ SAGEY: No tracks found, using fallback data');
+        console.error('⚠️ SAGEY DEBUG: No tracks found, using fallback data');
         setInsights({ ...DEFAULT_INSIGHTS, isDefault: true });
         setIsLoading(false);
         return;
       }
 
       // Calculate Musical Age first (no API calls needed)
-      console.warn('🎂 SAGEY: Calculating Musical Age...');
+      console.error('🎂 SAGEY DEBUG: Starting Musical Age calculation with', tracksToAnalyze.length, 'tracks...');
       const musicalAge = calculateMusicalAge(tracksToAnalyze);
-      console.warn('🎂 SAGEY: Musical Age calculated:', musicalAge.age, 'years');
+      console.error('🎂 SAGEY DEBUG: Musical Age result:', {
+        age: musicalAge.age,
+        description: musicalAge.description,
+        trackCount: musicalAge.trackCount,
+        averageYear: musicalAge.averageYear
+      });
 
       // Calculate Genre Passport (uses artist data, should work)
-      console.warn('🎤 SAGEY: Calculating Genre Passport...');
+      console.error('🎤 SAGEY DEBUG: Calculating Genre Passport...');
       let genrePassport;
       try {
         genrePassport = await calculateGenrePassport();
-        console.warn('🎤 SAGEY: Genre Passport calculated:', genrePassport.totalGenres, 'genres');
+        console.error('🎤 SAGEY DEBUG: Genre Passport calculated:', genrePassport.totalGenres, 'genres');
       } catch (error) {
-        console.error('🎤 SAGEY: Genre passport failed:', error);
+        console.error('🎤 SAGEY DEBUG: Genre passport failed:', error);
         genrePassport = DEFAULT_INSIGHTS.genrePassport;
       }
 
       // Calculate Night Owl Pattern (uses recent tracks, no API calls)
-      console.warn('🦉 SAGEY: Calculating Night Owl Pattern...');
+      console.error('🦉 SAGEY DEBUG: Calculating Night Owl Pattern...');
       const nightOwlPattern = calculateNightOwlPattern(recentTracks || []);
-      console.warn('🦉 SAGEY: Night Owl Pattern calculated, score:', nightOwlPattern.score);
+      console.error('🦉 SAGEY DEBUG: Night Owl Pattern calculated, score:', nightOwlPattern.score);
 
-      // Calculate Mood Ring (may fail due to audio features API)
-      console.warn('🎭 SAGEY: Attempting Mood Ring calculation...');
-      let moodRing;
-      try {
-        // Only attempt if we have a reasonable number of tracks
-        if (tracksToAnalyze.length >= 5) {
-          moodRing = await calculateMoodRing(tracksToAnalyze);
-          console.warn('🎭 SAGEY: Mood Ring calculated successfully:', moodRing.dominantMood);
-        } else {
-          console.warn('🎭 SAGEY: Not enough tracks for mood analysis, using defaults');
-          moodRing = DEFAULT_INSIGHTS.moodRing;
-        }
-      } catch (error) {
-        console.error('🎭 SAGEY: Mood Ring failed, using defaults:', error);
-        moodRing = DEFAULT_INSIGHTS.moodRing;
-      }
+      // Skip Mood Ring for now to avoid 403 errors
+      console.error('🎭 SAGEY DEBUG: Skipping Mood Ring to avoid 403 errors');
+      const moodRing = DEFAULT_INSIGHTS.moodRing;
 
       const comprehensiveInsights: SpotifyInsightsData = {
         musicalAge,
@@ -504,17 +517,17 @@ export function useSpotifyInsights() {
         isDefault: false
       };
 
-      console.warn('✅ SAGEY: All calculations completed!', {
+      console.error('✅ SAGEY DEBUG: All calculations completed!', {
         musicalAge: musicalAge.age,
-        moodValid: moodRing.dominantMood !== 'Unknown',
         genreCount: genrePassport.totalGenres,
-        nightOwlScore: nightOwlPattern.score
+        nightOwlScore: nightOwlPattern.score,
+        usingDefaults: false
       });
       
       setInsights(comprehensiveInsights);
 
     } catch (error) {
-      console.error('💥 SAGEY: Failed to load insights:', error);
+      console.error('💥 SAGEY DEBUG: Failed to load insights:', error);
       setError(error instanceof Error ? error.message : 'Failed to load insights');
       setInsights({ ...DEFAULT_INSIGHTS, isDefault: true });
     } finally {
