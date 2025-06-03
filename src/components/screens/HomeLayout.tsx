@@ -531,7 +531,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                                 {trackImageUrl ? (
                                   <img 
                                     src={trackImageUrl} 
-                                    alt={`${trackAlbum} album cover`}
+                                    alt={typeof trackAlbum === 'string' ? trackAlbum : trackAlbum?.name || 'Album'}
                                     className="w-full h-full object-cover rounded-lg"
                                     onError={(e) => {
                                       console.log('❌ Image failed to load:', trackImageUrl);
@@ -547,7 +547,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                               <div className="flex-1 min-w-0">
                                 <h4 className="text-white font-medium truncate">{trackName || 'Unknown Track'}</h4>
                                 <p className="text-gray-400 text-sm truncate">
-                                  {trackArtist || 'Unknown Artist'} • {trackAlbum || 'Unknown Album'}
+                                  {trackArtist || 'Unknown Artist'} • {typeof trackAlbum === 'string' ? trackAlbum : trackAlbum?.name || 'Unknown Album'}
                                 </p>
                                 <div className="flex items-center">
                                   <span className="text-xs text-gray-400">{track.duration_ms ? formatDuration(track.duration_ms) : '--:--'}</span>
@@ -636,13 +636,15 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                               {track.image_url && (
                                 <img 
                                   src={track.image_url} 
-                                  alt={track.album}
+                                  alt={typeof track.album === 'string' ? track.album : track.album?.name || 'Album'}
                                   className="w-12 h-12 mr-4 rounded-lg"
                                 />
                               )}
                               <div className="flex-1 min-w-0">
                                 <h4 className="text-white font-medium truncate">{track.name}</h4>
-                                <p className="text-gray-400 text-sm truncate">{track.artist} • {track.album}</p>
+                                <p className="text-gray-400 text-sm truncate">
+                                  {track.artist} • {typeof track.album === 'string' ? track.album : track.album?.name || 'Unknown Album'}
+                                </p>
                                 <div className="flex items-center">
                                   <span className="text-xs text-gray-400">{track.duration_ms ? formatDuration(track.duration_ms) : '--:--'}</span>
                                   {track.popularity && (

@@ -9,13 +9,22 @@ interface SpotifyTrack {
   id: string;
   name: string;
   artist: string;
-  album: string;
+  album: string | {
+    name: string;
+    release_date?: string;
+    release_date_precision?: string;
+    id: string;
+    type?: string;
+    total_tracks?: number;
+    images?: Array<{ url: string }>;
+  };
   played_at?: string;
   duration_ms: number;
   external_urls: { spotify: string };
   preview_url?: string;
   image_url?: string;
   popularity?: number;
+  album_name?: string; // Legacy fallback
 }
 
 interface SpotifyArtist {
@@ -417,14 +426,16 @@ export default function SpotifyDataView({ initialSection }: SpotifyDataViewProps
           {track.image_url && (
             <img 
               src={track.image_url} 
-              alt={track.album}
+              alt={typeof track.album === 'string' ? track.album : track.album?.name || 'Album'}
               className={`${isGrid ? 'w-full aspect-square mb-3' : 'w-12 h-12 mr-4'} rounded-lg`}
             />
           )}
           <div className={`${isGrid ? '' : 'flex-1 min-w-0'}`}>
             {isGrid && <span className="text-[#1DB954] font-bold text-sm mb-1 block">#{index + 1}</span>}
             <h4 className={`text-white font-medium ${isGrid ? 'text-sm mb-1' : ''} truncate`}>{track.name}</h4>
-            <p className={`text-gray-400 text-sm truncate ${isGrid ? 'mb-2' : ''}`}>{track.artist} • {track.album}</p>
+            <p className={`text-gray-400 text-sm truncate ${isGrid ? 'mb-2' : ''}`}>
+              {track.artist} • {typeof track.album === 'string' ? track.album : track.album?.name || 'Unknown Album'}
+            </p>
             <div className="flex items-center">
               <span className="text-xs text-gray-400">{formatDuration(track.duration_ms)}</span>
               {track.popularity && (
