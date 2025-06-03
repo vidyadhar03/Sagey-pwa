@@ -98,7 +98,6 @@ export function useSpotifyInsights() {
     console.error('🔍 SAGEY DEBUG: Extracting release years from track data...');
     
     const releaseYears: number[] = [];
-    const debugInfo: string[] = [];
     
     tracks.forEach((track, index) => {
       try {
@@ -111,36 +110,24 @@ export function useSpotifyInsights() {
             name: actualTrack?.name,
             hasAlbum: !!album,
             albumType: typeof album,
-            albumKeys: album ? Object.keys(album) : [],
             releaseDate: album?.release_date,
-            releaseDatePrecision: album?.release_date_precision,
             fullAlbum: album
           });
-          
-          debugInfo.push(`T${index + 1}: ${actualTrack?.name || 'Unknown'} - Album: ${!!album} - ReleaseDate: ${album?.release_date || 'MISSING'}`);
         }
         
-        // Try multiple ways to extract release date
-        let releaseDate = null;
-        if (album && typeof album === 'object') {
-          // Try different property names and formats
-          releaseDate = album.release_date || album.releaseDate || album['release-date'];
-          
-          if (releaseDate && typeof releaseDate === 'string' && releaseDate.length >= 4) {
-            const year = parseInt(releaseDate.substring(0, 4));
-            if (year > 1900 && year <= new Date().getFullYear()) {
-              releaseYears.push(year);
-              if (index < 3) {
-                console.error(`SAGEY DEBUG: ✅ Valid year ${year} extracted from track:`, actualTrack?.name);
-              }
-            } else if (index < 3) {
-              console.error(`SAGEY DEBUG: ❌ Invalid year ${year} for track:`, actualTrack?.name);
+        // Extract release date from album
+        if (album && album.release_date && typeof album.release_date === 'string' && album.release_date.length >= 4) {
+          const year = parseInt(album.release_date.substring(0, 4));
+          if (year > 1900 && year <= new Date().getFullYear()) {
+            releaseYears.push(year);
+            if (index < 3) {
+              console.error(`SAGEY DEBUG: ✅ Valid year ${year} extracted from track:`, actualTrack?.name);
             }
           } else if (index < 3) {
-            console.error(`SAGEY DEBUG: ❌ No valid release date format for track:`, actualTrack?.name, 'Found:', releaseDate, 'Type:', typeof releaseDate);
+            console.error(`SAGEY DEBUG: ❌ Invalid year ${year} for track:`, actualTrack?.name);
           }
         } else if (index < 3) {
-          console.error(`SAGEY DEBUG: ❌ No album object for track:`, actualTrack?.name, 'Album type:', typeof album);
+          console.error(`SAGEY DEBUG: ❌ No valid release date for track:`, actualTrack?.name, 'Found:', album?.release_date);
         }
       } catch (error) {
         if (index < 3) {
@@ -148,11 +135,6 @@ export function useSpotifyInsights() {
         }
       }
     });
-
-    // Show debug summary in alert
-    if (typeof window !== 'undefined' && debugInfo.length > 0) {
-      window.alert(`SAGEY TRACK DEBUG:\n${debugInfo.join('\n')}\n\nTotal valid years found: ${releaseYears.length}/${tracks.length}`);
-    }
 
     console.error('📊 SAGEY DEBUG: Release years extracted:', {
       totalTracks: tracks.length,
@@ -167,7 +149,7 @@ export function useSpotifyInsights() {
       const currentYear = new Date().getFullYear();
       return {
         age: 0,
-        description: `DEBUG: ${tracks.length} tracks, 0 valid years | Connect Spotify to discover your musical age`,
+        description: "Connect Spotify to discover your musical age",
         averageYear: currentYear,
         oldest: currentYear,
         newest: currentYear,
@@ -189,7 +171,7 @@ export function useSpotifyInsights() {
 
     const result = {
       age,
-      description: `DEBUG: ${tracks.length} tracks, ${releaseYears.length} valid years | ${description}`,
+      description,
       averageYear,
       oldest,
       newest,
@@ -501,15 +483,6 @@ export function useSpotifyInsights() {
       // Calculate Musical Age first (no API calls needed) - ADD DEBUGGING INFO TO DESCRIPTION
       console.error('🎂 SAGEY DEBUG: Starting Musical Age calculation with', tracksToAnalyze.length, 'tracks...');
       const musicalAge = calculateMusicalAge(tracksToAnalyze);
-      
-      // INJECT DEBUG INFO INTO THE DESCRIPTION FOR UI VISIBILITY
-      const debugInfo = `Tracks: ${tracksToAnalyze.length}, Source: ${topTracks && topTracks.length > 0 ? 'top' : 'recent'}`;
-      musicalAge.description = `DEBUG: ${debugInfo} | ${musicalAge.description}`;
-      
-      // TEMPORARY ALERT FOR ULTIMATE DEBUGGING VISIBILITY
-      if (typeof window !== 'undefined') {
-        window.alert(`SAGEY DEBUG: Musical Age calculated! Age: ${musicalAge.age}, Valid Years: ${musicalAge.description.includes('valid years') ? musicalAge.description.split(' valid years')[0].split(', ')[1] : 'unknown'}, Tracks: ${tracksToAnalyze.length}`);
-      }
       
       console.error('🎂 SAGEY DEBUG: Musical Age result:', {
         age: musicalAge.age,
