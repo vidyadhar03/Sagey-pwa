@@ -395,12 +395,70 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                 )}
               </motion.section>
 
-              {/* Musical Age Estimator - Now second */}
+              {/* Recently Played Section - Moved to second position */}
               {connected && (
                 <motion.section 
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
+                  className="mt-6 mb-8"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-white font-semibold text-lg">Recently Played</h3>
+                    <button 
+                      onClick={() => onTabClick?.('explore')}
+                      className="text-[#1DB954] text-sm font-medium hover:text-[#1ed760] transition-colors"
+                    >
+                      View All
+                    </button>
+                  </div>
+
+                  {dataLoading ? (
+                    <div className="animate-pulse bg-white/5 h-20 rounded-xl" />
+                  ) : (
+                    <div>
+                      {recentTracks.slice(0, 1).map((track, index) => (
+                        <div key={`${track.track?.id || track.id}-${index}`} className="p-4 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-[#1DB954]/30 transition-all">
+                          <div className="flex items-center">
+                            {(track.track?.album?.images?.[0] || track.album?.images?.[0]) && (
+                              <img 
+                                src={(track.track?.album?.images?.[0] || track.album?.images?.[0]).url} 
+                                alt={(track.track?.album?.name || track.album?.name)}
+                                className="w-16 h-16 rounded-lg mr-4 flex-shrink-0"
+                              />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-white font-semibold text-base mb-1 truncate">
+                                {track.track?.name || track.name}
+                              </p>
+                              <p className="text-gray-400 text-sm mb-1 truncate">
+                                {(track.track?.artists || track.artists)?.map((artist: any) => artist.name).join(', ')}
+                              </p>
+                              <p className="text-gray-500 text-xs truncate">
+                                {track.track?.album?.name || track.album?.name}
+                              </p>
+                            </div>
+                            {track.played_at && (
+                              <div className="text-right flex-shrink-0 ml-4">
+                                <span className="text-[#1DB954] text-sm font-medium">
+                                  {formatPlayedAt(track.played_at)}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </motion.section>
+              )}
+
+              {/* Musical Age Estimator - Now third */}
+              {connected && (
+                <motion.section 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
                   className="mt-6 mb-8"
                 >
                   <div className="mb-4">
@@ -411,64 +469,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                 </motion.section>
               )}
 
-              {/* Recently Played Section */}
-              {connected && (
-                <motion.section 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="mt-6 mb-8"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-white font-semibold text-lg">Recently Played</h3>
-                    <button 
-                      onClick={() => onTabClick?.('stats')}
-                      className="text-[#1DB954] text-sm font-medium hover:text-[#1ed760] transition-colors"
-                    >
-                      View All
-                    </button>
-                  </div>
-
-                  {dataLoading ? (
-                    <div className="space-y-3">
-                      {[...Array(3)].map((_, i) => (
-                        <div key={i} className="animate-pulse bg-white/5 h-16 rounded-xl" />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {recentTracks.map((track, index) => (
-                        <div key={`${track.track?.id || track.id}-${index}`} className="p-3 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-[#1DB954]/30 transition-all">
-                          <div className="flex items-center">
-                            {(track.track?.album?.images?.[0] || track.album?.images?.[0]) && (
-                              <img 
-                                src={(track.track?.album?.images?.[0] || track.album?.images?.[0]).url} 
-                                alt={(track.track?.album?.name || track.album?.name)}
-                                className="w-12 h-12 rounded-lg mr-3"
-                              />
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <p className="text-white font-medium truncate text-sm">
-                                {track.track?.name || track.name}
-                              </p>
-                                               <p className="text-gray-400 text-xs truncate">
-                                 {(track.track?.artists || track.artists)?.map((artist: any) => artist.name).join(', ')}
-                               </p>
-                            </div>
-                            {track.played_at && (
-                              <span className="text-[#1DB954] text-xs">
-                                {formatPlayedAt(track.played_at)}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </motion.section>
-              )}
-
-              {/* Top Tracks & Artists Section */}
+              {/* Top Tracks & Artists Section - Now fourth */}
               {connected && (
                 <motion.section 
                   initial={{ opacity: 0, y: 20 }}
@@ -529,7 +530,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                         </div>
                       ) : (
                         <div className="space-y-2">
-                                                  {topArtists.map((artist: any, index: number) => (
+                          {topArtists.map((artist: any, index: number) => (
                             <div key={artist.id} className="flex items-center">
                               <span className="text-[#1ed760] font-bold text-sm w-6">#{index + 1}</span>
                               {artist.images?.[0] && (
