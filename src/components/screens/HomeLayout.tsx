@@ -424,6 +424,15 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                       ) : (
                         recentTracks.slice(0, 1).map((item, index) => {
                           console.log('🎵 Recent track item:', item);
+                          console.log('🎵 Item structure:', {
+                            hasTrack: !!item.track,
+                            trackKeys: item.track ? Object.keys(item.track) : 'no track property',
+                            itemKeys: Object.keys(item),
+                            trackAlbum: item.track?.album,
+                            trackArtists: item.track?.artists,
+                            directAlbum: item.album,
+                            directArtists: item.artists
+                          });
                           
                           // Handle both formats: direct track format and nested track format
                           const track = item.track || item;
@@ -434,6 +443,8 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                           const playedAt = item.played_at;
                           
                           console.log('🎵 Processed track data:', { trackId, trackName, trackArtists, trackAlbum, playedAt });
+                          console.log('🎵 Album images:', trackAlbum?.images);
+                          console.log('🎵 Artist names:', trackArtists?.map((a: any) => a?.name));
                           
                           if (!track || !trackId) {
                             console.log('❌ Track validation failed:', { track, trackId });
@@ -470,18 +481,28 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                           
                           return (
                             <div key={`${trackId}-${index}`} className="flex items-center gap-4 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
-                              <span className="text-[#1DB954] font-bold text-lg mr-4 w-6">#1</span>
-                              {trackAlbum?.images?.[0] && (
-                                <img 
-                                  src={trackAlbum.images[0].url} 
-                                  alt={trackAlbum.name || 'Album cover'}
-                                  className="w-12 h-12 mr-4 rounded-lg"
-                                />
-                              )}
+                              {/* Album Image with fallback */}
+                              <div className="w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center overflow-hidden">
+                                {trackAlbum?.images?.[0] ? (
+                                  <img 
+                                    src={trackAlbum.images[0].url} 
+                                    alt={trackAlbum.name || trackName || 'Album cover'}
+                                    className="w-full h-full object-cover rounded-lg"
+                                    onError={(e) => {
+                                      console.log('❌ Image failed to load:', trackAlbum.images[0].url);
+                                      e.currentTarget.style.display = 'none';
+                                    }}
+                                  />
+                                ) : (
+                                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-gray-400">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="m9 9 10.5-3m0 6.553v3.75a2.25 2.25 0 0 1-1.632 2.163l-1.32.377a1.803 1.803 0 1 1-.99-3.467l2.31-.66a2.25 2.25 0 0 0 1.632-2.163zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 0 1-1.632 2.163l-1.32.377a1.803 1.803 0 0 1-.99-3.467l2.31-.66A2.25 2.25 0 0 0 9 15.553z" />
+                                  </svg>
+                                )}
+                              </div>
                               <div className="flex-1 min-w-0">
                                 <h4 className="text-white font-medium truncate">{trackName || 'Unknown Track'}</h4>
                                 <p className="text-gray-400 text-sm truncate">
-                                  {trackArtists?.map((artist: any) => artist?.name || 'Unknown Artist').join(', ') || 'Unknown Artist'} • {trackAlbum?.name || 'Unknown Album'}
+                                  {trackArtists?.map((artist: any) => artist?.name).filter(Boolean).join(', ') || 'Unknown Artist'} • {trackAlbum?.name || 'Unknown Album'}
                                 </p>
                                 <div className="flex items-center">
                                   <span className="text-xs text-gray-400">{track.duration_ms ? formatDuration(track.duration_ms) : '--:--'}</span>
