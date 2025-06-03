@@ -54,6 +54,22 @@ export default function BottomNav({ activeTab, onTabClick }: BottomNavProps) {
             <path d="M21 21l-4.35-4.35" />
           </svg>
         </button>
+
+        {/* Insights Plus Tab */}
+        <button 
+          onClick={() => onTabClick('insights-plus')} 
+          className={`flex items-center justify-center w-10 h-10 ${
+            activeTab === 'insights-plus' 
+              ? 'text-white' 
+              : 'text-[#808084]'
+          }`}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+            <path d="M3 3v18h18" />
+            <path d="M7 16l4-4 4 4 6-6" />
+            <path d="M17 10h4v4" />
+          </svg>
+        </button>
       </nav>
     </div>
   );

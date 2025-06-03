@@ -4,6 +4,7 @@ import React, { ReactNode, useState } from 'react';
 import BottomNav from './BottomNav';
 import HomeLayout from './screens/HomeLayout';
 import InsightsLayout from './screens/InsightsLayout';
+import NewInsightsLayout from './screens/NewInsightsLayout';
 import SpotifyDataView from './SpotifyDataView';
 
 interface FrameLayoutProps {
@@ -38,6 +39,8 @@ export default function FrameLayout({}: FrameLayoutProps) {
         return <InsightsLayout />;
       case 'explore':
         return <SpotifyDataView initialSection={exploreOptions?.section} />;
+      case 'insights-plus':
+        return <NewInsightsLayout />;
       default:
         return <HomeLayout onTabClick={handleTabClick} />;
     }
