@@ -2,18 +2,20 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import InsightCard, { InsightCardSkeleton } from './InsightCard';
-import { useMockInsights } from '../../../hooks/useMockInsights';
+import InsightCard from './InsightCard';
+import InsightSkeleton from './InsightSkeleton';
+import { useSpotifyInsights } from '../../../hooks/useSpotifyInsights';
 
 export default function GenrePassportCard() {
-  const { data, loading } = useMockInsights();
+  const { insights, isLoading } = useSpotifyInsights();
   const [showModal, setShowModal] = useState(false);
 
-  if (loading) {
-    return <InsightCardSkeleton delay={0.2} />;
+  if (isLoading) {
+    return <InsightSkeleton />;
   }
 
-  if (!data) return null;
+  const payload = insights.genrePassport;
+  const isFallback = payload.totalGenres === 0 || insights.isDefault;
 
   const handleShare = () => {
     console.log('Sharing Genre Passport insight...');
@@ -24,7 +26,9 @@ export default function GenrePassportCard() {
   };
 
   const handleBadgeClick = () => {
-    setShowModal(true);
+    if (!isFallback) {
+      setShowModal(true);
+    }
   };
 
   return (
@@ -35,6 +39,13 @@ export default function GenrePassportCard() {
         onInfo={handleInfo}
         delay={0.2}
       >
+        {/* Fallback Notice */}
+        {isFallback && (
+          <div className="absolute top-2 right-2 bg-zinc-800 px-2 py-1 rounded-lg border border-white/10">
+            <p className="text-xs text-zinc-400">Connect Spotify to unlock this insight</p>
+          </div>
+        )}
+
         {/* Genre Count Badge */}
         <div className="flex justify-center mb-4">
           <motion.button
@@ -42,21 +53,31 @@ export default function GenrePassportCard() {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.3, duration: 0.6, type: "spring" }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="relative bg-gradient-to-br from-[#1DB954] to-[#1AA34A] rounded-full w-24 h-24 
-                     flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow
-                     border-4 border-white/20"
+            whileHover={!isFallback ? { scale: 1.05 } : {}}
+            whileTap={!isFallback ? { scale: 0.95 } : {}}
+            className={`relative rounded-full w-24 h-24 
+                     flex items-center justify-center shadow-lg transition-shadow
+                     border-4 ${
+                       isFallback 
+                         ? 'bg-zinc-700 border-zinc-600 cursor-default' 
+                         : 'bg-gradient-to-br from-[#1DB954] to-[#1AA34A] border-white/20 hover:shadow-xl cursor-pointer'
+                     }`}
           >
             <div className="text-center">
-              <div className="text-2xl font-bold text-white">{data.genrePassport.totalGenres}</div>
-              <div className="text-xs text-white/90">genres</div>
+              <div className={`text-2xl font-bold ${isFallback ? 'text-zinc-400' : 'text-white'}`}>
+                {payload.totalGenres}
+              </div>
+              <div className={`text-xs ${isFallback ? 'text-zinc-500' : 'text-white/90'}`}>
+                genres
+              </div>
             </div>
             
             {/* Passport stamps effect */}
-            <div className="absolute -top-1 -right-1 w-6 h-6 bg-[#FFD700] rounded-full flex items-center justify-center">
-              <span className="text-xs">🌟</span>
-            </div>
+            {!isFallback && (
+              <div className="absolute -top-1 -right-1 w-6 h-6 bg-[#FFD700] rounded-full flex items-center justify-center">
+                <span className="text-xs">🌟</span>
+              </div>
+            )}
           </motion.button>
         </div>
 
@@ -67,8 +88,10 @@ export default function GenrePassportCard() {
           transition={{ delay: 0.6 }}
           className="text-center mb-4"
         >
-          <p className="text-white font-semibold">Musical Explorer</p>
-          <p className="text-zinc-400 text-sm">Your taste spans {data.genrePassport.totalGenres} genres</p>
+          <p className={`font-semibold ${isFallback ? 'text-zinc-500' : 'text-white'}`}>
+            {isFallback ? 'Musical Explorer' : 'Musical Explorer'}
+          </p>
+          <p className="text-zinc-400 text-sm">Your taste spans {payload.totalGenres} genres</p>
         </motion.div>
 
         {/* Exploration Score */}
@@ -80,32 +103,40 @@ export default function GenrePassportCard() {
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-zinc-300 text-sm">Exploration Score</span>
-            <span className="text-[#1DB954] font-semibold">{data.genrePassport.explorationScore}/100</span>
+            <span className={`font-semibold ${isFallback ? 'text-zinc-500' : 'text-[#1DB954]'}`}>
+              {payload.explorationScore}/100
+            </span>
           </div>
           <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
-              animate={{ width: `${data.genrePassport.explorationScore}%` }}
+              animate={{ width: `${payload.explorationScore}%` }}
               transition={{ delay: 1, duration: 1.2 }}
-              className="h-full bg-gradient-to-r from-[#1DB954] to-[#1AA34A] rounded-full"
+              className={`h-full rounded-full ${
+                isFallback 
+                  ? 'bg-zinc-600' 
+                  : 'bg-gradient-to-r from-[#1DB954] to-[#1AA34A]'
+              }`}
             />
           </div>
         </motion.div>
 
         {/* Tap to view hint */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.2 }}
-          className="text-zinc-500 text-xs text-center mt-2"
-        >
-          Tap badge to view all genres
-        </motion.p>
+        {!isFallback && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.2 }}
+            className="text-zinc-500 text-xs text-center mt-2"
+          >
+            Tap badge to view all genres
+          </motion.p>
+        )}
       </InsightCard>
 
       {/* Modal */}
       <AnimatePresence>
-        {showModal && (
+        {showModal && !isFallback && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -136,7 +167,7 @@ export default function GenrePassportCard() {
               </div>
               
               <div className="overflow-y-auto max-h-60 space-y-2">
-                {data.genrePassport.topGenres.map((genre, index) => (
+                {payload.topGenres.map((genre, index) => (
                   <motion.div
                     key={genre}
                     initial={{ opacity: 0, x: -20 }}

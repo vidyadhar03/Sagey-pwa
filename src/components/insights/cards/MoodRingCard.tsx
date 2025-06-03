@@ -2,17 +2,19 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import InsightCard, { InsightCardSkeleton } from './InsightCard';
-import { useMockInsights } from '../../../hooks/useMockInsights';
+import InsightCard from './InsightCard';
+import InsightSkeleton from './InsightSkeleton';
+import { useSpotifyInsights } from '../../../hooks/useSpotifyInsights';
 
 export default function MoodRingCard() {
-  const { data, loading } = useMockInsights();
+  const { insights, isLoading } = useSpotifyInsights();
 
-  if (loading) {
-    return <InsightCardSkeleton delay={0.1} />;
+  if (isLoading) {
+    return <InsightSkeleton />;
   }
 
-  if (!data) return null;
+  const payload = insights.moodRing;
+  const isFallback = payload.distribution.length === 0 || insights.isDefault;
 
   const handleShare = () => {
     console.log('Sharing Mood Ring insight...');
@@ -22,13 +24,13 @@ export default function MoodRingCard() {
     console.log('Mood Ring info...');
   };
 
-  const emotions = data.moodRing.emotions;
+  const emotions = payload.emotions;
   const total = Object.values(emotions).reduce((sum, val) => sum + val, 0);
   
   // Calculate angles for donut chart
   const segments = Object.entries(emotions).map(([emotion, value], index) => {
-    const percentage = (value / total) * 100;
-    const angle = (value / total) * 360;
+    const percentage = total > 0 ? (value / total) * 100 : 0;
+    const angle = total > 0 ? (value / total) * 360 : 0;
     return { emotion, value, percentage, angle };
   });
 
@@ -60,6 +62,13 @@ export default function MoodRingCard() {
       onInfo={handleInfo}
       delay={0.1}
     >
+      {/* Fallback Notice */}
+      {isFallback && (
+        <div className="absolute top-2 right-2 bg-zinc-800 px-2 py-1 rounded-lg border border-white/10">
+          <p className="text-xs text-zinc-400">Connect Spotify to unlock this insight</p>
+        </div>
+      )}
+
       {/* Donut Chart */}
       <div className="flex justify-center mb-4">
         <motion.div
@@ -69,10 +78,10 @@ export default function MoodRingCard() {
           className="relative w-32 h-32"
         >
           <div
-            className="w-full h-full rounded-full"
-            style={{
+            className={`w-full h-full rounded-full ${isFallback ? 'bg-zinc-700' : ''}`}
+            style={!isFallback ? {
               background: `conic-gradient(${gradientStops.join(', ')})`
-            }}
+            } : {}}
           />
           <div className="absolute inset-4 bg-zinc-900 rounded-full flex items-center justify-center">
             <div className="text-center">
@@ -89,7 +98,9 @@ export default function MoodRingCard() {
         transition={{ delay: 0.6 }}
         className="text-center mb-4"
       >
-        <p className="text-white font-semibold">{data.moodRing.dominantMood}</p>
+        <p className={`font-semibold ${isFallback ? 'text-zinc-500' : 'text-white'}`}>
+          {payload.dominantMood}
+        </p>
         <p className="text-zinc-400 text-sm">Your musical vibe</p>
       </motion.div>
 
@@ -109,8 +120,8 @@ export default function MoodRingCard() {
             className="flex items-center gap-2"
           >
             <div
-              className="w-3 h-3 rounded-full"
-              style={{ backgroundColor: colors[segment.emotion as keyof typeof colors] }}
+              className={`w-3 h-3 rounded-full ${isFallback ? 'bg-zinc-600' : ''}`}
+              style={!isFallback ? { backgroundColor: colors[segment.emotion as keyof typeof colors] } : {}}
             />
             <span className="text-zinc-300 capitalize">{segment.emotion}</span>
             <span className="text-zinc-400 ml-auto">{Math.round(segment.percentage)}%</span>

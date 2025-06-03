@@ -18,13 +18,16 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
   const { connected, user, loading, error: spotifyHookError, getTopTracks, getTopArtists, getRecentTracks, connect } = useSpotify();
   const { addLog } = useSpotifyDebug();
   const { 
-    todayMinutes, 
-    todayComparison, 
-    topGenre, 
-    topGenrePercentage,
-    loading: insightsLoading,
+    insights,
+    isLoading: insightsLoading,
     refresh: refreshInsights
   } = useSpotifyInsights();
+  
+  // Extract values from insights for backwards compatibility
+  const todayMinutes = 0; // This was for daily stats, not available in comprehensive insights
+  const todayComparison = '+0%'; // This was for daily stats comparison
+  const topGenre = insights.genrePassport.topGenres[0] || 'Mixed';
+  const topGenrePercentage = insights.genrePassport.explorationScore;
   
   // Remove separate data state - use the global cache from useSpotify
   const [recentTracks, setRecentTracks] = useState<any[]>([]);

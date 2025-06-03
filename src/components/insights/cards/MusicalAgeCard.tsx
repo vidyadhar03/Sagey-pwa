@@ -2,18 +2,22 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import InsightCard, { InsightCardSkeleton } from './InsightCard';
-import { useMockInsights } from '../../../hooks/useMockInsights';
+import InsightCard from './InsightCard';
+import InsightSkeleton from './InsightSkeleton';
+import { useSpotifyInsights } from '../../../hooks/useSpotifyInsights';
 
 export default function MusicalAgeCard() {
-  const { data, loading } = useMockInsights();
+  const { insights, isLoading } = useSpotifyInsights();
   const [displayAge, setDisplayAge] = useState(0);
   const [showConfetti, setShowConfetti] = useState(false);
 
+  const payload = insights.musicalAge;
+  const isFallback = payload.trackCount === 0 || insights.isDefault;
+
   // Rolling number animation
   useEffect(() => {
-    if (data?.musicalAge.age && !loading) {
-      const targetAge = data.musicalAge.age;
+    if (payload.age && !isLoading) {
+      const targetAge = payload.age;
       const duration = 2000; // 2 seconds
       const steps = 50;
       const increment = targetAge / steps;
@@ -27,21 +31,21 @@ export default function MusicalAgeCard() {
 
         if (current >= targetAge) {
           clearInterval(timer);
-          // Show confetti on first render
-          setShowConfetti(true);
-          setTimeout(() => setShowConfetti(false), 3000);
+          // Show confetti on first render only if not fallback
+          if (!isFallback) {
+            setShowConfetti(true);
+            setTimeout(() => setShowConfetti(false), 3000);
+          }
         }
       }, duration / steps);
 
       return () => clearInterval(timer);
     }
-  }, [data?.musicalAge.age, loading]);
+  }, [payload.age, isLoading, isFallback]);
 
-  if (loading) {
-    return <InsightCardSkeleton delay={0} />;
+  if (isLoading) {
+    return <InsightSkeleton />;
   }
-
-  if (!data) return null;
 
   const handleShare = () => {
     console.log('Sharing Musical Age insight...');
@@ -89,6 +93,13 @@ export default function MusicalAgeCard() {
         onInfo={handleInfo}
         delay={0}
       >
+        {/* Fallback Notice */}
+        {isFallback && (
+          <div className="absolute top-2 right-2 bg-zinc-800 px-2 py-1 rounded-lg border border-white/10">
+            <p className="text-xs text-zinc-400">Connect Spotify to unlock this insight</p>
+          </div>
+        )}
+
         {/* Big Age Number */}
         <div className="text-center mb-4">
           <motion.div
@@ -97,7 +108,7 @@ export default function MusicalAgeCard() {
             transition={{ delay: 0.3, duration: 0.6 }}
             className="relative"
           >
-            <span className="text-6xl font-bold bg-gradient-to-r from-[#1DB954] via-[#1ED760] to-[#1AA34A] bg-clip-text text-transparent">
+            <span className={`text-6xl font-bold ${isFallback ? 'text-zinc-500' : 'bg-gradient-to-r from-[#1DB954] via-[#1ED760] to-[#1AA34A] bg-clip-text text-transparent'}`}>
               {displayAge}
             </span>
             <span className="text-white text-xl ml-2">years</span>
@@ -112,7 +123,7 @@ export default function MusicalAgeCard() {
           className="text-center"
         >
           <p className="text-zinc-300 text-sm leading-relaxed">
-            {data.musicalAge.description}
+            {payload.description}
           </p>
         </motion.div>
 
@@ -125,7 +136,9 @@ export default function MusicalAgeCard() {
         >
           <div className="text-center">
             <p className="text-xs text-zinc-400">Avg. Release Year</p>
-            <p className="text-[#1DB954] font-semibold">{data.musicalAge.averageYear}</p>
+            <p className={`font-semibold ${isFallback ? 'text-zinc-500' : 'text-[#1DB954]'}`}>
+              {payload.averageYear}
+            </p>
           </div>
         </motion.div>
       </InsightCard>

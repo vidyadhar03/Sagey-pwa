@@ -2,17 +2,19 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import InsightCard, { InsightCardSkeleton } from './InsightCard';
-import { useMockInsights } from '../../../hooks/useMockInsights';
+import InsightCard from './InsightCard';
+import InsightSkeleton from './InsightSkeleton';
+import { useSpotifyInsights } from '../../../hooks/useSpotifyInsights';
 
 export default function NightOwlCard() {
-  const { data, loading } = useMockInsights();
+  const { insights, isLoading } = useSpotifyInsights();
 
-  if (loading) {
-    return <InsightCardSkeleton delay={0.3} />;
+  if (isLoading) {
+    return <InsightSkeleton />;
   }
 
-  if (!data) return null;
+  const payload = insights.nightOwlPattern;
+  const isFallback = payload.histogram.every(val => val === 0) || insights.isDefault;
 
   const handleShare = () => {
     console.log('Sharing Night Owl Pattern insight...');
@@ -22,13 +24,17 @@ export default function NightOwlCard() {
     console.log('Night Owl Pattern info...');
   };
 
-  const hourlyData = data.nightOwlPattern.hourlyData;
+  const hourlyData = payload.histogram;
   const maxValue = Math.max(...hourlyData);
-  const peakHour = data.nightOwlPattern.peakHour;
+  const peakHour = payload.peakHour;
 
   // Get color intensity based on listening activity
   const getBarColor = (value: number, hour: number) => {
-    const intensity = value / maxValue;
+    if (isFallback) {
+      return 'rgba(255, 255, 255, 0.1)';
+    }
+    
+    const intensity = maxValue > 0 ? value / maxValue : 0;
     if (hour === peakHour) {
       return `rgba(29, 185, 84, ${0.8 + intensity * 0.2})`; // Peak hour - brightest green
     }
@@ -52,101 +58,96 @@ export default function NightOwlCard() {
       onInfo={handleInfo}
       delay={0.3}
     >
-      {/* Peak Time Badge */}
-      <motion.div
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ delay: 0.3, duration: 0.6 }}
-        className="flex items-center justify-center mb-4"
-      >
-        <div className="bg-gradient-to-r from-[#1DB954] to-[#1AA34A] rounded-full px-4 py-2 flex items-center gap-2">
-          <span className="text-lg">{data.nightOwlPattern.isNightOwl ? '🌙' : '☀️'}</span>
-          <div className="text-white text-sm font-semibold">
-            Peak: {formatHour(peakHour)}
-          </div>
+      {/* Fallback Notice */}
+      {isFallback && (
+        <div className="absolute top-2 right-2 bg-zinc-800 px-2 py-1 rounded-lg border border-white/10">
+          <p className="text-xs text-zinc-400">Connect Spotify to unlock this insight</p>
         </div>
-      </motion.div>
+      )}
 
-      {/* 24-Hour Heatmap */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.6 }}
-        className="mb-4"
-      >
-        <div className="grid grid-cols-12 gap-1 mb-2">
+      {/* 24-hour Heatmap */}
+      <div className="mb-4">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="grid grid-cols-12 gap-1"
+        >
           {hourlyData.map((value, hour) => (
             <motion.div
               key={hour}
-              initial={{ height: 0 }}
-              animate={{ height: Math.max((value / maxValue) * 40, 4) }}
-              transition={{ delay: 0.8 + hour * 0.02, duration: 0.3 }}
-              className="rounded-sm relative group cursor-pointer"
-              style={{ 
-                backgroundColor: getBarColor(value, hour),
-                height: Math.max((value / maxValue) * 40, 4)
-              }}
-              title={`${formatHour(hour)}: ${value} tracks`}
+              initial={{ scaleY: 0 }}
+              animate={{ scaleY: 1 }}
+              transition={{ delay: 0.4 + hour * 0.02, duration: 0.3 }}
+              className="flex flex-col items-center"
             >
-              {/* Peak hour indicator */}
-              {hour === peakHour && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 1.5 }}
-                  className="absolute -top-2 left-1/2 transform -translate-x-1/2"
-                >
-                  <div className="w-2 h-2 bg-[#FFD700] rounded-full" />
-                </motion.div>
+              <div
+                className="w-full h-8 rounded-sm transition-all duration-300"
+                style={{
+                  backgroundColor: getBarColor(value, hour),
+                  height: isFallback ? '8px' : `${Math.max(8, (value / (maxValue || 1)) * 32)}px`
+                }}
+                title={`${formatHour(hour)}: ${value} tracks`}
+              />
+              {/* Show hour labels for key times */}
+              {[0, 6, 12, 18].includes(hour) && (
+                <span className="text-xs text-zinc-500 mt-1">
+                  {formatHour(hour)}
+                </span>
               )}
             </motion.div>
           ))}
-        </div>
-        
-        {/* Time Labels */}
-        <div className="grid grid-cols-4 text-xs text-zinc-400 mt-2">
-          <span className="text-center">6AM</span>
-          <span className="text-center">12PM</span>
-          <span className="text-center">6PM</span>
-          <span className="text-center">12AM</span>
-        </div>
-      </motion.div>
+        </motion.div>
+      </div>
 
-      {/* Night Owl Score */}
+      {/* Pattern Description */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.2 }}
+        transition={{ delay: 0.8 }}
+        className="text-center mb-4"
+      >
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <span className="text-2xl">
+            {isFallback ? '🎵' : payload.isNightOwl ? '🌙' : '☀️'}
+          </span>
+          <p className={`font-semibold ${isFallback ? 'text-zinc-500' : 'text-white'}`}>
+            {isFallback ? 'Night Owl Pattern' : payload.isNightOwl ? 'Night Owl' : 'Early Bird'}
+          </p>
+        </div>
+        <p className="text-zinc-400 text-sm">
+          Peak listening at {formatHour(peakHour)}
+        </p>
+      </motion.div>
+
+      {/* Score */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1 }}
         className="bg-white/5 rounded-xl p-3"
       >
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between">
           <span className="text-zinc-300 text-sm">
-            {data.nightOwlPattern.isNightOwl ? 'Night Owl' : 'Early Bird'} Score
+            {isFallback ? 'Pattern Score' : payload.isNightOwl ? 'Night Owl Score' : 'Early Bird Score'}
           </span>
-          <span className="text-[#1DB954] font-semibold">{data.nightOwlPattern.score}/100</span>
+          <span className={`font-semibold ${isFallback ? 'text-zinc-500' : 'text-[#1DB954]'}`}>
+            {payload.score}/100
+          </span>
         </div>
-        <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
+        <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden mt-2">
           <motion.div
             initial={{ width: 0 }}
-            animate={{ width: `${data.nightOwlPattern.score}%` }}
-            transition={{ delay: 1.4, duration: 1 }}
-            className="h-full bg-gradient-to-r from-[#1DB954] to-[#1AA34A] rounded-full"
+            animate={{ width: `${payload.score}%` }}
+            transition={{ delay: 1.2, duration: 1 }}
+            className={`h-full rounded-full ${
+              isFallback 
+                ? 'bg-zinc-600' 
+                : 'bg-gradient-to-r from-[#1DB954] to-[#1AA34A]'
+            }`}
           />
         </div>
       </motion.div>
-
-      {/* Pattern Description */}
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.6 }}
-        className="text-zinc-400 text-xs text-center mt-2"
-      >
-        {data.nightOwlPattern.isNightOwl 
-          ? "You prefer late-night listening sessions" 
-          : "You're most active during daytime hours"
-        }
-      </motion.p>
     </InsightCard>
   );
 } 

@@ -3,270 +3,373 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSpotify } from './useSpotify';
 
-interface ListeningStats {
-  todayMinutes: number;
-  todayComparison: string;
-  topGenre: string;
-  topGenrePercentage: number;
-  totalTracks: number;
-  uniqueArtists: number;
-  loading: boolean;
-  error: string | null;
+// Match the interface from useMockInsights.ts for compatibility
+export interface SpotifyInsightsData {
+  musicalAge: {
+    age: number;
+    description: string;
+    averageYear: number;
+    oldest: number;
+    newest: number;
+    trackCount: number;
+  };
+  moodRing: {
+    emotions: {
+      happy: number;
+      energetic: number;
+      chill: number;
+      melancholy: number;
+    };
+    dominantMood: string;
+    distribution: Array<{ label: string; pct: number; color: string }>;
+  };
+  genrePassport: {
+    totalGenres: number;
+    topGenres: string[];
+    explorationScore: number;
+    distinctCount: number;
+    newDiscoveries: number;
+  };
+  nightOwlPattern: {
+    hourlyData: number[];
+    peakHour: number;
+    isNightOwl: boolean;
+    score: number;
+    histogram: number[];
+  };
+  isDefault: boolean; // Flag to indicate if using fallback data
 }
+
+// Default fallback data when no Spotify connection
+const DEFAULT_INSIGHTS: SpotifyInsightsData = {
+  musicalAge: {
+    age: 0,
+    description: "Connect Spotify to discover your musical age",
+    averageYear: new Date().getFullYear(),
+    oldest: new Date().getFullYear(),
+    newest: new Date().getFullYear(),
+    trackCount: 0
+  },
+  moodRing: {
+    emotions: { happy: 0, energetic: 0, chill: 0, melancholy: 0 },
+    dominantMood: "Unknown",
+    distribution: []
+  },
+  genrePassport: {
+    totalGenres: 0,
+    topGenres: [],
+    explorationScore: 0,
+    distinctCount: 0,
+    newDiscoveries: 0
+  },
+  nightOwlPattern: {
+    hourlyData: new Array(24).fill(0),
+    peakHour: 12,
+    isNightOwl: false,
+    score: 0,
+    histogram: new Array(24).fill(0)
+  },
+  isDefault: true
+};
 
 interface GenreCount {
   [key: string]: number;
 }
 
-// Type to handle both SpotifyTrack interface and raw API responses
-type TrackData = {
-  artist?: string;
-  duration_ms?: number;
-  played_at?: string;
-  track?: {
-    artists?: Array<{ name: string }>;
-    duration_ms?: number;
-  };
-  artists?: Array<{ name: string }>;
-};
-
 export function useSpotifyInsights() {
-  const { connected, getRecentTracks, getTopArtists, getTopTracks } = useSpotify();
-  const [insights, setInsights] = useState<ListeningStats>({
-    todayMinutes: 0,
-    todayComparison: '+0%',
-    topGenre: 'Unknown',
-    topGenrePercentage: 0,
-    totalTracks: 0,
-    uniqueArtists: 0,
-    loading: true,
-    error: null
-  });
+  const { connected, getRecentTracks, getTopArtists, getTopTracks, getAudioFeatures } = useSpotify();
+  const [insights, setInsights] = useState<SpotifyInsightsData>(DEFAULT_INSIGHTS);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const calculateListeningTime = useCallback((tracks: any[]) => {
-    console.log('⏰ Calculating listening time for tracks:', tracks?.length);
-    
+  // Calculate musical age from track data
+  const calculateMusicalAge = useCallback((tracks: any[]) => {
     if (!tracks || tracks.length === 0) {
-      console.log('⚠️ No tracks provided for calculation');
-      return { todayMinutes: 0, comparison: '+0%' };
+      return DEFAULT_INSIGHTS.musicalAge;
     }
 
-    const now = new Date();
-    const today = now.toDateString();
-    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000).toDateString();
-    
-    let todayTracks = 0;
-    let yesterdayTracks = 0;
-    let todayDuration = 0;
-    let yesterdayDuration = 0;
-
-    tracks.forEach((trackItem, index) => {
-      // Handle both direct tracks and recent tracks format
-      const track = trackItem.track || trackItem;
-      const playedAt = trackItem.played_at || track.played_at;
-      
-      if (!playedAt) {
-        console.log(`⚠️ Track ${index} missing played_at:`, trackItem);
-        return;
-      }
-
-      try {
-        const playedDate = new Date(playedAt).toDateString();
-        const duration = track.duration_ms || trackItem.duration_ms || 180000; // Default 3 minutes
-        
-        if (playedDate === today) {
-          todayTracks++;
-          todayDuration += duration;
-          console.log(`📅 Today track: ${track.name || 'Unknown'} - ${Math.round(duration/1000/60)}min`);
-        } else if (playedDate === yesterday) {
-          yesterdayTracks++;
-          yesterdayDuration += duration;
+    const releaseYears = tracks
+      .map(track => {
+        const album = track.album || track.track?.album;
+        if (album?.release_date) {
+          return parseInt(album.release_date.substring(0, 4));
         }
-      } catch (error) {
-        console.error(`❌ Error processing track ${index}:`, error, trackItem);
-      }
-    });
+        return null;
+      })
+      .filter((year): year is number => year !== null && year > 1900 && year <= new Date().getFullYear());
 
-    // Convert to minutes
-    const todayMinutes = Math.round(todayDuration / (1000 * 60));
-    const yesterdayMinutes = Math.round(yesterdayDuration / (1000 * 60));
-    
-    console.log('📊 Listening calculation results:', {
-      todayTracks,
-      todayMinutes,
-      yesterdayTracks,
-      yesterdayMinutes
-    });
-    
-    // Calculate comparison with yesterday (based on minutes, not tracks)
-    let comparison = '+0%';
-    if (yesterdayMinutes > 0) {
-      const percentChange = Math.round(((todayMinutes - yesterdayMinutes) / yesterdayMinutes) * 100);
-      comparison = percentChange >= 0 ? `+${percentChange}%` : `${percentChange}%`;
-    } else if (todayMinutes > 0) {
-      comparison = '+100%';
+    if (releaseYears.length === 0) {
+      return DEFAULT_INSIGHTS.musicalAge;
     }
 
-    return { todayMinutes, comparison };
+    const averageYear = Math.round(releaseYears.reduce((sum, year) => sum + year, 0) / releaseYears.length);
+    const currentYear = new Date().getFullYear();
+    const age = Math.max(0, currentYear - averageYear);
+    const oldest = Math.min(...releaseYears);
+    const newest = Math.max(...releaseYears);
+
+    let description = "Your music taste spans multiple eras";
+    if (age < 5) description = "Your taste is cutting-edge and contemporary";
+    else if (age < 15) description = "You have a modern musical palette";
+    else if (age < 25) description = "Your taste reflects the golden era of digital music";
+    else description = "You appreciate the classics and timeless hits";
+
+    return {
+      age,
+      description,
+      averageYear,
+      oldest,
+      newest,
+      trackCount: tracks.length
+    };
   }, []);
 
-  const calculateTopGenre = useCallback(async () => {
+  // Calculate mood distribution from audio features
+  const calculateMoodRing = useCallback(async (tracks: any[]) => {
+    if (!tracks || tracks.length === 0) {
+      return DEFAULT_INSIGHTS.moodRing;
+    }
+
     try {
-      console.log('🎵 Calculating top genre...');
-      
-      // Get top artists for genre analysis
-      const topArtists = await getTopArtists('short_term');
-      console.log('🎤 Top artists data:', topArtists);
-      
-      if (!topArtists || topArtists.length === 0) {
-        console.log('⚠️ No top artists data found');
-        return { topGenre: 'Unknown', topGenrePercentage: 0 };
+      // Get track IDs for audio features
+      const trackIds = tracks
+        .map(track => track.id || track.track?.id)
+        .filter(Boolean)
+        .slice(0, 50); // Limit to 50 tracks for API efficiency
+
+      if (trackIds.length === 0) {
+        return DEFAULT_INSIGHTS.moodRing;
       }
 
-      // Count genres from top artists
+      const audioFeaturesResponse = await getAudioFeatures(trackIds);
+      
+      // Handle different response formats from the API
+      let audioFeatures: any[] = [];
+      if (audioFeaturesResponse && Array.isArray(audioFeaturesResponse)) {
+        audioFeatures = audioFeaturesResponse;
+      } else if (audioFeaturesResponse && audioFeaturesResponse.audio_features) {
+        audioFeatures = audioFeaturesResponse.audio_features;
+      }
+      
+      if (!audioFeatures || audioFeatures.length === 0) {
+        return DEFAULT_INSIGHTS.moodRing;
+      }
+
+      // Calculate mood distribution based on audio features
+      let totalValence = 0, totalEnergy = 0, totalDanceability = 0;
+      let validFeatures = 0;
+
+      audioFeatures.forEach((features: any) => {
+        if (features && typeof features.valence === 'number') {
+          totalValence += features.valence;
+          totalEnergy += features.energy || 0;
+          totalDanceability += features.danceability || 0;
+          validFeatures++;
+        }
+      });
+
+      if (validFeatures === 0) {
+        return DEFAULT_INSIGHTS.moodRing;
+      }
+
+      const avgValence = totalValence / validFeatures;
+      const avgEnergy = totalEnergy / validFeatures;
+      const avgDance = totalDanceability / validFeatures;
+
+      // Map audio features to emotions (simplified mapping)
+      const happy = Math.round(avgValence * 100);
+      const energetic = Math.round(avgEnergy * 100);
+      const chill = Math.round((1 - avgEnergy) * 100);
+      const melancholy = Math.round((1 - avgValence) * 100);
+
+      // Normalize to 100%
+      const total = happy + energetic + chill + melancholy;
+      const emotions = {
+        happy: Math.round((happy / total) * 100),
+        energetic: Math.round((energetic / total) * 100),
+        chill: Math.round((chill / total) * 100),
+        melancholy: Math.round((melancholy / total) * 100)
+      };
+
+      // Find dominant mood
+      const moodEntries = Object.entries(emotions);
+      const dominantMood = moodEntries.reduce((a, b) => a[1] > b[1] ? a : b)[0];
+
+      const distribution = [
+        { label: 'Happy', pct: emotions.happy, color: '#FFD700' },
+        { label: 'Energetic', pct: emotions.energetic, color: '#FF6B6B' },
+        { label: 'Chill', pct: emotions.chill, color: '#4ECDC4' },
+        { label: 'Melancholy', pct: emotions.melancholy, color: '#9B59B6' }
+      ];
+
+      return {
+        emotions,
+        dominantMood: dominantMood.charAt(0).toUpperCase() + dominantMood.slice(1),
+        distribution
+      };
+    } catch (error) {
+      console.error('Error calculating mood ring:', error);
+      return DEFAULT_INSIGHTS.moodRing;
+    }
+  }, [getAudioFeatures]);
+
+  // Calculate genre passport from artists
+  const calculateGenrePassport = useCallback(async () => {
+    try {
+      const topArtists = await getTopArtists('medium_term');
+      
+      if (!topArtists || topArtists.length === 0) {
+        return DEFAULT_INSIGHTS.genrePassport;
+      }
+
+      const genreSet = new Set<string>();
       const genreCounts: GenreCount = {};
-      let totalGenres = 0;
 
       topArtists.forEach(artist => {
         if (artist.genres && artist.genres.length > 0) {
           artist.genres.forEach(genre => {
+            genreSet.add(genre);
             genreCounts[genre] = (genreCounts[genre] || 0) + 1;
-            totalGenres++;
           });
         }
       });
 
-      console.log('🏷️ Genre counts:', genreCounts, 'Total:', totalGenres);
+      const totalGenres = genreSet.size;
+      const topGenres = Object.entries(genreCounts)
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 8)
+        .map(([genre]) => genre.split(' ').map(word => 
+          word.charAt(0).toUpperCase() + word.slice(1)
+        ).join(' '));
 
-      if (totalGenres === 0) {
-        return { topGenre: 'Mixed', topGenrePercentage: 0 };
-      }
-
-      // Find most common genre
-      const sortedGenres = Object.entries(genreCounts)
-        .sort(([,a], [,b]) => b - a);
-
-      if (sortedGenres.length === 0) {
-        return { topGenre: 'Mixed', topGenrePercentage: 0 };
-      }
-
-      const [topGenre, count] = sortedGenres[0];
-      const percentage = Math.round((count / totalGenres) * 100);
-
-      // Clean up genre names for display
-      const cleanGenreName = topGenre
-        .split(' ')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-
-      console.log('🎯 Top genre result:', { topGenre: cleanGenreName, percentage });
-
-      return { 
-        topGenre: cleanGenreName, 
-        topGenrePercentage: percentage 
+      // Calculate exploration score based on genre diversity
+      const explorationScore = Math.min(100, Math.round((totalGenres / 20) * 100));
+      
+      return {
+        totalGenres,
+        topGenres,
+        explorationScore,
+        distinctCount: totalGenres,
+        newDiscoveries: Math.floor(totalGenres * 0.2) // Estimate
       };
     } catch (error) {
-      console.error('❌ Failed to calculate top genre:', error);
-      return { topGenre: 'Unknown', topGenrePercentage: 0 };
+      console.error('Error calculating genre passport:', error);
+      return DEFAULT_INSIGHTS.genrePassport;
     }
   }, [getTopArtists]);
 
-  const loadInsights = useCallback(async () => {
-    console.log('📊 Loading insights, connected:', connected);
+  // Calculate night owl pattern from recent tracks
+  const calculateNightOwlPattern = useCallback((tracks: any[]) => {
+    if (!tracks || tracks.length === 0) {
+      return DEFAULT_INSIGHTS.nightOwlPattern;
+    }
+
+    const hourlyData = new Array(24).fill(0);
     
+    tracks.forEach(trackItem => {
+      const playedAt = trackItem.played_at;
+      if (playedAt) {
+        try {
+          const date = new Date(playedAt);
+          const hour = date.getHours();
+          hourlyData[hour]++;
+        } catch (error) {
+          console.error('Error parsing played_at date:', playedAt);
+        }
+      }
+    });
+
+    // Find peak hour
+    const peakHour = hourlyData.indexOf(Math.max(...hourlyData));
+    
+    // Determine if user is a night owl (peak activity after 6 PM or before 6 AM)
+    const isNightOwl = peakHour >= 18 || peakHour <= 6;
+    
+    // Calculate night owl score based on late-night listening
+    const nightHours = hourlyData.slice(22).concat(hourlyData.slice(0, 6));
+    const totalNightListening = nightHours.reduce((sum, count) => sum + count, 0);
+    const totalListening = hourlyData.reduce((sum, count) => sum + count, 0);
+    const score = totalListening > 0 ? Math.round((totalNightListening / totalListening) * 100) : 0;
+
+    return {
+      hourlyData,
+      peakHour,
+      isNightOwl,
+      score,
+      histogram: hourlyData // Alias for compatibility
+    };
+  }, []);
+
+  const loadInsights = useCallback(async () => {
     if (!connected) {
-      console.log('❌ Not connected, resetting insights');
-      setInsights(prev => ({ 
-        ...prev, 
-        todayMinutes: 0,
-        todayComparison: '+0%',
-        topGenre: 'Unknown',
-        topGenrePercentage: 0,
-        totalTracks: 0,
-        uniqueArtists: 0,
-        loading: false, 
-        error: null 
-      }));
+      setInsights(DEFAULT_INSIGHTS);
+      setIsLoading(false);
+      setError(null);
       return;
     }
 
-    // Set loading state
-    setInsights(prev => ({ ...prev, loading: true, error: null }));
-    console.log('🔄 Fetching Spotify data for insights...');
+    setIsLoading(true);
+    setError(null);
 
     try {
-      // Only fetch recent tracks - this is the primary data we need
-      // The genre calculation will fetch top artists when needed
-      const recentTracks = await getRecentTracks();
-      console.log('📈 Recent tracks fetched:', recentTracks?.length);
+      console.log('🔄 Loading comprehensive Spotify insights...');
       
-      // Debug: Log first few tracks to understand data structure
-      if (recentTracks?.length > 0) {
-        const firstTrack: any = recentTracks[0];
-        console.log('🔍 Sample recent track data:', {
-          first: firstTrack,
-          hasTrackProperty: !!firstTrack?.track,
-          hasPlayedAt: !!firstTrack?.played_at
-        });
+      // Fetch data in parallel
+      const [recentTracks, topTracks] = await Promise.all([
+        getRecentTracks(),
+        getTopTracks('medium_term')
+      ]);
+
+      console.log('📊 Data fetched:', { recentTracks: recentTracks?.length, topTracks: topTracks?.length });
+
+      // Use top tracks for more comprehensive analysis, fallback to recent tracks
+      const tracksToAnalyze = topTracks && topTracks.length > 0 ? topTracks : recentTracks;
+      
+      if (!tracksToAnalyze || tracksToAnalyze.length === 0) {
+        console.log('⚠️ No tracks found, using fallback data');
+        setInsights({ ...DEFAULT_INSIGHTS, isDefault: true });
+        setIsLoading(false);
+        return;
       }
 
-      // Calculate today's listening time from recent tracks
-      const { todayMinutes, comparison } = calculateListeningTime(recentTracks);
-      console.log('⏰ Today listening calculated:', { todayMinutes, comparison });
+      // Calculate all insights in parallel where possible
+      const [musicalAge, moodRing, genrePassport] = await Promise.all([
+        Promise.resolve(calculateMusicalAge(tracksToAnalyze)),
+        calculateMoodRing(tracksToAnalyze),
+        calculateGenrePassport()
+      ]);
 
-      // Calculate additional stats from recent tracks
-      const uniqueArtists = new Set(
-        recentTracks.map((trackItem: any) => {
-          // Handle both track formats - recent tracks vs direct tracks
-          if (trackItem.track) {
-            // Recent track format: { track: { artists: [...] }, played_at: ... }
-            return trackItem.track.artists?.[0]?.name;
-          } else {
-            // Direct track format: { artist: "...", name: "..." }
-            return trackItem.artist;
-          }
-        }).filter(Boolean)
-      ).size;
+      // Night owl pattern needs recent tracks with timestamps
+      const nightOwlPattern = calculateNightOwlPattern(recentTracks || []);
 
-      // Calculate top genre (this will use cached data if available)
-      console.log('🎵 Starting genre calculation...');
-      const genreData = await calculateTopGenre();
-      console.log('🎯 Genre data calculated:', genreData);
-
-      const newInsights = {
-        todayMinutes,
-        todayComparison: comparison,
-        topGenre: genreData.topGenre,
-        topGenrePercentage: genreData.topGenrePercentage,
-        totalTracks: recentTracks.length,
-        uniqueArtists,
-        loading: false,
-        error: null
+      const comprehensiveInsights: SpotifyInsightsData = {
+        musicalAge,
+        moodRing,
+        genrePassport,
+        nightOwlPattern,
+        isDefault: false
       };
 
-      console.log('✅ Final insights calculated:', newInsights);
-      setInsights(newInsights);
+      console.log('✅ Comprehensive insights calculated:', comprehensiveInsights);
+      setInsights(comprehensiveInsights);
 
     } catch (error) {
-      console.error('💥 Failed to load Spotify insights:', error);
-      setInsights(prev => ({
-        ...prev,
-        loading: false,
-        error: error instanceof Error ? error.message : 'Failed to load insights. Please try again.'
-      }));
+      console.error('💥 Failed to load comprehensive insights:', error);
+      setError(error instanceof Error ? error.message : 'Failed to load insights');
+      setInsights({ ...DEFAULT_INSIGHTS, isDefault: true });
+    } finally {
+      setIsLoading(false);
     }
-  }, [connected, getRecentTracks, calculateTopGenre, calculateListeningTime]);
+  }, [connected, getRecentTracks, getTopTracks, calculateMusicalAge, calculateMoodRing, calculateGenrePassport, calculateNightOwlPattern]);
 
-  // Load insights only when component mounts or connection changes
   useEffect(() => {
-    console.log('🎯 useSpotifyInsights: useEffect triggered, connected:', connected);
-    if (connected) {
-      loadInsights();
-    }
-  }, [connected]); // Only depend on connected state
+    loadInsights();
+  }, [connected, loadInsights]);
 
   return {
-    ...insights,
+    insights,
+    isLoading,
+    error,
     refresh: loadInsights
   };
 } 
