@@ -88,51 +88,64 @@ export function useSpotifyInsights() {
 
   // Calculate musical age from track data
   const calculateMusicalAge = useCallback((tracks: any[]) => {
-    console.log('🎂 calculateMusicalAge called with:', { tracksLength: tracks?.length, firstTrack: tracks?.[0] });
+    console.warn('🎂 SAGEY: calculateMusicalAge - processing', tracks?.length, 'tracks');
     
     if (!tracks || tracks.length === 0) {
-      console.log('❌ calculateMusicalAge: No tracks provided');
+      console.warn('❌ SAGEY: calculateMusicalAge - No tracks provided');
       return DEFAULT_INSIGHTS.musicalAge;
     }
 
-    console.log('🔍 calculateMusicalAge: Processing tracks for release years...');
+    console.warn('🔍 SAGEY: Extracting release years from track data...');
     
-    const releaseYears = tracks
-      .map((track, index) => {
-        const album = track.album || track.track?.album;
-        console.log(`Track ${index + 1}:`, {
-          trackName: track.name || track.track?.name,
-          album: album,
-          releaseDate: album?.release_date,
-          trackStructure: Object.keys(track)
-        });
+    const releaseYears: number[] = [];
+    
+    tracks.forEach((track, index) => {
+      try {
+        // Handle different track structures
+        const actualTrack = track.track || track;
+        const album = actualTrack.album;
+        
+        if (index < 3) { // Log first 3 tracks for debugging
+          console.warn(`SAGEY Track ${index + 1}:`, {
+            name: actualTrack.name,
+            hasAlbum: !!album,
+            releaseDate: album?.release_date
+          });
+        }
         
         if (album?.release_date) {
           const year = parseInt(album.release_date.substring(0, 4));
-          console.log(`  -> Year extracted: ${year}`);
-          return year;
+          if (year > 1900 && year <= new Date().getFullYear()) {
+            releaseYears.push(year);
+          } else if (index < 3) {
+            console.warn(`SAGEY: Invalid year ${year} for track:`, actualTrack.name);
+          }
         }
-        console.log(`  -> No valid release date found`);
-        return null;
-      })
-      .filter((year): year is number => {
-        const isValid = year !== null && year > 1900 && year <= new Date().getFullYear();
-        if (!isValid && year !== null) {
-          console.log(`  -> Filtered out invalid year: ${year}`);
+      } catch (error) {
+        if (index < 3) {
+          console.warn(`SAGEY: Error processing track ${index + 1}:`, error);
         }
-        return isValid;
-      });
+      }
+    });
 
-    console.log('📊 calculateMusicalAge: Release years extracted:', { 
+    console.warn('📊 SAGEY: Release years extracted:', {
       totalTracks: tracks.length,
       validYears: releaseYears.length,
-      years: releaseYears.slice(0, 10),
-      sample: releaseYears.length > 10 ? '...' : 'complete'
+      yearRange: releaseYears.length > 0 ? 
+        `${Math.min(...releaseYears)}-${Math.max(...releaseYears)}` : 'none'
     });
 
     if (releaseYears.length === 0) {
-      console.log('❌ calculateMusicalAge: No valid release years found');
-      return DEFAULT_INSIGHTS.musicalAge;
+      console.warn('❌ SAGEY: No valid release years found - using current year');
+      const currentYear = new Date().getFullYear();
+      return {
+        age: 0,
+        description: "Connect Spotify to discover your musical age",
+        averageYear: currentYear,
+        oldest: currentYear,
+        newest: currentYear,
+        trackCount: tracks.length
+      };
     }
 
     const averageYear = Math.round(releaseYears.reduce((sum, year) => sum + year, 0) / releaseYears.length);
@@ -156,96 +169,70 @@ export function useSpotifyInsights() {
       trackCount: tracks.length
     };
 
-    console.log('✅ calculateMusicalAge: Success!', result);
+    console.warn('✅ SAGEY: Musical Age calculated successfully!', {
+      age: result.age,
+      averageYear: result.averageYear,
+      trackCount: result.trackCount
+    });
+    
     return result;
   }, []);
 
   // Calculate mood distribution from audio features
   const calculateMoodRing = useCallback(async (tracks: any[]) => {
-    console.log('🎭 calculateMoodRing called with:', { 
-      tracksLength: tracks?.length, 
-      connected,
-      firstTrack: tracks?.[0] ? {
-        id: tracks[0].id,
-        name: tracks[0].name,
-        structure: Object.keys(tracks[0])
-      } : null
-    });
+    console.warn('🎭 SAGEY: calculateMoodRing starting with', tracks?.length, 'tracks');
     
     if (!tracks || tracks.length === 0) {
-      console.log('❌ calculateMoodRing: No tracks provided');
+      console.warn('❌ SAGEY: calculateMoodRing - No tracks provided');
+      return DEFAULT_INSIGHTS.moodRing;
+    }
+
+    // Check connection first - if not connected, return defaults immediately
+    if (!connected) {
+      console.warn('⚠️ SAGEY: calculateMoodRing - Not connected, using defaults');
       return DEFAULT_INSIGHTS.moodRing;
     }
 
     try {
-      // Check if we're connected before trying to fetch audio features
-      if (!connected) {
-        console.log('⚠️ calculateMoodRing: Not connected to Spotify, using fallback mood ring data');
-        return DEFAULT_INSIGHTS.moodRing;
-      }
-
       // Get track IDs for audio features
       const trackIds = tracks
-        .map((track, index) => {
+        .map((track) => {
           const id = track.id || track.track?.id;
-          console.log(`Track ${index + 1} ID extraction:`, {
-            directId: track.id,
-            nestedId: track.track?.id,
-            finalId: id,
-            trackName: track.name || track.track?.name
-          });
           return id;
         })
         .filter(Boolean)
-        .slice(0, 50); // Limit to 50 tracks for API efficiency
+        .slice(0, 20); // Reduce to 20 tracks to avoid API limits
 
-      console.log('🔍 calculateMoodRing: Track IDs processed:', { 
-        totalTracks: tracks.length,
-        validIds: trackIds.length,
-        sampleIds: trackIds.slice(0, 5),
-        allIds: trackIds
-      });
+      console.warn('🔍 SAGEY: calculateMoodRing - Got', trackIds.length, 'track IDs');
 
-      if (trackIds.length === 0) {
-        console.log('⚠️ calculateMoodRing: No valid track IDs found for audio features');
+      if (trackIds.length < 5) {
+        console.warn('⚠️ SAGEY: calculateMoodRing - Not enough valid track IDs, using defaults');
         return DEFAULT_INSIGHTS.moodRing;
       }
 
-      console.log('🎵 calculateMoodRing: Calling getAudioFeatures with', trackIds.length, 'track IDs...');
-
+      console.warn('🎵 SAGEY: Calling getAudioFeatures API...');
       const audioFeaturesResponse = await getAudioFeatures(trackIds);
       
-      console.log('📡 calculateMoodRing: getAudioFeatures response:', {
-        response: audioFeaturesResponse,
-        responseType: typeof audioFeaturesResponse,
-        hasAudioFeatures: !!audioFeaturesResponse?.audio_features,
-        audioFeaturesType: Array.isArray(audioFeaturesResponse?.audio_features) ? 'array' : typeof audioFeaturesResponse?.audio_features,
-        audioFeaturesLength: audioFeaturesResponse?.audio_features?.length
+      console.warn('📡 SAGEY: Audio features response received:', {
+        hasResponse: !!audioFeaturesResponse,
+        responseType: typeof audioFeaturesResponse
       });
       
       // Handle different response formats from the API
       let audioFeatures: any[] = [];
       if (audioFeaturesResponse && Array.isArray(audioFeaturesResponse)) {
         audioFeatures = audioFeaturesResponse;
-        console.log('📊 calculateMoodRing: Using direct array response');
       } else if (audioFeaturesResponse && audioFeaturesResponse.audio_features) {
         audioFeatures = audioFeaturesResponse.audio_features;
-        console.log('📊 calculateMoodRing: Using nested audio_features array');
       }
       
-      console.log('🎼 calculateMoodRing: Final audio features:', {
-        audioFeaturesLength: audioFeatures?.length,
-        firstFeature: audioFeatures?.[0],
-        sampleFeatures: audioFeatures?.slice(0, 3).map(f => ({
-          id: f?.id,
-          valence: f?.valence,
-          energy: f?.energy,
-          danceability: f?.danceability
-        }))
+      console.warn('🎼 SAGEY: Processed audio features:', {
+        count: audioFeatures?.length,
+        firstFeatureValid: !!audioFeatures?.[0]?.valence
       });
       
       if (!audioFeatures || audioFeatures.length === 0) {
-        console.log('⚠️ calculateMoodRing: No audio features returned from API');
+        console.warn('⚠️ SAGEY: No audio features returned, using defaults');
         return DEFAULT_INSIGHTS.moodRing;
       }
 
@@ -253,15 +240,7 @@ export function useSpotifyInsights() {
       let totalValence = 0, totalEnergy = 0, totalDanceability = 0;
       let validFeatures = 0;
 
-      audioFeatures.forEach((features: any, index: number) => {
-        console.log(`Feature ${index + 1}:`, {
-          hasFeatures: !!features,
-          valence: features?.valence,
-          energy: features?.energy,
-          danceability: features?.danceability,
-          isValidValence: typeof features?.valence === 'number'
-        });
-        
+      audioFeatures.forEach((features: any) => {
         if (features && typeof features.valence === 'number') {
           totalValence += features.valence;
           totalEnergy += features.energy || 0;
@@ -270,23 +249,18 @@ export function useSpotifyInsights() {
         }
       });
 
-      console.log('📊 calculateMoodRing: Aggregated values:', {
+      console.warn('📊 SAGEY: Audio feature stats:', {
         validFeatures,
-        totalValence,
-        totalEnergy,
-        totalDanceability
+        avgValence: validFeatures > 0 ? (totalValence / validFeatures).toFixed(2) : 0
       });
 
       if (validFeatures === 0) {
-        console.log('⚠️ calculateMoodRing: No valid audio features found');
+        console.warn('⚠️ SAGEY: No valid audio features found, using defaults');
         return DEFAULT_INSIGHTS.moodRing;
       }
 
       const avgValence = totalValence / validFeatures;
       const avgEnergy = totalEnergy / validFeatures;
-      const avgDance = totalDanceability / validFeatures;
-
-      console.log('📊 calculateMoodRing: Average values calculated:', { avgValence, avgEnergy, avgDance, validFeatures });
 
       // Map audio features to emotions (simplified mapping)
       const happy = Math.round(avgValence * 100);
@@ -320,16 +294,14 @@ export function useSpotifyInsights() {
         distribution
       };
 
-      console.log('✅ calculateMoodRing: Success!', result);
+      console.warn('✅ SAGEY: Mood Ring calculated successfully!', {
+        dominantMood: result.dominantMood,
+        validFeatures
+      });
 
       return result;
     } catch (error) {
-      console.error('❌ calculateMoodRing: Error occurred:', error);
-      console.error('🔍 calculateMoodRing: Error details:', {
-        errorType: error?.constructor?.name,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined
-      });
+      console.error('❌ SAGEY: calculateMoodRing error:', error);
       return DEFAULT_INSIGHTS.moodRing;
     }
   }, [connected, getAudioFeatures]);
@@ -378,7 +350,7 @@ export function useSpotifyInsights() {
       
       console.log('✅ Genre passport calculated successfully:', { totalGenres, topGenres: topGenres.slice(0, 3), explorationScore });
 
-      return {
+      return { 
         totalGenres,
         topGenres,
         explorationScore,
@@ -438,14 +410,14 @@ export function useSpotifyInsights() {
     
     // Circuit breaker: prevent API spam
     if (now - lastLoadTime < MIN_LOAD_INTERVAL) {
-      console.log('🚫 Rate limited: Too soon since last load, skipping...');
+      console.warn('🚫 SAGEY: Rate limited - too soon since last load');
       return;
     }
     
-    console.log('🔄 loadInsights called, connected:', connected);
+    console.warn('🔄 SAGEY: loadInsights started, connected:', connected);
     
     if (!connected) {
-      console.log('❌ Not connected to Spotify, setting default insights');
+      console.warn('❌ SAGEY: Not connected to Spotify, using defaults');
       setInsights(DEFAULT_INSIGHTS);
       setIsLoading(false);
       setError(null);
@@ -457,98 +429,72 @@ export function useSpotifyInsights() {
     setLastLoadTime(now);
 
     try {
-      console.log('🔄 Loading comprehensive Spotify insights...');
+      console.warn('🔄 SAGEY: Fetching Spotify data...');
       
       // Fetch data in parallel
       const [recentTracks, topTracks] = await Promise.all([
         getRecentTracks().catch(error => {
-          console.error('Failed to fetch recent tracks:', error);
+          console.error('SAGEY: Failed to fetch recent tracks:', error);
           return [];
         }),
         getTopTracks('medium_term').catch(error => {
-          console.error('Failed to fetch top tracks:', error);
+          console.error('SAGEY: Failed to fetch top tracks:', error);
           return [];
         })
       ]);
 
-      console.log('📊 Data fetched successfully:', { 
-        recentTracksCount: recentTracks?.length, 
-        topTracksCount: topTracks?.length,
-        recentTracksSample: recentTracks?.slice(0, 2).map(t => ({
-          id: t?.id,
-          name: t?.name,
-          hasAlbum: !!t?.album,
-          albumType: typeof t?.album,
-          structure: Object.keys(t || {})
-        })),
-        topTracksSample: topTracks?.slice(0, 2).map(t => ({
-          id: t?.id,
-          name: t?.name,
-          hasAlbum: !!t?.album,
-          albumType: typeof t?.album,
-          structure: Object.keys(t || {})
-        }))
-      });
+      console.warn('📊 SAGEY: Data fetched - recent:', recentTracks?.length, 'top:', topTracks?.length);
 
       // Use top tracks for more comprehensive analysis, fallback to recent tracks
       const tracksToAnalyze = topTracks && topTracks.length > 0 ? topTracks : recentTracks;
       
-      console.log('🎯 Tracks selected for analysis:', {
-        source: topTracks && topTracks.length > 0 ? 'top tracks' : 'recent tracks',
-        count: tracksToAnalyze?.length,
-        firstTrack: tracksToAnalyze?.[0] ? {
-          id: tracksToAnalyze[0].id,
-          name: tracksToAnalyze[0].name,
-          hasAlbum: !!tracksToAnalyze[0].album,
-          albumType: typeof tracksToAnalyze[0].album,
-          structure: Object.keys(tracksToAnalyze[0])
-        } : null
-      });
+      console.warn('🎯 SAGEY: Analyzing', tracksToAnalyze?.length, 'tracks from', 
+        topTracks && topTracks.length > 0 ? 'top tracks' : 'recent tracks');
       
       if (!tracksToAnalyze || tracksToAnalyze.length === 0) {
-        console.log('⚠️ No tracks found, using fallback data');
+        console.warn('⚠️ SAGEY: No tracks found, using fallback data');
         setInsights({ ...DEFAULT_INSIGHTS, isDefault: true });
         setIsLoading(false);
         return;
       }
 
-      console.log('🧮 Starting calculations with', tracksToAnalyze.length, 'tracks...');
-
-      // Calculate Musical Age first (no API calls)
-      console.log('🎂 Starting Musical Age calculation...');
+      // Calculate Musical Age first (no API calls needed)
+      console.warn('🎂 SAGEY: Calculating Musical Age...');
       const musicalAge = calculateMusicalAge(tracksToAnalyze);
-      console.log('🎂 Musical Age result:', musicalAge);
+      console.warn('🎂 SAGEY: Musical Age calculated:', musicalAge.age, 'years');
 
-      // Calculate all insights in parallel where possible
-      const [moodRing, genrePassport] = await Promise.all([
-        (async () => {
-          console.log('🎭 Starting Mood Ring calculation...');
-          try {
-            const result = await calculateMoodRing(tracksToAnalyze);
-            console.log('🎭 Mood Ring result:', result);
-            return result;
-          } catch (error) {
-            console.error('🎭 Mood ring calculation failed, using defaults:', error);
-            return DEFAULT_INSIGHTS.moodRing;
-          }
-        })(),
-        (async () => {
-          console.log('🎤 Starting Genre Passport calculation...');
-          try {
-            const result = await calculateGenrePassport();
-            console.log('🎤 Genre Passport result:', result);
-            return result;
-          } catch (error) {
-            console.error('🎤 Genre passport calculation failed, using defaults:', error);
-            return DEFAULT_INSIGHTS.genrePassport;
-          }
-        })()
-      ]);
+      // Calculate Genre Passport (uses artist data, should work)
+      console.warn('🎤 SAGEY: Calculating Genre Passport...');
+      let genrePassport;
+      try {
+        genrePassport = await calculateGenrePassport();
+        console.warn('🎤 SAGEY: Genre Passport calculated:', genrePassport.totalGenres, 'genres');
+      } catch (error) {
+        console.error('🎤 SAGEY: Genre passport failed:', error);
+        genrePassport = DEFAULT_INSIGHTS.genrePassport;
+      }
 
-      // Night owl pattern needs recent tracks with timestamps
-      console.log('🦉 Starting Night Owl Pattern calculation...');
+      // Calculate Night Owl Pattern (uses recent tracks, no API calls)
+      console.warn('🦉 SAGEY: Calculating Night Owl Pattern...');
       const nightOwlPattern = calculateNightOwlPattern(recentTracks || []);
-      console.log('🦉 Night Owl Pattern result:', nightOwlPattern);
+      console.warn('🦉 SAGEY: Night Owl Pattern calculated, score:', nightOwlPattern.score);
+
+      // Calculate Mood Ring (may fail due to audio features API)
+      console.warn('🎭 SAGEY: Attempting Mood Ring calculation...');
+      let moodRing;
+      try {
+        // Only attempt if we have a reasonable number of tracks
+        if (tracksToAnalyze.length >= 5) {
+          moodRing = await calculateMoodRing(tracksToAnalyze);
+          console.warn('🎭 SAGEY: Mood Ring calculated successfully:', moodRing.dominantMood);
+        } else {
+          console.warn('🎭 SAGEY: Not enough tracks for mood analysis, using defaults');
+          moodRing = DEFAULT_INSIGHTS.moodRing;
+        }
+      } catch (error) {
+        console.error('🎭 SAGEY: Mood Ring failed, using defaults:', error);
+        moodRing = DEFAULT_INSIGHTS.moodRing;
+      }
 
       const comprehensiveInsights: SpotifyInsightsData = {
         musicalAge,
@@ -558,17 +504,17 @@ export function useSpotifyInsights() {
         isDefault: false
       };
 
-      console.log('✅ All calculations completed successfully:', {
+      console.warn('✅ SAGEY: All calculations completed!', {
         musicalAge: musicalAge.age,
-        moodRingValid: moodRing.dominantMood !== 'Unknown',
-        genrePassportValid: genrePassport.totalGenres > 0,
-        nightOwlValid: nightOwlPattern.score > 0
+        moodValid: moodRing.dominantMood !== 'Unknown',
+        genreCount: genrePassport.totalGenres,
+        nightOwlScore: nightOwlPattern.score
       });
       
       setInsights(comprehensiveInsights);
 
     } catch (error) {
-      console.error('💥 Failed to load comprehensive insights:', error);
+      console.error('💥 SAGEY: Failed to load insights:', error);
       setError(error instanceof Error ? error.message : 'Failed to load insights');
       setInsights({ ...DEFAULT_INSIGHTS, isDefault: true });
     } finally {
@@ -578,7 +524,7 @@ export function useSpotifyInsights() {
 
   // Fixed useEffect - only depend on connected, not loadInsights to prevent infinite loop
   useEffect(() => {
-    loadInsights();
+      loadInsights();
   }, [connected]); // Removed loadInsights dependency to fix infinite loop
 
   return {
