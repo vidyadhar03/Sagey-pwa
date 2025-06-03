@@ -417,12 +417,26 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                     <div className="animate-pulse bg-white/5 h-20 rounded-xl" />
                   ) : (
                     <div>
-                      {recentTracks.length === 0 ? (
-                        <div className="flex items-center justify-center p-6 bg-white/5 rounded-lg">
-                          <p className="text-gray-400 text-sm">No recent tracks available</p>
-                        </div>
-                      ) : (
-                        recentTracks.slice(0, 1).map((item, index) => {
+                      {(() => {
+                        console.log('🎵 Recent tracks debug:', {
+                          connected,
+                          recentTracksLength: recentTracks.length,
+                          recentTracksData: recentTracks,
+                          dataLoading,
+                          hasUser: !!user
+                        });
+                        
+                        if (recentTracks.length === 0) {
+                          return (
+                            <div className="flex items-center justify-center p-6 bg-white/5 rounded-lg">
+                              <p className="text-gray-400 text-sm">
+                                {connected ? 'No recent tracks available' : 'Connect to Spotify to see recent tracks'}
+                              </p>
+                            </div>
+                          );
+                        }
+                        
+                        return recentTracks.slice(0, 1).map((item, index) => {
                           console.log('🎵 Recent track item:', item);
                           console.log('🎵 Item structure:', {
                             hasTrack: !!item.track,
@@ -526,8 +540,8 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                               </a>
                             </div>
                           );
-                        })
-                      )}
+                        });
+                      })()}
                     </div>
                   )}
                 </motion.section>
