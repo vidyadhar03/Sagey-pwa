@@ -77,10 +77,14 @@ interface GenreCount {
 }
 
 export function useSpotifyInsights() {
-  const { connected, getRecentTracks, getTopArtists, getTopTracks, getAudioFeatures } = useSpotify();
+  const { connected, getRecentTracks, getTopTracks, getTopArtists, getAudioFeatures } = useSpotify();
   const [insights, setInsights] = useState<SpotifyInsightsData>(DEFAULT_INSIGHTS);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastLoadTime, setLastLoadTime] = useState<number>(0);
+
+  // Circuit breaker: prevent API spam by enforcing minimum time between calls
+  const MIN_LOAD_INTERVAL = 2000; // 2 seconds minimum between loads
 
   // Calculate musical age from track data
   const calculateMusicalAge = useCallback((tracks: any[]) => {
@@ -328,6 +332,14 @@ export function useSpotifyInsights() {
   }, []);
 
   const loadInsights = useCallback(async () => {
+    const now = Date.now();
+    
+    // Circuit breaker: prevent API spam
+    if (now - lastLoadTime < MIN_LOAD_INTERVAL) {
+      console.log('🚫 Rate limited: Too soon since last load, skipping...');
+      return;
+    }
+    
     console.log('🔄 loadInsights called, connected:', connected);
     
     if (!connected) {
@@ -340,6 +352,7 @@ export function useSpotifyInsights() {
 
     setIsLoading(true);
     setError(null);
+    setLastLoadTime(now);
 
     try {
       console.log('🔄 Loading comprehensive Spotify insights...');
@@ -404,11 +417,12 @@ export function useSpotifyInsights() {
     } finally {
       setIsLoading(false);
     }
-  }, [connected, getRecentTracks, getTopTracks, calculateMusicalAge, calculateMoodRing, calculateGenrePassport, calculateNightOwlPattern]);
+  }, [connected, getRecentTracks, getTopTracks, calculateMusicalAge, calculateMoodRing, calculateGenrePassport, calculateNightOwlPattern, lastLoadTime]);
 
+  // Fixed useEffect - only depend on connected, not loadInsights to prevent infinite loop
   useEffect(() => {
     loadInsights();
-  }, [connected, loadInsights]);
+  }, [connected]); // Removed loadInsights dependency to fix infinite loop
 
   return {
     insights,

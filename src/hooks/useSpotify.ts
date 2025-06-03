@@ -564,19 +564,62 @@ export function useSpotify() {
 
   // Fetch audio features for tracks
   const getAudioFeatures = async (trackIds: string[]): Promise<{ aggregate: AudioFeatures; audio_features: any[] }> => {
+    console.log('🎵 getAudioFeatures called with:', { connected: status.connected, trackCount: trackIds.length });
+    
     if (!status.connected) {
+      console.log('❌ getAudioFeatures: Not connected to Spotify');
       throw new Error('Spotify not connected');
     }
 
-    const ids = trackIds.join(',');
-    const response = await fetch(`/api/spotify/audio-features?ids=${ids}`);
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to fetch audio features');
+    if (!trackIds || trackIds.length === 0) {
+      console.log('❌ getAudioFeatures: No track IDs provided');
+      throw new Error('No track IDs provided');
     }
 
-    return response.json();
+    try {
+      const ids = trackIds.join(',');
+      console.log('🔄 getAudioFeatures: Making API request...');
+      
+      const response = await fetch(`/api/spotify/audio-features?ids=${ids}`);
+      
+      console.log('📡 getAudioFeatures: API response status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ getAudioFeatures: API error:', { 
+          status: response.status, 
+          statusText: response.statusText,
+          error: errorText 
+        });
+        
+        // Don't throw for 403/401 errors - just return empty result
+        if (response.status === 403 || response.status === 401) {
+          console.log('🔄 getAudioFeatures: Auth error, returning empty result');
+          return {
+            aggregate: {
+              energy: 0,
+              valence: 0,
+              danceability: 0,
+              acousticness: 0,
+              instrumentalness: 0,
+              tempo: 0,
+              mood_score: 0
+            },
+            audio_features: []
+          };
+        }
+        
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log('✅ getAudioFeatures: Success');
+      return data;
+      
+    } catch (error) {
+      console.error('❌ getAudioFeatures: Exception occurred:', error);
+      throw error;
+    }
   };
 
   // Get music insights (combines multiple API calls)
