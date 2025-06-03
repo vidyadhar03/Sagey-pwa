@@ -88,21 +88,50 @@ export function useSpotifyInsights() {
 
   // Calculate musical age from track data
   const calculateMusicalAge = useCallback((tracks: any[]) => {
+    console.log('🎂 calculateMusicalAge called with:', { tracksLength: tracks?.length, firstTrack: tracks?.[0] });
+    
     if (!tracks || tracks.length === 0) {
+      console.log('❌ calculateMusicalAge: No tracks provided');
       return DEFAULT_INSIGHTS.musicalAge;
     }
 
+    console.log('🔍 calculateMusicalAge: Processing tracks for release years...');
+    
     const releaseYears = tracks
-      .map(track => {
+      .map((track, index) => {
         const album = track.album || track.track?.album;
+        console.log(`Track ${index + 1}:`, {
+          trackName: track.name || track.track?.name,
+          album: album,
+          releaseDate: album?.release_date,
+          trackStructure: Object.keys(track)
+        });
+        
         if (album?.release_date) {
-          return parseInt(album.release_date.substring(0, 4));
+          const year = parseInt(album.release_date.substring(0, 4));
+          console.log(`  -> Year extracted: ${year}`);
+          return year;
         }
+        console.log(`  -> No valid release date found`);
         return null;
       })
-      .filter((year): year is number => year !== null && year > 1900 && year <= new Date().getFullYear());
+      .filter((year): year is number => {
+        const isValid = year !== null && year > 1900 && year <= new Date().getFullYear();
+        if (!isValid && year !== null) {
+          console.log(`  -> Filtered out invalid year: ${year}`);
+        }
+        return isValid;
+      });
+
+    console.log('📊 calculateMusicalAge: Release years extracted:', { 
+      totalTracks: tracks.length,
+      validYears: releaseYears.length,
+      years: releaseYears.slice(0, 10),
+      sample: releaseYears.length > 10 ? '...' : 'complete'
+    });
 
     if (releaseYears.length === 0) {
+      console.log('❌ calculateMusicalAge: No valid release years found');
       return DEFAULT_INSIGHTS.musicalAge;
     }
 
@@ -118,7 +147,7 @@ export function useSpotifyInsights() {
     else if (age < 25) description = "Your taste reflects the golden era of digital music";
     else description = "You appreciate the classics and timeless hits";
 
-    return {
+    const result = {
       age,
       description,
       averageYear,
@@ -126,46 +155,97 @@ export function useSpotifyInsights() {
       newest,
       trackCount: tracks.length
     };
+
+    console.log('✅ calculateMusicalAge: Success!', result);
+    return result;
   }, []);
 
   // Calculate mood distribution from audio features
   const calculateMoodRing = useCallback(async (tracks: any[]) => {
+    console.log('🎭 calculateMoodRing called with:', { 
+      tracksLength: tracks?.length, 
+      connected,
+      firstTrack: tracks?.[0] ? {
+        id: tracks[0].id,
+        name: tracks[0].name,
+        structure: Object.keys(tracks[0])
+      } : null
+    });
+    
     if (!tracks || tracks.length === 0) {
+      console.log('❌ calculateMoodRing: No tracks provided');
       return DEFAULT_INSIGHTS.moodRing;
     }
 
     try {
       // Check if we're connected before trying to fetch audio features
       if (!connected) {
-        console.log('⚠️ Not connected to Spotify, using fallback mood ring data');
+        console.log('⚠️ calculateMoodRing: Not connected to Spotify, using fallback mood ring data');
         return DEFAULT_INSIGHTS.moodRing;
       }
 
       // Get track IDs for audio features
       const trackIds = tracks
-        .map(track => track.id || track.track?.id)
+        .map((track, index) => {
+          const id = track.id || track.track?.id;
+          console.log(`Track ${index + 1} ID extraction:`, {
+            directId: track.id,
+            nestedId: track.track?.id,
+            finalId: id,
+            trackName: track.name || track.track?.name
+          });
+          return id;
+        })
         .filter(Boolean)
         .slice(0, 50); // Limit to 50 tracks for API efficiency
 
+      console.log('🔍 calculateMoodRing: Track IDs processed:', { 
+        totalTracks: tracks.length,
+        validIds: trackIds.length,
+        sampleIds: trackIds.slice(0, 5),
+        allIds: trackIds
+      });
+
       if (trackIds.length === 0) {
-        console.log('⚠️ No valid track IDs found for audio features');
+        console.log('⚠️ calculateMoodRing: No valid track IDs found for audio features');
         return DEFAULT_INSIGHTS.moodRing;
       }
 
-      console.log('🎵 Fetching audio features for mood calculation...', { trackIds: trackIds.slice(0, 5), totalTracks: trackIds.length });
+      console.log('🎵 calculateMoodRing: Calling getAudioFeatures with', trackIds.length, 'track IDs...');
 
       const audioFeaturesResponse = await getAudioFeatures(trackIds);
+      
+      console.log('📡 calculateMoodRing: getAudioFeatures response:', {
+        response: audioFeaturesResponse,
+        responseType: typeof audioFeaturesResponse,
+        hasAudioFeatures: !!audioFeaturesResponse?.audio_features,
+        audioFeaturesType: Array.isArray(audioFeaturesResponse?.audio_features) ? 'array' : typeof audioFeaturesResponse?.audio_features,
+        audioFeaturesLength: audioFeaturesResponse?.audio_features?.length
+      });
       
       // Handle different response formats from the API
       let audioFeatures: any[] = [];
       if (audioFeaturesResponse && Array.isArray(audioFeaturesResponse)) {
         audioFeatures = audioFeaturesResponse;
+        console.log('📊 calculateMoodRing: Using direct array response');
       } else if (audioFeaturesResponse && audioFeaturesResponse.audio_features) {
         audioFeatures = audioFeaturesResponse.audio_features;
+        console.log('📊 calculateMoodRing: Using nested audio_features array');
       }
       
+      console.log('🎼 calculateMoodRing: Final audio features:', {
+        audioFeaturesLength: audioFeatures?.length,
+        firstFeature: audioFeatures?.[0],
+        sampleFeatures: audioFeatures?.slice(0, 3).map(f => ({
+          id: f?.id,
+          valence: f?.valence,
+          energy: f?.energy,
+          danceability: f?.danceability
+        }))
+      });
+      
       if (!audioFeatures || audioFeatures.length === 0) {
-        console.log('⚠️ No audio features returned from API');
+        console.log('⚠️ calculateMoodRing: No audio features returned from API');
         return DEFAULT_INSIGHTS.moodRing;
       }
 
@@ -173,7 +253,15 @@ export function useSpotifyInsights() {
       let totalValence = 0, totalEnergy = 0, totalDanceability = 0;
       let validFeatures = 0;
 
-      audioFeatures.forEach((features: any) => {
+      audioFeatures.forEach((features: any, index: number) => {
+        console.log(`Feature ${index + 1}:`, {
+          hasFeatures: !!features,
+          valence: features?.valence,
+          energy: features?.energy,
+          danceability: features?.danceability,
+          isValidValence: typeof features?.valence === 'number'
+        });
+        
         if (features && typeof features.valence === 'number') {
           totalValence += features.valence;
           totalEnergy += features.energy || 0;
@@ -182,8 +270,15 @@ export function useSpotifyInsights() {
         }
       });
 
+      console.log('📊 calculateMoodRing: Aggregated values:', {
+        validFeatures,
+        totalValence,
+        totalEnergy,
+        totalDanceability
+      });
+
       if (validFeatures === 0) {
-        console.log('⚠️ No valid audio features found');
+        console.log('⚠️ calculateMoodRing: No valid audio features found');
         return DEFAULT_INSIGHTS.moodRing;
       }
 
@@ -191,7 +286,7 @@ export function useSpotifyInsights() {
       const avgEnergy = totalEnergy / validFeatures;
       const avgDance = totalDanceability / validFeatures;
 
-      console.log('📊 Audio features calculated:', { avgValence, avgEnergy, avgDance, validFeatures });
+      console.log('📊 calculateMoodRing: Average values calculated:', { avgValence, avgEnergy, avgDance, validFeatures });
 
       // Map audio features to emotions (simplified mapping)
       const happy = Math.round(avgValence * 100);
@@ -219,15 +314,22 @@ export function useSpotifyInsights() {
         { label: 'Melancholy', pct: emotions.melancholy, color: '#9B59B6' }
       ];
 
-      console.log('✅ Mood ring calculated successfully:', { emotions, dominantMood });
-
-      return {
+      const result = {
         emotions,
         dominantMood: dominantMood.charAt(0).toUpperCase() + dominantMood.slice(1),
         distribution
       };
+
+      console.log('✅ calculateMoodRing: Success!', result);
+
+      return result;
     } catch (error) {
-      console.error('❌ Error calculating mood ring (falling back to defaults):', error);
+      console.error('❌ calculateMoodRing: Error occurred:', error);
+      console.error('🔍 calculateMoodRing: Error details:', {
+        errorType: error?.constructor?.name,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
       return DEFAULT_INSIGHTS.moodRing;
     }
   }, [connected, getAudioFeatures]);
@@ -369,10 +471,39 @@ export function useSpotifyInsights() {
         })
       ]);
 
-      console.log('📊 Data fetched:', { recentTracks: recentTracks?.length, topTracks: topTracks?.length });
+      console.log('📊 Data fetched successfully:', { 
+        recentTracksCount: recentTracks?.length, 
+        topTracksCount: topTracks?.length,
+        recentTracksSample: recentTracks?.slice(0, 2).map(t => ({
+          id: t?.id,
+          name: t?.name,
+          hasAlbum: !!t?.album,
+          albumType: typeof t?.album,
+          structure: Object.keys(t || {})
+        })),
+        topTracksSample: topTracks?.slice(0, 2).map(t => ({
+          id: t?.id,
+          name: t?.name,
+          hasAlbum: !!t?.album,
+          albumType: typeof t?.album,
+          structure: Object.keys(t || {})
+        }))
+      });
 
       // Use top tracks for more comprehensive analysis, fallback to recent tracks
       const tracksToAnalyze = topTracks && topTracks.length > 0 ? topTracks : recentTracks;
+      
+      console.log('🎯 Tracks selected for analysis:', {
+        source: topTracks && topTracks.length > 0 ? 'top tracks' : 'recent tracks',
+        count: tracksToAnalyze?.length,
+        firstTrack: tracksToAnalyze?.[0] ? {
+          id: tracksToAnalyze[0].id,
+          name: tracksToAnalyze[0].name,
+          hasAlbum: !!tracksToAnalyze[0].album,
+          albumType: typeof tracksToAnalyze[0].album,
+          structure: Object.keys(tracksToAnalyze[0])
+        } : null
+      });
       
       if (!tracksToAnalyze || tracksToAnalyze.length === 0) {
         console.log('⚠️ No tracks found, using fallback data');
@@ -383,21 +514,41 @@ export function useSpotifyInsights() {
 
       console.log('🧮 Starting calculations with', tracksToAnalyze.length, 'tracks...');
 
+      // Calculate Musical Age first (no API calls)
+      console.log('🎂 Starting Musical Age calculation...');
+      const musicalAge = calculateMusicalAge(tracksToAnalyze);
+      console.log('🎂 Musical Age result:', musicalAge);
+
       // Calculate all insights in parallel where possible
-      const [musicalAge, moodRing, genrePassport] = await Promise.all([
-        Promise.resolve(calculateMusicalAge(tracksToAnalyze)),
-        calculateMoodRing(tracksToAnalyze).catch(error => {
-          console.error('Mood ring calculation failed, using defaults:', error);
-          return DEFAULT_INSIGHTS.moodRing;
-        }),
-        calculateGenrePassport().catch(error => {
-          console.error('Genre passport calculation failed, using defaults:', error);
-          return DEFAULT_INSIGHTS.genrePassport;
-        })
+      const [moodRing, genrePassport] = await Promise.all([
+        (async () => {
+          console.log('🎭 Starting Mood Ring calculation...');
+          try {
+            const result = await calculateMoodRing(tracksToAnalyze);
+            console.log('🎭 Mood Ring result:', result);
+            return result;
+          } catch (error) {
+            console.error('🎭 Mood ring calculation failed, using defaults:', error);
+            return DEFAULT_INSIGHTS.moodRing;
+          }
+        })(),
+        (async () => {
+          console.log('🎤 Starting Genre Passport calculation...');
+          try {
+            const result = await calculateGenrePassport();
+            console.log('🎤 Genre Passport result:', result);
+            return result;
+          } catch (error) {
+            console.error('🎤 Genre passport calculation failed, using defaults:', error);
+            return DEFAULT_INSIGHTS.genrePassport;
+          }
+        })()
       ]);
 
       // Night owl pattern needs recent tracks with timestamps
+      console.log('🦉 Starting Night Owl Pattern calculation...');
       const nightOwlPattern = calculateNightOwlPattern(recentTracks || []);
+      console.log('🦉 Night Owl Pattern result:', nightOwlPattern);
 
       const comprehensiveInsights: SpotifyInsightsData = {
         musicalAge,
@@ -407,7 +558,13 @@ export function useSpotifyInsights() {
         isDefault: false
       };
 
-      console.log('✅ Comprehensive insights calculated successfully');
+      console.log('✅ All calculations completed successfully:', {
+        musicalAge: musicalAge.age,
+        moodRingValid: moodRing.dominantMood !== 'Unknown',
+        genrePassportValid: genrePassport.totalGenres > 0,
+        nightOwlValid: nightOwlPattern.score > 0
+      });
+      
       setInsights(comprehensiveInsights);
 
     } catch (error) {
