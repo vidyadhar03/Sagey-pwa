@@ -11,7 +11,7 @@ const nextConfig = {
   },
   
   // Server external packages (moved from experimental)
-  serverExternalPackages: [],
+  serverExternalPackages: ['ioredis'],
   
   // Explicitly set TypeScript config path
   typescript: {
