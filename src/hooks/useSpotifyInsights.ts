@@ -131,6 +131,12 @@ export function useSpotifyInsights() {
     }
 
     try {
+      // Check if we're connected before trying to fetch audio features
+      if (!connected) {
+        console.log('⚠️ Not connected to Spotify, using fallback mood ring data');
+        return DEFAULT_INSIGHTS.moodRing;
+      }
+
       // Get track IDs for audio features
       const trackIds = tracks
         .map(track => track.id || track.track?.id)
@@ -138,8 +144,11 @@ export function useSpotifyInsights() {
         .slice(0, 50); // Limit to 50 tracks for API efficiency
 
       if (trackIds.length === 0) {
+        console.log('⚠️ No valid track IDs found for audio features');
         return DEFAULT_INSIGHTS.moodRing;
       }
+
+      console.log('🎵 Fetching audio features for mood calculation...', { trackIds: trackIds.slice(0, 5), totalTracks: trackIds.length });
 
       const audioFeaturesResponse = await getAudioFeatures(trackIds);
       
@@ -152,6 +161,7 @@ export function useSpotifyInsights() {
       }
       
       if (!audioFeatures || audioFeatures.length === 0) {
+        console.log('⚠️ No audio features returned from API');
         return DEFAULT_INSIGHTS.moodRing;
       }
 
@@ -169,12 +179,15 @@ export function useSpotifyInsights() {
       });
 
       if (validFeatures === 0) {
+        console.log('⚠️ No valid audio features found');
         return DEFAULT_INSIGHTS.moodRing;
       }
 
       const avgValence = totalValence / validFeatures;
       const avgEnergy = totalEnergy / validFeatures;
       const avgDance = totalDanceability / validFeatures;
+
+      console.log('📊 Audio features calculated:', { avgValence, avgEnergy, avgDance, validFeatures });
 
       // Map audio features to emotions (simplified mapping)
       const happy = Math.round(avgValence * 100);
@@ -202,25 +215,37 @@ export function useSpotifyInsights() {
         { label: 'Melancholy', pct: emotions.melancholy, color: '#9B59B6' }
       ];
 
+      console.log('✅ Mood ring calculated successfully:', { emotions, dominantMood });
+
       return {
         emotions,
         dominantMood: dominantMood.charAt(0).toUpperCase() + dominantMood.slice(1),
         distribution
       };
     } catch (error) {
-      console.error('Error calculating mood ring:', error);
+      console.error('❌ Error calculating mood ring (falling back to defaults):', error);
       return DEFAULT_INSIGHTS.moodRing;
     }
-  }, [getAudioFeatures]);
+  }, [connected, getAudioFeatures]);
 
   // Calculate genre passport from artists
   const calculateGenrePassport = useCallback(async () => {
     try {
+      // Check if we're connected before trying to fetch artists
+      if (!connected) {
+        console.log('⚠️ Not connected to Spotify, using fallback genre passport data');
+        return DEFAULT_INSIGHTS.genrePassport;
+      }
+
+      console.log('🎤 Fetching top artists for genre calculation...');
       const topArtists = await getTopArtists('medium_term');
       
       if (!topArtists || topArtists.length === 0) {
+        console.log('⚠️ No top artists found');
         return DEFAULT_INSIGHTS.genrePassport;
       }
+
+      console.log('📊 Processing genres from artists...', { artistCount: topArtists.length });
 
       const genreSet = new Set<string>();
       const genreCounts: GenreCount = {};
@@ -245,6 +270,8 @@ export function useSpotifyInsights() {
       // Calculate exploration score based on genre diversity
       const explorationScore = Math.min(100, Math.round((totalGenres / 20) * 100));
       
+      console.log('✅ Genre passport calculated successfully:', { totalGenres, topGenres: topGenres.slice(0, 3), explorationScore });
+
       return {
         totalGenres,
         topGenres,
@@ -253,10 +280,10 @@ export function useSpotifyInsights() {
         newDiscoveries: Math.floor(totalGenres * 0.2) // Estimate
       };
     } catch (error) {
-      console.error('Error calculating genre passport:', error);
+      console.error('❌ Error calculating genre passport (falling back to defaults):', error);
       return DEFAULT_INSIGHTS.genrePassport;
     }
-  }, [getTopArtists]);
+  }, [connected, getTopArtists]);
 
   // Calculate night owl pattern from recent tracks
   const calculateNightOwlPattern = useCallback((tracks: any[]) => {
@@ -301,7 +328,10 @@ export function useSpotifyInsights() {
   }, []);
 
   const loadInsights = useCallback(async () => {
+    console.log('🔄 loadInsights called, connected:', connected);
+    
     if (!connected) {
+      console.log('❌ Not connected to Spotify, setting default insights');
       setInsights(DEFAULT_INSIGHTS);
       setIsLoading(false);
       setError(null);
@@ -316,8 +346,14 @@ export function useSpotifyInsights() {
       
       // Fetch data in parallel
       const [recentTracks, topTracks] = await Promise.all([
-        getRecentTracks(),
-        getTopTracks('medium_term')
+        getRecentTracks().catch(error => {
+          console.error('Failed to fetch recent tracks:', error);
+          return [];
+        }),
+        getTopTracks('medium_term').catch(error => {
+          console.error('Failed to fetch top tracks:', error);
+          return [];
+        })
       ]);
 
       console.log('📊 Data fetched:', { recentTracks: recentTracks?.length, topTracks: topTracks?.length });
@@ -332,11 +368,19 @@ export function useSpotifyInsights() {
         return;
       }
 
+      console.log('🧮 Starting calculations with', tracksToAnalyze.length, 'tracks...');
+
       // Calculate all insights in parallel where possible
       const [musicalAge, moodRing, genrePassport] = await Promise.all([
         Promise.resolve(calculateMusicalAge(tracksToAnalyze)),
-        calculateMoodRing(tracksToAnalyze),
-        calculateGenrePassport()
+        calculateMoodRing(tracksToAnalyze).catch(error => {
+          console.error('Mood ring calculation failed, using defaults:', error);
+          return DEFAULT_INSIGHTS.moodRing;
+        }),
+        calculateGenrePassport().catch(error => {
+          console.error('Genre passport calculation failed, using defaults:', error);
+          return DEFAULT_INSIGHTS.genrePassport;
+        })
       ]);
 
       // Night owl pattern needs recent tracks with timestamps
@@ -350,7 +394,7 @@ export function useSpotifyInsights() {
         isDefault: false
       };
 
-      console.log('✅ Comprehensive insights calculated:', comprehensiveInsights);
+      console.log('✅ Comprehensive insights calculated successfully');
       setInsights(comprehensiveInsights);
 
     } catch (error) {
