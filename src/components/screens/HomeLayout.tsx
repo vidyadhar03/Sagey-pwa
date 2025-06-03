@@ -444,25 +444,65 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                             );
                           }
                           
+                          // Format duration helper
+                          const formatDuration = (ms: number) => {
+                            const minutes = Math.floor(ms / 60000);
+                            const seconds = Math.floor((ms % 60000) / 1000);
+                            return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                          };
+                          
+                          // Format played at time helper
+                          const formatPlayedAt = (dateString: string) => {
+                            const date = new Date(dateString);
+                            const now = new Date();
+                            const diffMs = now.getTime() - date.getTime();
+                            const diffMins = Math.floor(diffMs / 60000);
+                            const diffHours = Math.floor(diffMins / 60);
+                          
+                            if (diffMins < 60) {
+                              return `${diffMins}m ago`;
+                            } else if (diffHours < 24) {
+                              return `${diffHours}h ago`;
+                            } else {
+                              return `${Math.floor(diffHours / 24)}d ago`;
+                            }
+                          };
+                          
                           return (
                             <div key={`${trackId}-${index}`} className="flex items-center gap-4 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
+                              <span className="text-[#1DB954] font-bold text-lg mr-4 w-6">#1</span>
                               {trackAlbum?.images?.[0] && (
                                 <img 
                                   src={trackAlbum.images[0].url} 
                                   alt={trackAlbum.name || 'Album cover'}
-                                  className="w-12 h-12 rounded-lg"
+                                  className="w-12 h-12 mr-4 rounded-lg"
                                 />
                               )}
                               <div className="flex-1 min-w-0">
-                                <p className="font-medium truncate">{trackName || 'Unknown Track'}</p>
-                                <p className="text-sm text-gray-400 truncate">
-                                  {trackArtists?.map((artist: any) => artist?.name || 'Unknown Artist').join(', ') || 'Unknown Artist'}
+                                <h4 className="text-white font-medium truncate">{trackName || 'Unknown Track'}</h4>
+                                <p className="text-gray-400 text-sm truncate">
+                                  {trackArtists?.map((artist: any) => artist?.name || 'Unknown Artist').join(', ') || 'Unknown Artist'} • {trackAlbum?.name || 'Unknown Album'}
                                 </p>
+                                <div className="flex items-center">
+                                  <span className="text-xs text-gray-400">{track.duration_ms ? formatDuration(track.duration_ms) : '--:--'}</span>
+                                  {playedAt && (
+                                    <>
+                                      <span className="text-gray-400 mx-1">•</span>
+                                      <span className="text-xs text-orange-400">{formatPlayedAt(playedAt)}</span>
+                                    </>
+                                  )}
+                                </div>
                               </div>
-                              <div className="text-xs text-gray-400 text-right">
-                                <div>{playedAt ? new Date(playedAt).toLocaleDateString() : '--'}</div>
-                                <div>{playedAt ? new Date(playedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}</div>
-                              </div>
+                              <a 
+                                href={track.external_urls?.spotify || `https://open.spotify.com/track/${trackId}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="ml-2 p-2 rounded-full bg-[#1DB954]/20 hover:bg-[#1DB954]/30 transition-all"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-4 h-4 text-[#1DB954]">
+                                  <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.84-.179-.959-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.361 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.42 1.56-.299.421-1.02.599-1.559.3z"/>
+                                </svg>
+                              </a>
                             </div>
                           );
                         })
