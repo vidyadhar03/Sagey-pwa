@@ -25,6 +25,8 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
     loading: insightsLoading,
     refresh: refreshInsights
   } = useSpotifyInsights();
+  
+  // Remove separate data state - use the global cache from useSpotify
   const [recentTracks, setRecentTracks] = useState<any[]>([]);
   const [topTracks, setTopTracks] = useState<any[]>([]);
   const [topArtists, setTopArtists] = useState<any[]>([]);
@@ -32,6 +34,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
   const [spotifyError, setSpotifyError] = useState<string | null>(null);
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Track if data has been loaded to prevent re-loading on tab switches
   const dataLoadedRef = useRef(false);
@@ -137,45 +140,56 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
   }, [addLog]);
 
   useEffect(() => {
-    // Only load data if connected, has user, and haven't loaded data before
-    if (connected && user && !dataLoadedRef.current) {
-      console.log('🏠 HomeLayout: Loading quick data for first time');
-      dataLoadedRef.current = true;
-      loadQuickData();
+    // Initialize data when connected (same pattern as SpotifyDataView)
+    if (connected && user && !isInitialized) {
+      console.log('🏠 HomeLayout: Starting initialization...');
+      initializeHomeData();
     } else if (!connected) {
-      // Reset data and flag when disconnected
-      console.log('🏠 HomeLayout: Disconnected, clearing data');
-      dataLoadedRef.current = false;
+      // Reset when disconnected
+      console.log('🏠 HomeLayout: Disconnected, resetting state');
       setRecentTracks([]);
       setTopTracks([]);
       setTopArtists([]);
       setDataLoading(false);
+      setIsInitialized(false);
+      dataLoadedRef.current = false;
     }
   }, [connected, user]);
 
-  const loadQuickData = async () => {
-    console.log('🏠 HomeLayout: Starting loadQuickData');
+  // Initialize home data (same pattern as SpotifyDataView)
+  const initializeHomeData = async () => {
+    console.log('🏠 HomeLayout: Starting initialization...');
     setDataLoading(true);
+    
     try {
-      // Use cached data efficiently - these will return cached data if available
+      // Load recent tracks, top tracks, and top artists using global cache
+      console.log('🏠 HomeLayout: Loading data via useSpotify cache...');
+      
       const [recent, tracks, artists] = await Promise.all([
         getRecentTracks(),
-        getTopTracks('short_term'),
+        getTopTracks('short_term'), 
         getTopArtists('short_term')
       ]);
       
-      console.log('🏠 HomeLayout: Quick data loaded', {
-        recent: recent?.length,
-        tracks: tracks?.length,
-        artists: artists?.length
+      console.log('🏠 HomeLayout: Data loaded successfully', {
+        recentCount: recent?.length || 0,
+        tracksCount: tracks?.length || 0,
+        artistsCount: artists?.length || 0,
+        recentSample: recent?.[0],
+        trackSample: tracks?.[0],
+        artistSample: artists?.[0]
       });
       
-      setRecentTracks(recent?.slice(0, 3) || []);
+      // Set data for display (limit to what we need for home)
+      setRecentTracks(recent || []);
       setTopTracks(tracks?.slice(0, 3) || []);
       setTopArtists(artists?.slice(0, 3) || []);
+      setIsInitialized(true);
+      dataLoadedRef.current = true;
+      
     } catch (error) {
-      console.error('🏠 HomeLayout: Failed to load quick data:', error);
-      // Don't reset dataLoadedRef on error, allow retry
+      console.error('🏠 HomeLayout: Failed to initialize data:', error);
+      setSpotifyError('Failed to load music data. Please try refreshing.');
     } finally {
       setDataLoading(false);
     }
@@ -420,17 +434,27 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                       {(() => {
                         console.log('🎵 Recent tracks debug:', {
                           connected,
+                          isInitialized,
                           recentTracksLength: recentTracks.length,
                           recentTracksData: recentTracks,
                           dataLoading,
-                          hasUser: !!user
+                          hasUser: !!user,
+                          firstTrackStructure: recentTracks[0] ? {
+                            hasTrack: !!recentTracks[0].track,
+                            directKeys: Object.keys(recentTracks[0]),
+                            trackKeys: recentTracks[0].track ? Object.keys(recentTracks[0].track) : null,
+                            playedAt: recentTracks[0].played_at,
+                            trackName: recentTracks[0].track?.name || recentTracks[0].name,
+                            trackArtists: recentTracks[0].track?.artists || recentTracks[0].artists,
+                            albumImages: recentTracks[0].track?.album?.images || recentTracks[0].album?.images
+                          } : null
                         });
                         
                         if (recentTracks.length === 0) {
                           return (
                             <div className="flex items-center justify-center p-6 bg-white/5 rounded-lg">
                               <p className="text-gray-400 text-sm">
-                                {connected ? 'No recent tracks available' : 'Connect to Spotify to see recent tracks'}
+                                {connected && isInitialized ? 'No recent tracks available' : 'Loading recent tracks...'}
                               </p>
                             </div>
                           );
