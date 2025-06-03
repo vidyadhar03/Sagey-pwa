@@ -148,7 +148,7 @@ export function useSpotifyInsights() {
       const currentYear = new Date().getFullYear();
       return {
         age: 0,
-        description: "Connect Spotify to discover your musical age",
+        description: `DEBUG: ${tracks.length} tracks, 0 valid years | Connect Spotify to discover your musical age`,
         averageYear: currentYear,
         oldest: currentYear,
         newest: currentYear,
@@ -170,7 +170,7 @@ export function useSpotifyInsights() {
 
     const result = {
       age,
-      description,
+      description: `DEBUG: ${tracks.length} tracks, ${releaseYears.length} valid years | ${description}`,
       averageYear,
       oldest,
       newest,
@@ -479,9 +479,19 @@ export function useSpotifyInsights() {
         return;
       }
 
-      // Calculate Musical Age first (no API calls needed)
+      // Calculate Musical Age first (no API calls needed) - ADD DEBUGGING INFO TO DESCRIPTION
       console.error('🎂 SAGEY DEBUG: Starting Musical Age calculation with', tracksToAnalyze.length, 'tracks...');
       const musicalAge = calculateMusicalAge(tracksToAnalyze);
+      
+      // INJECT DEBUG INFO INTO THE DESCRIPTION FOR UI VISIBILITY
+      const debugInfo = `Tracks: ${tracksToAnalyze.length}, Source: ${topTracks && topTracks.length > 0 ? 'top' : 'recent'}`;
+      musicalAge.description = `DEBUG: ${debugInfo} | ${musicalAge.description}`;
+      
+      // TEMPORARY ALERT FOR ULTIMATE DEBUGGING VISIBILITY
+      if (typeof window !== 'undefined') {
+        window.alert(`SAGEY DEBUG: Musical Age calculated! Age: ${musicalAge.age}, Valid Years: ${musicalAge.description.includes('valid years') ? musicalAge.description.split(' valid years')[0].split(', ')[1] : 'unknown'}, Tracks: ${tracksToAnalyze.length}`);
+      }
+      
       console.error('🎂 SAGEY DEBUG: Musical Age result:', {
         age: musicalAge.age,
         description: musicalAge.description,
