@@ -426,7 +426,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                         if (!trackData || !trackData.id) return null;
                         
                         return (
-                          <div key={`${trackData.id}-${index}`} className="flex items-center gap-4 p-4 bg-white/5 rounded-xl hover:bg-white/10 transition-colors border border-white/10 hover:border-[#1DB954]/30">
+                          <div key={`${trackData.id}-${index}`} className="flex items-center gap-4 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
                             {album?.images?.[0] && (
                               <img 
                                 src={album.images[0].url} 
@@ -435,7 +435,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                               />
                             )}
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium truncate text-white">{trackData.name || 'Unknown Track'}</p>
+                              <p className="font-medium truncate">{trackData.name || 'Unknown Track'}</p>
                               <p className="text-sm text-gray-400 truncate">
                                 {artists?.map((artist: any) => artist?.name || 'Unknown Artist').join(', ') || 'Unknown Artist'}
                               </p>
