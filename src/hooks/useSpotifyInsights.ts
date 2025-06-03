@@ -98,6 +98,7 @@ export function useSpotifyInsights() {
     console.error('🔍 SAGEY DEBUG: Extracting release years from track data...');
     
     const releaseYears: number[] = [];
+    const debugInfo: string[] = [];
     
     tracks.forEach((track, index) => {
       try {
@@ -105,35 +106,53 @@ export function useSpotifyInsights() {
         const actualTrack = track.track || track;
         const album = actualTrack.album;
         
-        if (index < 5) { // Log first 5 tracks for debugging
+        if (index < 3) { // Log first 3 tracks for debugging
           console.error(`SAGEY DEBUG Track ${index + 1}:`, {
             name: actualTrack?.name,
             hasAlbum: !!album,
             albumType: typeof album,
+            albumKeys: album ? Object.keys(album) : [],
             releaseDate: album?.release_date,
+            releaseDatePrecision: album?.release_date_precision,
             fullAlbum: album
           });
+          
+          debugInfo.push(`T${index + 1}: ${actualTrack?.name || 'Unknown'} - Album: ${!!album} - ReleaseDate: ${album?.release_date || 'MISSING'}`);
         }
         
-        if (album && typeof album === 'object' && 'release_date' in album && typeof album.release_date === 'string') {
-          const year = parseInt(album.release_date.substring(0, 4));
-          if (year > 1900 && year <= new Date().getFullYear()) {
-            releaseYears.push(year);
-            if (index < 5) {
-              console.error(`SAGEY DEBUG: ✅ Valid year ${year} extracted from track:`, actualTrack?.name);
+        // Try multiple ways to extract release date
+        let releaseDate = null;
+        if (album && typeof album === 'object') {
+          // Try different property names and formats
+          releaseDate = album.release_date || album.releaseDate || album['release-date'];
+          
+          if (releaseDate && typeof releaseDate === 'string' && releaseDate.length >= 4) {
+            const year = parseInt(releaseDate.substring(0, 4));
+            if (year > 1900 && year <= new Date().getFullYear()) {
+              releaseYears.push(year);
+              if (index < 3) {
+                console.error(`SAGEY DEBUG: ✅ Valid year ${year} extracted from track:`, actualTrack?.name);
+              }
+            } else if (index < 3) {
+              console.error(`SAGEY DEBUG: ❌ Invalid year ${year} for track:`, actualTrack?.name);
             }
-          } else if (index < 5) {
-            console.error(`SAGEY DEBUG: ❌ Invalid year ${year} for track:`, actualTrack?.name);
+          } else if (index < 3) {
+            console.error(`SAGEY DEBUG: ❌ No valid release date format for track:`, actualTrack?.name, 'Found:', releaseDate, 'Type:', typeof releaseDate);
           }
-        } else if (index < 5) {
-          console.error(`SAGEY DEBUG: ❌ No valid release date for track:`, actualTrack?.name, 'album:', album);
+        } else if (index < 3) {
+          console.error(`SAGEY DEBUG: ❌ No album object for track:`, actualTrack?.name, 'Album type:', typeof album);
         }
       } catch (error) {
-        if (index < 5) {
+        if (index < 3) {
           console.error(`SAGEY DEBUG: ❌ Error processing track ${index + 1}:`, error);
         }
       }
     });
+
+    // Show debug summary in alert
+    if (typeof window !== 'undefined' && debugInfo.length > 0) {
+      window.alert(`SAGEY TRACK DEBUG:\n${debugInfo.join('\n')}\n\nTotal valid years found: ${releaseYears.length}/${tracks.length}`);
+    }
 
     console.error('📊 SAGEY DEBUG: Release years extracted:', {
       totalTracks: tracks.length,
