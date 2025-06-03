@@ -11,7 +11,7 @@ import { useSpotifyDebug } from '../../hooks/useSpotifyDebug';
 import { useSpotifyInsights } from '../../hooks/useSpotifyInsights';
 
 interface HomeLayoutProps {
-  onTabClick?: (tab: string) => void;
+  onTabClick?: (tab: string, options?: { section?: string }) => void;
 }
 
 export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
@@ -406,7 +406,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-white font-semibold text-lg">Recently Played</h3>
                     <button 
-                      onClick={() => onTabClick?.('explore')}
+                      onClick={() => onTabClick?.('explore', { section: 'recent' })}
                       className="text-[#1DB954] text-sm font-medium hover:text-[#1ed760] transition-colors"
                     >
                       View All
@@ -417,37 +417,38 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                     <div className="animate-pulse bg-white/5 h-20 rounded-xl" />
                   ) : (
                     <div>
-                      {recentTracks.slice(0, 1).map((track, index) => (
-                        <div key={`${track.track?.id || track.id}-${index}`} className="p-4 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-[#1DB954]/30 transition-all">
-                          <div className="flex items-center">
-                            {(track.track?.album?.images?.[0] || track.album?.images?.[0]) && (
+                      {recentTracks.slice(0, 1).map((track, index) => {
+                        // Handle both recent track format (with track property) and direct track format
+                        const trackData = track.track || track;
+                        const album = trackData.album || track.album;
+                        const artists = trackData.artists || track.artists;
+                        
+                        if (!trackData || !trackData.id) return null;
+                        
+                        return (
+                          <div key={`${trackData.id}-${index}`} className="flex items-center gap-4 p-4 bg-white/5 rounded-xl hover:bg-white/10 transition-colors border border-white/10 hover:border-[#1DB954]/30">
+                            {album?.images?.[0] && (
                               <img 
-                                src={(track.track?.album?.images?.[0] || track.album?.images?.[0]).url} 
-                                alt={(track.track?.album?.name || track.album?.name)}
-                                className="w-16 h-16 rounded-lg mr-4 flex-shrink-0"
+                                src={album.images[0].url} 
+                                alt={album.name || 'Album cover'}
+                                className="w-12 h-12 rounded-lg"
                               />
                             )}
                             <div className="flex-1 min-w-0">
-                              <p className="text-white font-semibold text-base mb-1 truncate">
-                                {track.track?.name || track.name}
-                              </p>
-                              <p className="text-gray-400 text-sm mb-1 truncate">
-                                {(track.track?.artists || track.artists)?.map((artist: any) => artist.name).join(', ')}
-                              </p>
-                              <p className="text-gray-500 text-xs truncate">
-                                {track.track?.album?.name || track.album?.name}
+                              <p className="font-medium truncate text-white">{trackData.name || 'Unknown Track'}</p>
+                              <p className="text-sm text-gray-400 truncate">
+                                {artists?.map((artist: any) => artist?.name || 'Unknown Artist').join(', ') || 'Unknown Artist'}
                               </p>
                             </div>
                             {track.played_at && (
-                              <div className="text-right flex-shrink-0 ml-4">
-                                <span className="text-[#1DB954] text-sm font-medium">
-                                  {formatPlayedAt(track.played_at)}
-                                </span>
+                              <div className="text-xs text-gray-400 text-right">
+                                <div>{new Date(track.played_at).toLocaleDateString()}</div>
+                                <div>{new Date(track.played_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                               </div>
                             )}
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </motion.section>

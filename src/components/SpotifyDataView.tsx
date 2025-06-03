@@ -61,11 +61,17 @@ interface DataCache {
   recent?: SpotifyTrack[];
 }
 
-export default function SpotifyDataView() {
+interface SpotifyDataViewProps {
+  initialSection?: string;
+}
+
+export default function SpotifyDataView({ initialSection }: SpotifyDataViewProps) {
   const { connected, user, loading, connect, checkStatus, getTopTracks, getTopArtists, getTopAlbums, getRecentTracks } = useSpotify();
   
-  // Core state management
-  const [activeTab, setActiveTab] = useState<'tracks' | 'artists' | 'genres' | 'albums' | 'recent'>('tracks');
+  // Core state management - use initialSection if provided
+  const [activeTab, setActiveTab] = useState<'tracks' | 'artists' | 'genres' | 'albums' | 'recent'>(
+    (initialSection as 'tracks' | 'artists' | 'genres' | 'albums' | 'recent') || 'tracks'
+  );
   const [timeRange, setTimeRange] = useState<'short_term' | 'medium_term' | 'long_term'>('short_term');
   const [dataLoading, setDataLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

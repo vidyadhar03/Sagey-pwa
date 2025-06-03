@@ -13,10 +13,18 @@ interface FrameLayoutProps {
 export default function FrameLayout({}: FrameLayoutProps) {
   // Implement active tab state
   const [activeTab, setActiveTab] = useState('home');
+  const [exploreOptions, setExploreOptions] = useState<{ section?: string } | undefined>();
   
-  const handleTabClick = (tab: string) => {
+  const handleTabClick = (tab: string, options?: { section?: string }) => {
     if (tab !== activeTab) {
       setActiveTab(tab);
+      
+      // Handle explore tab with specific section
+      if (tab === 'explore' && options?.section) {
+        setExploreOptions(options);
+      } else {
+        setExploreOptions(undefined);
+      }
     }
   };
 
@@ -29,7 +37,7 @@ export default function FrameLayout({}: FrameLayoutProps) {
       case 'insights':
         return <InsightsLayout />;
       case 'explore':
-        return <SpotifyDataView />;
+        return <SpotifyDataView initialSection={exploreOptions?.section} />;
       default:
         return <HomeLayout onTabClick={handleTabClick} />;
     }
