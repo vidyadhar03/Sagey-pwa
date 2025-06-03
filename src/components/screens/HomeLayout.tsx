@@ -417,35 +417,27 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                     <div className="animate-pulse bg-white/5 h-20 rounded-xl" />
                   ) : (
                     <div>
-                      {recentTracks.slice(0, 1).map((track, index) => {
-                        // Handle both recent track format (with track property) and direct track format
-                        const trackData = track.track || track;
-                        const album = trackData.album || track.album;
-                        const artists = trackData.artists || track.artists;
-                        
-                        if (!trackData || !trackData.id) return null;
-                        
+                      {recentTracks.slice(0, 1).map((item, index) => {
+                        if (!item || !item.track || !item.track.id) return null;
                         return (
-                          <div key={`${trackData.id}-${index}`} className="flex items-center gap-4 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
-                            {album?.images?.[0] && (
+                          <div key={`${item.track.id}-${index}`} className="flex items-center gap-4 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
+                            {item.track.album?.images?.[0] && (
                               <img 
-                                src={album.images[0].url} 
-                                alt={album.name || 'Album cover'}
+                                src={item.track.album.images[0].url} 
+                                alt={item.track.album.name || 'Album cover'}
                                 className="w-12 h-12 rounded-lg"
                               />
                             )}
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium truncate">{trackData.name || 'Unknown Track'}</p>
+                              <p className="font-medium truncate">{item.track.name || 'Unknown Track'}</p>
                               <p className="text-sm text-gray-400 truncate">
-                                {artists?.map((artist: any) => artist?.name || 'Unknown Artist').join(', ') || 'Unknown Artist'}
+                                {item.track.artists?.map((artist: any) => artist?.name || 'Unknown Artist').join(', ') || 'Unknown Artist'}
                               </p>
                             </div>
-                            {track.played_at && (
-                              <div className="text-xs text-gray-400 text-right">
-                                <div>{new Date(track.played_at).toLocaleDateString()}</div>
-                                <div>{new Date(track.played_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-                              </div>
-                            )}
+                            <div className="text-xs text-gray-400 text-right">
+                              <div>{item.played_at ? new Date(item.played_at).toLocaleDateString() : '--'}</div>
+                              <div>{item.played_at ? new Date(item.played_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}</div>
+                            </div>
                           </div>
                         );
                       })}
