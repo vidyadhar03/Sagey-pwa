@@ -438,7 +438,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      {recentTracks.slice(0, 3).map((item: any, index: number) => {
+                      {recentTracks.slice(0, 1).map((item: any, index: number) => {
                         // Add null safety checks
                         if (!item || !item.track) {
                           return null;
