@@ -99,13 +99,13 @@ export default function MoodRingCard() {
       )}
 
       {/* Donut Chart Container */}
-      <div className="flex justify-center mb-3 relative h-36 w-full"> {/* Further reduced height */}
+      <div className="flex justify-center mb-3 relative h-36 w-full">
         {/* Main Donut Chart */}
         <motion.div
           initial={{ scale: 0, rotate: -90 }}
           animate={{ scale: 1, rotate: 0 }}
           transition={{ delay: 0.3, duration: 0.8 }}
-          className="relative w-28 h-28 z-10 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" // Reduced size
+          className="relative w-28 h-28 z-10" // Removed absolute positioning that was causing the offset
         >
           <div
             className={`w-full h-full rounded-full ${isFallback ? 'bg-zinc-700' : ''}`}
@@ -113,9 +113,9 @@ export default function MoodRingCard() {
               background: `conic-gradient(${gradientStops.join(', ')})`
             } : {}}
           />
-          <div className="absolute inset-3 bg-zinc-900 rounded-full flex items-center justify-center"> {/* Adjusted inset */}
+          <div className="absolute inset-3 bg-zinc-900 rounded-full flex items-center justify-center">
             <div className="text-center">
-              <div className="text-xl">🎵</div> {/* Smaller emoji */}
+              <div className="text-xl">🎵</div>
             </div>
           </div>
         </motion.div>
@@ -182,11 +182,11 @@ export default function MoodRingCard() {
               
               {/* Percentage Badge */}
               <div 
-                className="relative px-2 py-1 rounded-full text-xs font-bold text-white border backdrop-blur-sm"
+                className="relative px-2 py-1 rounded-full text-xs font-bold border backdrop-blur-sm"
                 style={{ 
                   backgroundColor: `${colors[position.emotion as keyof typeof colors]}40`,
                   borderColor: colors[position.emotion as keyof typeof colors],
-                  color: colors[position.emotion as keyof typeof colors],
+                  color: 'white', // Changed to white text
                   boxShadow: `0 0 12px ${colors[position.emotion as keyof typeof colors]}40`
                 }}
               >
@@ -196,7 +196,7 @@ export default function MoodRingCard() {
           </motion.div>
         ))}
 
-        {/* Orbital Particles Animation */}
+        {/* Orbital Particles Animation - positioned relative to the centered ring */}
         {!isFallback && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -204,7 +204,7 @@ export default function MoodRingCard() {
             transition={{ delay: 2 }}
             className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
           >
-            {[...Array(4)].map((_, i) => ( // Reduced particles
+            {[...Array(4)].map((_, i) => (
               <motion.div
                 key={i}
                 className="absolute w-1 h-1 rounded-full"
@@ -214,7 +214,7 @@ export default function MoodRingCard() {
                 }}
                 animate={{
                   rotate: 360,
-                  x: [0, Math.cos(i * 90 * Math.PI / 180) * 35], // Smaller orbit
+                  x: [0, Math.cos(i * 90 * Math.PI / 180) * 35],
                   y: [0, Math.sin(i * 90 * Math.PI / 180) * 35]
                 }}
                 transition={{
