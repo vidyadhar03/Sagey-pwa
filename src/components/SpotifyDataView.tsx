@@ -713,10 +713,10 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
 
       <div className="w-full h-screen overflow-y-auto bg-gradient-to-br from-[#0A0A0A] via-[#1A1A1A] to-[#0A0A0A]">
         {/* Content area with proper top padding based on connection status */}
-        <div className={`max-w-7xl mx-auto px-4 pb-[120px] ${connected ? 'pt-[110px]' : 'pt-4'}`}>
+        <div className={`max-w-7xl mx-auto px-4 pb-[120px] ${connected ? 'pt-[105px]' : 'pt-4'}`}>
           {/* Time Range Selector (for tracks, artists, albums, and genres) - Position below filter chips */}
           {activeTab !== 'recent' && (
-            <div className="mb-6 mt-4">
+            <div className="mb-6 mt-1">
               <div className="flex gap-2 mb-4">
                 <button
                   onClick={() => setTimeRange('short_term')}
@@ -765,7 +765,7 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
 
           {/* Subtle section title for Recent tab */}
           {activeTab === 'recent' && (
-            <div className="mb-6 mt-4">
+            <div className="mb-6 mt-1">
               <div className="flex items-center justify-between">
                 <h3 className="text-white text-lg font-medium">Recently Played</h3>
                 <span className="text-gray-400 text-sm">{recentTracks.length} tracks</span>
@@ -796,9 +796,80 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
                 <div>
                   
                   <div className={getContainerClasses()}>
-                    {recentTracks.map((track: any, index: number) => (
-                      renderTrackItem(track, index)
-                    )).filter(Boolean)}
+                    {recentTracks.map((item: any, index: number) => {
+                      // Handle recent tracks structure (item.track)
+                      if (!item || !item.track) {
+                        return null;
+                      }
+                      
+                      const track = item.track;
+                      if (!track || !track.id) {
+                        return null;
+                      }
+
+                      const isGrid = viewMode === 'grid';
+                      
+                      return (
+                        <div 
+                          key={`${track.id}-${item.played_at}`} 
+                          className={`${getItemClasses()} animate-fadeInUp`}
+                          style={{ animationDelay: `${index * 50}ms` }}
+                        >
+                          <div className={`flex ${isGrid ? 'flex-col' : 'items-center'}`}>
+                            {!isGrid && <span className="text-[#1DB954] font-bold text-lg mr-4 w-6">#{index + 1}</span>}
+                            {track.album?.images?.[0]?.url && (
+                              <img 
+                                src={track.album.images[0].url} 
+                                alt={track.album?.name || 'Album'}
+                                className={`${isGrid ? 'w-full aspect-square mb-3' : 'w-12 h-12 mr-4'} rounded-lg`}
+                              />
+                            )}
+                            <div className={`${isGrid ? '' : 'flex-1 min-w-0'}`}>
+                              {isGrid && <span className="text-[#1DB954] font-bold text-sm mb-1 block">#{index + 1}</span>}
+                              <h4 className={`text-white font-medium ${isGrid ? 'text-sm mb-1' : ''} truncate`}>{track.name || 'Unknown Track'}</h4>
+                              <p className={`text-gray-400 text-sm truncate ${isGrid ? 'mb-2' : ''}`}>
+                                {track.artists?.map((artist: any) => artist.name).join(', ') || 'Unknown Artist'} • {track.album?.name || 'Unknown Album'}
+                              </p>
+                              <div className="flex items-center">
+                                <span className="text-xs text-gray-400">{track.duration_ms ? formatDuration(track.duration_ms) : '--:--'}</span>
+                                {item.played_at && (
+                                  <>
+                                    <span className="text-gray-400 mx-1">•</span>
+                                    <span className="text-xs text-orange-400">{formatPlayedAt(item.played_at)}</span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                            {!isGrid && (
+                              <a 
+                                href={track.external_urls?.spotify || `https://open.spotify.com/track/${track.id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="ml-2 p-2 rounded-full bg-[#1DB954]/20 hover:bg-[#1DB954]/30 transition-all"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-4 h-4 text-[#1DB954]">
+                                  <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.84-.179-.959-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.361 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.42 1.56-.299.421-1.02.599-1.559.3z"/>
+                                </svg>
+                              </a>
+                            )}
+                          </div>
+                          {isGrid && (
+                            <div className="mt-3 flex justify-center">
+                              <a 
+                                href={track.external_urls?.spotify || `https://open.spotify.com/track/${track.id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-2 rounded-full bg-[#1DB954]/20 hover:bg-[#1DB954]/30 transition-all"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-4 h-4 text-[#1DB954]">
+                                  <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.84-.179-.959-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.361 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.42 1.56-.299.421-1.02.599-1.559.3z"/>
+                                </svg>
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }).filter(Boolean)}
                   </div>
 
                   {recentTracks.length === 0 && (
