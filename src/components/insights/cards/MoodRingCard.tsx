@@ -43,7 +43,7 @@ export default function MoodRingCard() {
 
   // SVG properties for the donut
   const outerRadius = 70;
-  const innerRadius = 50;
+  const innerRadius = 62;
   const center = 90;
 
   // Calculate path data for each segment
@@ -104,8 +104,8 @@ export default function MoodRingCard() {
           transition={{ delay: 0.2, duration: 1, ease: "easeOut" }}
           className="relative"
         >
-          {/* Reduced glow ring - 40% less opacity */}
-          <div className="absolute inset-0 rounded-full blur-xl opacity-18 bg-gradient-to-r from-violet-500 via-pink-500 to-cyan-500 animate-pulse" />
+          {/* Much reduced glow ring - only 10% opacity */}
+          <div className="absolute inset-0 rounded-full blur-xl opacity-10 bg-gradient-to-r from-violet-500 via-pink-500 to-cyan-500 animate-pulse" />
           
           {/* SVG Donut Chart */}
           <svg 
