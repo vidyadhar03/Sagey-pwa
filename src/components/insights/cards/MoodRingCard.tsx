@@ -43,7 +43,7 @@ export default function MoodRingCard() {
 
   // SVG properties for the donut
   const outerRadius = 70;
-  const innerRadius = 45;
+  const innerRadius = 50;
   const center = 90;
 
   // Calculate path data for each segment
@@ -71,21 +71,12 @@ export default function MoodRingCard() {
       `A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${x4} ${y4}`,
       'Z'
     ].join(' ');
-
-    // Calculate label position (on the ring)
-    const labelAngle = startAngle + segment.angle / 2;
-    const labelRadius = (outerRadius + innerRadius) / 2;
-    const labelX = center + labelRadius * Math.cos((labelAngle - 90) * Math.PI / 180);
-    const labelY = center + labelRadius * Math.sin((labelAngle - 90) * Math.PI / 180);
     
     accumulatedAngle += segment.angle;
     
     return {
       ...segment,
       pathData,
-      labelX,
-      labelY,
-      labelAngle,
       startAngle,
       endAngle
     };
@@ -113,8 +104,8 @@ export default function MoodRingCard() {
           transition={{ delay: 0.2, duration: 1, ease: "easeOut" }}
           className="relative"
         >
-          {/* Outer glow ring */}
-          <div className="absolute inset-0 rounded-full blur-xl opacity-30 bg-gradient-to-r from-violet-500 via-pink-500 to-cyan-500 animate-pulse" />
+          {/* Reduced glow ring - 40% less opacity */}
+          <div className="absolute inset-0 rounded-full blur-xl opacity-18 bg-gradient-to-r from-violet-500 via-pink-500 to-cyan-500 animate-pulse" />
           
           {/* SVG Donut Chart */}
           <svg 
@@ -146,56 +137,31 @@ export default function MoodRingCard() {
             
             {/* Animated segments */}
             {!isFallback && pathSegments.map((segment, index) => (
-              <g key={segment.emotion}>
-                {/* Main segment with glow */}
-                <motion.path
-                  d={segment.pathData}
-                  fill={`url(#gradient-${segment.emotion})`}
-                  stroke={colors[segment.emotion as keyof typeof colors]}
-                  strokeWidth="1"
-                  filter="drop-shadow(0 0 8px rgba(255,255,255,0.3))"
-                  initial={{ 
-                    opacity: 0,
-                    scale: 0.8,
-                  }}
-                  animate={{ 
-                    opacity: 1,
-                    scale: 1,
-                  }}
-                  transition={{ 
-                    delay: 0.6 + index * 0.2, 
-                    duration: 0.8,
-                    ease: "easeOut"
-                  }}
-                  whileHover={{ 
-                    scale: 1.05,
-                    filter: "drop-shadow(0 0 16px rgba(255,255,255,0.5))"
-                  }}
-                />
-                
-                {/* Percentage label on segment */}
-                {segment.percentage > 5 && (
-                  <motion.text
-                    x={segment.labelX}
-                    y={segment.labelY}
-                    textAnchor="middle"
-                    dominantBaseline="central"
-                    className="text-xs font-bold fill-white"
-                    style={{
-                      filter: `drop-shadow(0 0 4px ${colors[segment.emotion as keyof typeof colors]})`
-                    }}
-                    initial={{ opacity: 0, scale: 0.5 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ 
-                      delay: 1.0 + index * 0.2, 
-                      duration: 0.6,
-                      ease: "backOut"
-                    }}
-                  >
-                    {Math.round(segment.percentage)}%
-                  </motion.text>
-                )}
-              </g>
+              <motion.path
+                key={segment.emotion}
+                d={segment.pathData}
+                fill={`url(#gradient-${segment.emotion})`}
+                stroke={colors[segment.emotion as keyof typeof colors]}
+                strokeWidth="1"
+                filter="drop-shadow(0 0 8px rgba(255,255,255,0.3))"
+                initial={{ 
+                  opacity: 0,
+                  scale: 0.8,
+                }}
+                animate={{ 
+                  opacity: 1,
+                  scale: 1,
+                }}
+                transition={{ 
+                  delay: 0.6 + index * 0.2, 
+                  duration: 0.8,
+                  ease: "easeOut"
+                }}
+                whileHover={{ 
+                  scale: 1.05,
+                  filter: "drop-shadow(0 0 16px rgba(255,255,255,0.5))"
+                }}
+              />
             ))}
 
             {/* Pulsing center */}
@@ -282,12 +248,12 @@ export default function MoodRingCard() {
         <p className="text-zinc-400 text-sm">Your musical vibe</p>
       </motion.div>
 
-      {/* Enhanced Legend */}
+      {/* Clean Legend with Percentages */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6 }}
-        className="grid grid-cols-2 gap-4"
+        className="grid grid-cols-2 gap-3"
       >
         {segments.map((segment, index) => (
           <motion.div
@@ -295,11 +261,7 @@ export default function MoodRingCard() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.8 + index * 0.1 }}
-            className="flex items-center gap-3 p-2 rounded-lg bg-zinc-800/30 backdrop-blur-sm"
-            whileHover={{ 
-              scale: 1.02,
-              backgroundColor: 'rgba(39, 39, 42, 0.5)'
-            }}
+            className="flex items-center gap-3"
           >
             <motion.div 
               className="w-4 h-4 rounded-full flex-shrink-0"
@@ -320,14 +282,24 @@ export default function MoodRingCard() {
                 ease: "easeInOut"
               }}
             />
-            <span 
-              className="capitalize font-medium text-sm"
-              style={{ 
-                color: isFallback ? '#9ca3af' : colors[segment.emotion as keyof typeof colors] 
-              }}
-            >
-              {segment.emotion}
-            </span>
+            <div className="flex items-center gap-2 flex-1">
+              <span 
+                className="capitalize font-medium text-sm"
+                style={{ 
+                  color: isFallback ? '#9ca3af' : colors[segment.emotion as keyof typeof colors] 
+                }}
+              >
+                {segment.emotion}
+              </span>
+              <span 
+                className="text-xs font-bold ml-auto"
+                style={{ 
+                  color: isFallback ? '#6b7280' : colors[segment.emotion as keyof typeof colors] 
+                }}
+              >
+                {Math.round(segment.percentage)}%
+              </span>
+            </div>
           </motion.div>
         ))}
       </motion.div>
