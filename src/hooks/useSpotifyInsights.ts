@@ -204,87 +204,110 @@ export function useSpotifyInsights() {
     }
 
     try {
-      // Get track IDs for audio features
-      const trackIds = tracks
-        .map((track) => {
-          const id = track.id || track.track?.id;
-          return id;
-        })
-        .filter(Boolean)
-        .slice(0, 20); // Reduce to 20 tracks to avoid API limits
-
-      console.warn('🔍 SAGEY: calculateMoodRing - Got', trackIds.length, 'track IDs');
-
-      if (trackIds.length < 5) {
-        console.warn('⚠️ SAGEY: calculateMoodRing - Not enough valid track IDs, using defaults');
+      console.warn('🎭 SAGEY: Audio Features API deprecated for new apps - using genre-based mood estimation');
+      
+      // Get artist data to analyze genres for mood estimation
+      const topArtists = await getTopArtists('medium_term').catch(() => []);
+      
+      if (!topArtists || topArtists.length === 0) {
+        console.warn('⚠️ SAGEY: No artists available for genre-based mood calculation');
         return DEFAULT_INSIGHTS.moodRing;
       }
 
-      console.warn('🎵 SAGEY: Calling getAudioFeatures API...');
-      const audioFeaturesResponse = await getAudioFeatures(trackIds);
-      
-      console.warn('📡 SAGEY: Audio features response received:', {
-        hasResponse: !!audioFeaturesResponse,
-        responseType: typeof audioFeaturesResponse
-      });
-      
-      // Handle different response formats from the API
-      let audioFeatures: any[] = [];
-      if (audioFeaturesResponse && Array.isArray(audioFeaturesResponse)) {
-        audioFeatures = audioFeaturesResponse;
-      } else if (audioFeaturesResponse && audioFeaturesResponse.audio_features) {
-        audioFeatures = audioFeaturesResponse.audio_features;
-      }
-      
-      console.warn('🎼 SAGEY: Processed audio features:', {
-        count: audioFeatures?.length,
-        firstFeatureValid: !!audioFeatures?.[0]?.valence
-      });
-      
-      if (!audioFeatures || audioFeatures.length === 0) {
-        console.warn('⚠️ SAGEY: No audio features returned, using defaults');
-        return DEFAULT_INSIGHTS.moodRing;
-      }
-
-      // Calculate mood distribution based on audio features
-      let totalValence = 0, totalEnergy = 0, totalDanceability = 0;
-      let validFeatures = 0;
-
-      audioFeatures.forEach((features: any) => {
-        if (features && typeof features.valence === 'number') {
-          totalValence += features.valence;
-          totalEnergy += features.energy || 0;
-          totalDanceability += features.danceability || 0;
-          validFeatures++;
+      // Extract all genres from artists
+      const allGenres: string[] = [];
+      topArtists.forEach(artist => {
+        if (artist.genres && Array.isArray(artist.genres)) {
+          allGenres.push(...artist.genres);
         }
       });
 
-      console.warn('📊 SAGEY: Audio feature stats:', {
-        validFeatures,
-        avgValence: validFeatures > 0 ? (totalValence / validFeatures).toFixed(2) : 0
-      });
-
-      if (validFeatures === 0) {
-        console.warn('⚠️ SAGEY: No valid audio features found, using defaults');
+      if (allGenres.length === 0) {
+        console.warn('⚠️ SAGEY: No genres found for mood calculation');
         return DEFAULT_INSIGHTS.moodRing;
       }
 
-      const avgValence = totalValence / validFeatures;
-      const avgEnergy = totalEnergy / validFeatures;
+      // Genre-to-mood mapping based on music characteristics
+      const genreMoodMap = {
+        // Happy/Upbeat genres
+        happy: ['pop', 'dance', 'disco', 'funk', 'reggae', 'ska', 'latin', 'salsa', 'bossa nova', 'happy hardcore', 'eurobeat', 'bubblegum pop'],
+        
+        // Energetic/High-energy genres  
+        energetic: ['rock', 'metal', 'punk', 'hardcore', 'electronic', 'edm', 'drum and bass', 'dubstep', 'techno', 'trance', 'house', 'hip hop', 'rap', 'trap'],
+        
+        // Chill/Relaxed genres
+        chill: ['ambient', 'chillout', 'lo-fi', 'downtempo', 'jazz', 'blues', 'acoustic', 'folk', 'indie folk', 'new age', 'classical', 'instrumental', 'lounge'],
+        
+        // Melancholy/Emotional genres
+        melancholy: ['emo', 'post-rock', 'shoegaze', 'alternative', 'indie rock', 'slowcore', 'sadcore', 'dark ambient', 'gothic', 'post-punk', 'grunge']
+      };
 
-      // Map audio features to emotions (simplified mapping)
-      const happy = Math.round(avgValence * 100);
-      const energetic = Math.round(avgEnergy * 100);
-      const chill = Math.round((1 - avgEnergy) * 100);
-      const melancholy = Math.round((1 - avgValence) * 100);
+      // Calculate mood scores based on genre matches
+      let moodScores = { happy: 0, energetic: 0, chill: 0, melancholy: 0 };
+      
+      allGenres.forEach(genre => {
+        const lowerGenre = genre.toLowerCase();
+        
+        // Check each mood category for genre matches
+        Object.entries(genreMoodMap).forEach(([mood, moodGenres]) => {
+          const matches = moodGenres.some(moodGenre => 
+            lowerGenre.includes(moodGenre) || moodGenre.includes(lowerGenre)
+          );
+          if (matches) {
+            moodScores[mood as keyof typeof moodScores]++;
+          }
+        });
+      });
 
-      // Normalize to 100%
-      const total = happy + energetic + chill + melancholy;
+      // If no direct matches, use heuristics based on common genre characteristics
+      if (Object.values(moodScores).every(score => score === 0)) {
+        allGenres.forEach(genre => {
+          const lowerGenre = genre.toLowerCase();
+          
+          // Heuristic matching for broader categorization
+          if (lowerGenre.includes('rock') || lowerGenre.includes('metal') || lowerGenre.includes('punk')) {
+            moodScores.energetic++;
+          } else if (lowerGenre.includes('pop') || lowerGenre.includes('dance')) {
+            moodScores.happy++;
+          } else if (lowerGenre.includes('jazz') || lowerGenre.includes('classical') || lowerGenre.includes('ambient')) {
+            moodScores.chill++;
+          } else if (lowerGenre.includes('alternative') || lowerGenre.includes('indie')) {
+            moodScores.melancholy++;
+          } else {
+            // Default distribution for unknown genres
+            moodScores.happy += 0.25;
+            moodScores.energetic += 0.25;
+            moodScores.chill += 0.25;
+            moodScores.melancholy += 0.25;
+          }
+        });
+      }
+
+      // Normalize scores to percentages
+      const totalScore = Object.values(moodScores).reduce((sum, score) => sum + score, 0);
+      
+      if (totalScore === 0) {
+        // Fallback: balanced distribution
+        const emotions = { happy: 25, energetic: 25, chill: 25, melancholy: 25 };
+        const dominantMood = 'Balanced';
+        
+        const distribution = [
+          { label: 'Happy', pct: 25, color: '#FFD700' },
+          { label: 'Energetic', pct: 25, color: '#FF6B6B' },
+          { label: 'Chill', pct: 25, color: '#4ECDC4' },
+          { label: 'Melancholy', pct: 25, color: '#9B59B6' }
+        ];
+
+        console.warn('✅ SAGEY: Mood Ring calculated (balanced fallback)');
+        return { emotions, dominantMood, distribution };
+      }
+
+      // Convert to percentages
       const emotions = {
-        happy: Math.round((happy / total) * 100),
-        energetic: Math.round((energetic / total) * 100),
-        chill: Math.round((chill / total) * 100),
-        melancholy: Math.round((melancholy / total) * 100)
+        happy: Math.round((moodScores.happy / totalScore) * 100),
+        energetic: Math.round((moodScores.energetic / totalScore) * 100),
+        chill: Math.round((moodScores.chill / totalScore) * 100),
+        melancholy: Math.round((moodScores.melancholy / totalScore) * 100)
       };
 
       // Find dominant mood
@@ -304,9 +327,10 @@ export function useSpotifyInsights() {
         distribution
       };
 
-      console.warn('✅ SAGEY: Mood Ring calculated successfully!', {
+      console.warn('✅ SAGEY: Mood Ring calculated via genre analysis!', {
         dominantMood: result.dominantMood,
-        validFeatures
+        genreCount: allGenres.length,
+        artistCount: topArtists.length
       });
 
       return result;
@@ -314,7 +338,7 @@ export function useSpotifyInsights() {
       console.error('❌ SAGEY: calculateMoodRing error:', error);
       return DEFAULT_INSIGHTS.moodRing;
     }
-  }, [connected, getAudioFeatures]);
+  }, [connected, getTopArtists]);
 
   // Calculate genre passport from artists
   const calculateGenrePassport = useCallback(async () => {
