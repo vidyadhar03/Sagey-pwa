@@ -72,8 +72,8 @@ export default function MoodRingCard() {
       const centerAngle = currentAngle + (segment.angle / 2);
       const radians = (centerAngle * Math.PI) / 180;
       
-      // Position at a good distance from the donut
-      const labelRadius = 85;
+      // Position much further from the donut for proper clearance
+      const labelRadius = 110; // Increased from 85 for proper spacing
       const x = Math.cos(radians) * labelRadius;
       const y = Math.sin(radians) * labelRadius;
       
@@ -104,8 +104,8 @@ export default function MoodRingCard() {
         </div>
       )}
 
-      {/* SVG Donut Chart Container */}
-      <div className="flex justify-center mb-4 relative h-48 w-full">
+      {/* SVG Donut Chart Container - Increased size for proper chip clearance */}
+      <div className="flex justify-center mb-4 relative h-64 w-full py-8 px-6"> {/* Increased height and added proper padding */}
         <motion.div
           initial={{ scale: 0, rotate: -90 }}
           animate={{ scale: 1, rotate: 0 }}
@@ -200,7 +200,7 @@ export default function MoodRingCard() {
               }}
               className="relative"
             >
-              {/* Connection line to ring */}
+              {/* Connection line to ring - Extended for new distance */}
               <motion.div
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: 1 }}
@@ -208,9 +208,9 @@ export default function MoodRingCard() {
                 className="absolute top-1/2 h-px transform -translate-y-1/2"
                 style={{
                   backgroundColor: colors[position.emotion as keyof typeof colors],
-                  width: '24px',
+                  width: '46px', // Increased from 24px to reach ring from new distance
                   opacity: 0.6,
-                  left: position.x > 0 ? '-24px' : '100%',
+                  left: position.x > 0 ? '-46px' : '100%',
                   transformOrigin: position.x > 0 ? 'left' : 'right'
                 }}
               />
