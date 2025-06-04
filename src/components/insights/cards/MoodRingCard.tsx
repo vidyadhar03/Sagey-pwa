@@ -104,8 +104,8 @@ export default function MoodRingCard() {
           transition={{ delay: 0.2, duration: 1, ease: "easeOut" }}
           className="relative"
         >
-          {/* Very subtle glow ring - only 5% opacity */}
-          <div className="absolute inset-0 rounded-full blur-xl opacity-5 bg-gradient-to-r from-violet-500 via-pink-500 to-cyan-500 animate-pulse" />
+          {/* Very subtle glow with muted colors and less blur */}
+          <div className="absolute inset-0 rounded-full blur-md bg-gradient-to-r from-slate-600/20 via-gray-600/20 to-slate-600/20" />
           
           {/* SVG Donut Chart */}
           <svg 
