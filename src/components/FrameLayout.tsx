@@ -6,10 +6,11 @@ import HomeLayout from './screens/HomeLayout';
 import InsightsLayout from './screens/InsightsLayout';
 import NewInsightsLayout from './screens/NewInsightsLayout';
 import SpotifyDataView from './SpotifyDataView';
+import UserProfile from './UserProfile';
 import { useSpotify } from '../hooks/useSpotify';
 
 // Dynamic Top Bar Component - Only show when Spotify is connected
-const DynamicTopBar = ({ activeTab }: { activeTab: string }) => {
+const DynamicTopBar = ({ activeTab, onProfileClick }: { activeTab: string; onProfileClick: () => void }) => {
   const getTopBarContent = () => {
     switch (activeTab) {
       case 'home':
@@ -65,7 +66,7 @@ const DynamicTopBar = ({ activeTab }: { activeTab: string }) => {
         {/* Right side - Profile icon (conditional) */}
         <div className="flex items-center">
           {showProfile && (
-            <button className="p-2" aria-label="Profile">
+            <button className="p-2" aria-label="Profile" onClick={onProfileClick}>
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
@@ -85,6 +86,7 @@ export default function FrameLayout({}: FrameLayoutProps) {
   // Implement active tab state
   const [activeTab, setActiveTab] = useState('home');
   const [exploreOptions, setExploreOptions] = useState<{ section?: string } | undefined>();
+  const [showUserProfile, setShowUserProfile] = useState(false);
   
   // Get Spotify connection status
   const { connected } = useSpotify();
@@ -100,6 +102,14 @@ export default function FrameLayout({}: FrameLayoutProps) {
         setExploreOptions(undefined);
       }
     }
+  };
+
+  const handleProfileClick = () => {
+    setShowUserProfile(true);
+  };
+
+  const handleCloseUserProfile = () => {
+    setShowUserProfile(false);
   };
 
   // Render components without keys to prevent unnecessary remounting
@@ -122,13 +132,18 @@ export default function FrameLayout({}: FrameLayoutProps) {
   return (
     <div className="w-full h-screen flex flex-col bg-[#0D0D0F] text-white overflow-hidden">
       {/* Dynamic Top Bar - Only show when Spotify is connected */}
-      {connected && <DynamicTopBar activeTab={activeTab} />}
+      {connected && <DynamicTopBar activeTab={activeTab} onProfileClick={handleProfileClick} />}
       
       <main className={`flex-1 relative ${connected ? 'pt-[60px]' : ''}`}>
         {/* Render the active tab component without forced remounting */}
         {renderActiveTab()}
       </main>
       <BottomNav activeTab={activeTab} onTabClick={handleTabClick} />
+      
+      {/* User Profile Modal */}
+      {showUserProfile && (
+        <UserProfile onClose={handleCloseUserProfile} />
+      )}
     </div>
   );
 } 

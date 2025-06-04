@@ -229,7 +229,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
   };
 
   return (
-    <div className="w-full h-full overflow-y-auto">
+    <div className="w-full h-full overflow-y-auto bg-gradient-to-br from-[#0A0A0A] via-[#1A1A1A] to-[#0A0A0A]">
       {/* TopAppBar - Only show when Spotify is not connected */}
       {!connected && (
         <TopAppBar 
@@ -240,7 +240,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
         />
       )}
       
-      <div className={`max-w-7xl mx-auto px-4 pb-[120px] ${!connected ? 'pt-4' : ''}`}>
+      <div className={`max-w-7xl mx-auto px-4 pb-[120px] ${!connected ? 'pt-16' : 'pt-6'}`}>
         {/* Spotify Error Alert */}
         {displayError && (
           <motion.div 
@@ -298,6 +298,16 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
             >
               {connected ? (
                 <>
+                  {/* Personalized Welcome Greeting */}
+                  <div className="mb-6">
+                    <h1 className="text-3xl font-bold text-white mb-2">
+                      Hello, {user?.display_name || 'Music Lover'}! 👋
+                    </h1>
+                    <p className="text-gray-400 text-lg">
+                      Your musical journey awaits
+                    </p>
+                  </div>
+                  
                   {/* Quick Stats Header - Removed Refresh Button and Title */}
                   
                   {/* Debug Info (Development Only) */}
