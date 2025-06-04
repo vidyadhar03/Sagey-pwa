@@ -67,8 +67,8 @@ export default function MoodRingCard() {
       // Convert to radians and adjust for starting position
       const radians = (centerAngle - 90) * (Math.PI / 180);
       
-      // Position outside the donut (increased radius to avoid overlap)
-      const radius = 120; // Increased from 80 to 120 to position outside the ring
+      // Position close to the donut ring (just outside)
+      const radius = 85; // Close to the ring edge
       const x = Math.cos(radians) * radius;
       const y = Math.sin(radians) * radius;
       
@@ -79,7 +79,7 @@ export default function MoodRingCard() {
         radians,
         centerAngle
       };
-    }).filter(segment => segment.percentage > 1); // Show all moods with >1% instead of >5%
+    }).filter(segment => segment.percentage > 1); // Show all moods with >1%
   };
 
   const floatingPositions = getFloatingPositions();
@@ -99,7 +99,7 @@ export default function MoodRingCard() {
       )}
 
       {/* Donut Chart Container */}
-      <div className="flex justify-center mb-6 relative h-80 w-full">
+      <div className="flex justify-center mb-4 relative h-44 w-full"> {/* Reduced height */}
         {/* Main Donut Chart */}
         <motion.div
           initial={{ scale: 0, rotate: -90 }}
@@ -120,7 +120,7 @@ export default function MoodRingCard() {
           </div>
         </motion.div>
 
-        {/* Floating Mood Labels */}
+        {/* Floating Percentage Labels */}
         {!isFallback && floatingPositions.map((position, index) => (
           <motion.div
             key={position.emotion}
@@ -144,14 +144,14 @@ export default function MoodRingCard() {
             }}
             className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20"
           >
-            {/* Floating Label Container */}
+            {/* Floating Percentage Only */}
             <motion.div
               animate={{
-                y: [0, -8, 0],
-                rotate: [0, 3, -3, 0]
+                y: [0, -4, 0],
+                scale: [1, 1.05, 1]
               }}
               transition={{
-                duration: 3 + index * 0.5,
+                duration: 2 + index * 0.3,
                 repeat: Infinity,
                 ease: "easeInOut"
               }}
@@ -159,48 +159,25 @@ export default function MoodRingCard() {
             >
               {/* Glow Effect */}
               <div 
-                className="absolute inset-0 rounded-full blur-md opacity-40"
+                className="absolute inset-0 rounded-full blur-sm opacity-50"
                 style={{ 
                   backgroundColor: colors[position.emotion as keyof typeof colors],
-                  scale: 1.2
+                  scale: 1.3
                 }}
               />
               
-              {/* Main Label */}
+              {/* Percentage Badge */}
               <div 
-                className="relative px-3 py-1.5 rounded-full text-xs font-medium text-white border backdrop-blur-sm"
+                className="relative px-2 py-1 rounded-full text-xs font-bold text-white border backdrop-blur-sm"
                 style={{ 
-                  backgroundColor: `${colors[position.emotion as keyof typeof colors]}20`,
+                  backgroundColor: `${colors[position.emotion as keyof typeof colors]}40`,
                   borderColor: colors[position.emotion as keyof typeof colors],
-                  boxShadow: `0 0 20px ${colors[position.emotion as keyof typeof colors]}30`
+                  color: colors[position.emotion as keyof typeof colors],
+                  boxShadow: `0 0 12px ${colors[position.emotion as keyof typeof colors]}40`
                 }}
               >
-                <div className="text-center">
-                  <div 
-                    className="font-bold capitalize text-xs"
-                    style={{ color: colors[position.emotion as keyof typeof colors] }}
-                  >
-                    {position.emotion}
-                  </div>
-                  <div className="text-white text-xs">
-                    {Math.round(position.percentage)}%
-                  </div>
-                </div>
+                {Math.round(position.percentage)}%
               </div>
-
-              {/* Connection Line to Ring */}
-              <motion.div
-                initial={{ scaleX: 0 }}
-                animate={{ scaleX: 1 }}
-                transition={{ delay: 1.5 + index * 0.2, duration: 0.4 }}
-                className="absolute top-1/2 h-px opacity-30 transform -translate-y-1/2"
-                style={{
-                  backgroundColor: colors[position.emotion as keyof typeof colors],
-                  width: '32px', // Fixed width for consistent line length
-                  left: position.x > 0 ? '-32px' : '100%',
-                  transformOrigin: position.x > 0 ? 'left' : 'right'
-                }}
-              />
             </motion.div>
           </motion.div>
         ))}
@@ -250,29 +227,38 @@ export default function MoodRingCard() {
         <p className="text-zinc-400 text-sm">Your musical vibe</p>
       </motion.div>
 
-      {/* Simplified Legend (less prominent now that we have floating labels) */}
-      {isFallback && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
-          className="grid grid-cols-2 gap-2 text-xs"
-        >
-          {segments.map((segment, index) => (
-            <motion.div
-              key={segment.emotion}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.9 + index * 0.1 }}
-              className="flex items-center gap-2"
+      {/* Mood Legend */}
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.8 }}
+        className="grid grid-cols-2 gap-3 text-sm"
+      >
+        {segments.map((segment, index) => (
+          <motion.div
+            key={segment.emotion}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.9 + index * 0.1 }}
+            className="flex items-center gap-2"
+          >
+            <div 
+              className="w-3 h-3 rounded-full"
+              style={{ 
+                backgroundColor: isFallback ? '#4a5568' : colors[segment.emotion as keyof typeof colors] 
+              }}
+            />
+            <span 
+              className="capitalize font-medium"
+              style={{ 
+                color: isFallback ? '#9ca3af' : colors[segment.emotion as keyof typeof colors] 
+              }}
             >
-              <div className="w-3 h-3 rounded-full bg-zinc-600" />
-              <span className="text-zinc-300 capitalize">{segment.emotion}</span>
-              <span className="text-zinc-400 ml-auto">0%</span>
-            </motion.div>
-          ))}
-        </motion.div>
-      )}
+              {segment.emotion}
+            </span>
+          </motion.div>
+        ))}
+      </motion.div>
     </InsightCard>
   );
 } 
