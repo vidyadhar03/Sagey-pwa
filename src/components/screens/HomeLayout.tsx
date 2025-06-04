@@ -429,7 +429,17 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                   ) : (
                     <div className="space-y-2">
                       {recentTracks.slice(0, 3).map((item: any, index: number) => {
+                        // Add null safety checks
+                        if (!item || !item.track) {
+                          return null;
+                        }
+                        
                         const track = item.track;
+                        
+                        // Additional safety check for track
+                        if (!track || !track.id) {
+                          return null;
+                        }
                         
                         const formatDuration = (ms: number) => {
                           const minutes = Math.floor(ms / 60000);
@@ -461,18 +471,18 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                               />
                             )}
                             <div className="flex-1 min-w-0">
-                              <h4 className="text-white font-medium truncate">{track.name}</h4>
+                              <h4 className="text-white font-medium truncate">{track.name || 'Unknown Track'}</h4>
                               <p className="text-gray-400 text-sm truncate">
-                                {track.artists?.map((artist: any) => artist.name).join(', ')} • {track.album?.name || 'Unknown Album'}
+                                {track.artists?.map((artist: any) => artist.name).join(', ') || 'Unknown Artist'} • {track.album?.name || 'Unknown Album'}
                               </p>
                               <div className="flex items-center">
-                                <span className="text-xs text-gray-400">{formatDuration(track.duration_ms)}</span>
+                                <span className="text-xs text-gray-400">{track.duration_ms ? formatDuration(track.duration_ms) : '--:--'}</span>
                                 <span className="text-gray-400 mx-1">•</span>
                                 <span className="text-xs text-[#1DB954]">{formatPlayedAt(item.played_at)}</span>
                               </div>
                             </div>
                             <a 
-                              href={track.external_urls.spotify}
+                              href={track.external_urls?.spotify || `https://open.spotify.com/track/${track.id}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="ml-2 p-2 rounded-full bg-[#1DB954]/20 hover:bg-[#1DB954]/30 transition-all"
@@ -483,7 +493,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                             </a>
                           </div>
                         );
-                      })}
+                      }).filter(Boolean)}
                     </div>
                   )}
                 </div>
@@ -509,6 +519,11 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                   ) : (
                     <div className="space-y-2">
                       {topTracks.slice(0, 3).map((track: any, index: number) => {
+                        // Add null safety checks
+                        if (!track || !track.id) {
+                          return null;
+                        }
+                        
                         const formatDuration = (ms: number) => {
                           const minutes = Math.floor(ms / 60000);
                           const seconds = Math.floor((ms % 60000) / 1000);
@@ -526,9 +541,9 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                               />
                             )}
                             <div className="flex-1 min-w-0">
-                              <h4 className="text-white font-medium truncate">{track.name}</h4>
+                              <h4 className="text-white font-medium truncate">{track.name || 'Unknown Track'}</h4>
                               <p className="text-gray-400 text-sm truncate">
-                                {track.artist} • {typeof track.album === 'string' ? track.album : track.album?.name || 'Unknown Album'}
+                                {track.artist || 'Unknown Artist'} • {typeof track.album === 'string' ? track.album : track.album?.name || 'Unknown Album'}
                               </p>
                               <div className="flex items-center">
                                 <span className="text-xs text-gray-400">{track.duration_ms ? formatDuration(track.duration_ms) : '--:--'}</span>
@@ -552,7 +567,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                             </a>
                           </div>
                         );
-                      })}
+                      }).filter(Boolean)}
                     </div>
                   )}
                 </div>
@@ -578,6 +593,11 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                   ) : (
                     <div className="space-y-2">
                       {topArtists.slice(0, 3).map((artist: any, index: number) => {
+                        // Add null safety checks
+                        if (!artist || !artist.id) {
+                          return null;
+                        }
+                        
                         // Format number helper
                         const formatNumber = (num: number) => {
                           if (num >= 1000000) {
@@ -594,16 +614,16 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                             {artist.image_url && (
                               <img 
                                 src={artist.image_url} 
-                                alt={artist.name}
+                                alt={artist.name || 'Artist'}
                                 className="w-16 h-16 mr-4 rounded-full border-2 border-[#1ed760]/20"
                               />
                             )}
                             <div className="flex-1 min-w-0">
-                              <h4 className="text-white font-medium text-lg truncate">{artist.name}</h4>
+                              <h4 className="text-white font-medium text-lg truncate">{artist.name || 'Unknown Artist'}</h4>
                               <div className="flex items-center mt-1">
-                                <span className="text-xs text-gray-400">{formatNumber(artist.followers)} followers</span>
+                                <span className="text-xs text-gray-400">{artist.followers ? formatNumber(artist.followers) : '0'} followers</span>
                                 <span className="text-gray-400 mx-1">•</span>
-                                <span className="text-xs text-[#1ed760]">{artist.popularity}% popularity</span>
+                                <span className="text-xs text-[#1ed760]">{artist.popularity || 0}% popularity</span>
                               </div>
                               {artist.genres?.length > 0 && (
                                 <div className="flex flex-wrap gap-1 mt-2">
@@ -635,7 +655,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                             </a>
                           </div>
                         );
-                      })}
+                      }).filter(Boolean)}
                     </div>
                   )}
                 </div>
