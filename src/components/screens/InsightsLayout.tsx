@@ -2,9 +2,13 @@
 
 import React, { useState } from 'react';
 import TopAppBar from '../TopAppBar';
+import { useSpotify } from '../../hooks/useSpotify';
 
 export default function InsightsLayout() {
   const [activeTab, setActiveTab] = useState<'overview' | 'detailed' | 'ai-insights'>('overview');
+  
+  // Get Spotify connection status
+  const { connected } = useSpotify();
 
   // Sample data for music insights
   const musicInsights = {
@@ -312,23 +316,23 @@ export default function InsightsLayout() {
                   <div className="mb-4">
                     <p className="text-white font-medium text-lg mb-2">{insight.insight}</p>
                     <p className="text-secondary text-sm leading-relaxed">{insight.description}</p>
-            </div>
+                  </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
                       <div className="w-2 h-2 rounded-full mr-2" style={{ backgroundColor: insight.color }} />
                       <span className="text-xs text-secondary">Based on your listening patterns</span>
-                  </div>
-                  <button 
+                    </div>
+                    <button 
                       className="text-sm font-medium transition-colors"
                       style={{ color: insight.color }}
-                  >
+                    >
                       Learn More
-                  </button>
+                    </button>
                   </div>
                 </div>
               ))}
-              </div>
+            </div>
 
             {/* Generate More Insights CTA */}
             <div className="p-6 rounded-2xl bg-gradient-to-r from-[#1DB954]/20 to-[#1ED760]/20 border border-[#1DB954]/30 text-center">
@@ -349,54 +353,56 @@ export default function InsightsLayout() {
   };
 
   return (
-    <>
-      <TopAppBar
-        title="Music Insights"
-        showLeftIcon={false}
-        showRightIcon={true}
-      />
-      <div className="pt-[60px] w-full h-screen overflow-y-auto">
-        <div className="max-w-7xl mx-auto px-4 pb-[120px]">
-          {/* Tab Navigation */}
-          <div className="mt-4 mb-6">
-            <div className="flex bg-[#2A2A2D] rounded-2xl p-1">
-              <button
-                onClick={() => setActiveTab('overview')}
-                className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
-                  activeTab === 'overview'
-                    ? 'bg-[#1DB954] text-white'
-                    : 'text-secondary hover:text-white'
-                }`}
-              >
-                Overview
-              </button>
-              <button
-                onClick={() => setActiveTab('detailed')}
-                className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
-                  activeTab === 'detailed'
-                    ? 'bg-[#1DB954] text-white'
-                    : 'text-secondary hover:text-white'
-                }`}
-              >
-                Detailed
-              </button>
-              <button
-                onClick={() => setActiveTab('ai-insights')}
-                className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
-                  activeTab === 'ai-insights'
-                    ? 'bg-[#1DB954] text-white'
-                    : 'text-secondary hover:text-white'
-                }`}
-              >
-                AI Insights
-              </button>
-            </div>
+    <div className="w-full h-full overflow-y-auto">
+      {/* TopAppBar - Only show when Spotify is not connected */}
+      {!connected && (
+        <TopAppBar 
+          title="Music Insights"
+          showRightIcon={true}
+          titleAlign="left"
+        />
+      )}
+      
+      <div className={`max-w-7xl mx-auto px-4 pb-[120px] ${!connected ? 'pt-4' : ''}`}>
+        {/* Tab Navigation */}
+        <div className="mt-4 mb-6">
+          <div className="flex bg-[#2A2A2D] rounded-2xl p-1">
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
+                activeTab === 'overview'
+                  ? 'bg-[#1DB954] text-white'
+                  : 'text-secondary hover:text-white'
+              }`}
+            >
+              Overview
+            </button>
+            <button
+              onClick={() => setActiveTab('detailed')}
+              className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
+                activeTab === 'detailed'
+                  ? 'bg-[#1DB954] text-white'
+                  : 'text-secondary hover:text-white'
+              }`}
+            >
+              Detailed
+            </button>
+            <button
+              onClick={() => setActiveTab('ai-insights')}
+              className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
+                activeTab === 'ai-insights'
+                  ? 'bg-[#1DB954] text-white'
+                  : 'text-secondary hover:text-white'
+              }`}
+            >
+              AI Insights
+            </button>
           </div>
-
-          {/* Tab Content */}
-          {renderTabContent()}
         </div>
+
+        {/* Tab Content */}
+        {renderTabContent()}
       </div>
-    </>
+    </div>
   );
 } 
