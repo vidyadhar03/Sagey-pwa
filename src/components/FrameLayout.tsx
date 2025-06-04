@@ -33,12 +33,6 @@ const DynamicTopBar = ({
           showProfile: true,
           titleAlign: 'left' as const
         };
-      case 'insights':
-        return {
-          title: 'Music Insights',
-          showProfile: true,
-          titleAlign: 'left' as const
-        };
       case 'explore':
         return {
           title: exploreTopBarData?.title || 'Explore',
@@ -172,8 +166,6 @@ export default function FrameLayout({}: FrameLayoutProps) {
     switch (activeTab) {
       case 'home':
         return <HomeLayout onTabClick={handleTabClick} />;
-      case 'insights':
-        return <InsightsLayout />;
       case 'explore':
         return <SpotifyDataView initialSection={exploreOptions?.section} onUpdateTopBar={setExploreTopBarData} />;
       case 'insights-plus':

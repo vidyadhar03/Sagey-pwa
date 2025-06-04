@@ -699,7 +699,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
 
                 {/* Insights Tab CTA */}
                 <button 
-                  onClick={() => onTabClick?.('insights')}
+                  onClick={() => onTabClick?.('insights-plus')}
                   className="p-4 rounded-2xl bg-gradient-to-r from-[#1ed760]/20 to-[#1AA34A]/20 border border-[#1ed760]/30 hover:border-[#1ed760]/50 transition-all"
                 >
                   <div className="flex flex-col items-center text-center">
