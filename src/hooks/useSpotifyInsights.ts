@@ -507,9 +507,16 @@ export function useSpotifyInsights() {
       const nightOwlPattern = calculateNightOwlPattern(recentTracks || []);
       console.error('🦉 SAGEY DEBUG: Night Owl Pattern calculated, score:', nightOwlPattern.score);
 
-      // Skip Mood Ring for now to avoid 403 errors
-      console.error('🎭 SAGEY DEBUG: Skipping Mood Ring to avoid 403 errors');
-      const moodRing = DEFAULT_INSIGHTS.moodRing;
+      // Calculate Mood Ring (try to get audio features)
+      console.error('🎭 SAGEY DEBUG: Calculating Mood Ring...');
+      let moodRing;
+      try {
+        moodRing = await calculateMoodRing(tracksToAnalyze || []);
+        console.error('🎭 SAGEY DEBUG: Mood Ring calculated successfully');
+      } catch (error) {
+        console.error('🎭 SAGEY DEBUG: Mood Ring failed, using defaults:', error);
+        moodRing = DEFAULT_INSIGHTS.moodRing;
+      }
 
       const comprehensiveInsights: SpotifyInsightsData = {
         musicalAge,
