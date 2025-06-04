@@ -67,8 +67,8 @@ export default function MoodRingCard() {
       // Convert to radians and adjust for starting position
       const radians = (centerAngle - 90) * (Math.PI / 180);
       
-      // Position closer to the ring to fit in layout
-      const radius = 75; // Reduced from 85 to fit better
+      // Position with proper clearance from ring (ring radius is 56px, so 95px gives good clearance)
+      const radius = 95; // Increased from 75 to provide proper clearance
       const x = Math.cos(radians) * radius;
       const y = Math.sin(radians) * radius;
       
@@ -98,14 +98,14 @@ export default function MoodRingCard() {
         </div>
       )}
 
-      {/* Donut Chart Container */}
-      <div className="flex justify-center mb-3 relative h-36 w-full">
+      {/* Donut Chart Container - Increased height and added padding for chip clearance */}
+      <div className="flex justify-center mb-3 relative h-52 w-full px-4 py-6"> {/* Increased height and added padding */}
         {/* Main Donut Chart */}
         <motion.div
           initial={{ scale: 0, rotate: -90 }}
           animate={{ scale: 1, rotate: 0 }}
           transition={{ delay: 0.3, duration: 0.8 }}
-          className="relative w-28 h-28 z-10" // Removed absolute positioning that was causing the offset
+          className="relative w-28 h-28 z-10"
         >
           <div
             className={`w-full h-full rounded-full ${isFallback ? 'bg-zinc-700' : ''}`}
@@ -157,7 +157,7 @@ export default function MoodRingCard() {
               }}
               className="relative"
             >
-              {/* Pointer Line to Ring */}
+              {/* Pointer Line to Ring - Adjusted length for new positioning */}
               <motion.div
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: 1 }}
@@ -165,8 +165,8 @@ export default function MoodRingCard() {
                 className="absolute top-1/2 h-px opacity-40 transform -translate-y-1/2"
                 style={{
                   backgroundColor: colors[position.emotion as keyof typeof colors],
-                  width: '20px',
-                  left: position.x > 0 ? '-20px' : '100%',
+                  width: '35px', // Increased from 20px to reach the ring from new distance
+                  left: position.x > 0 ? '-35px' : '100%',
                   transformOrigin: position.x > 0 ? 'left' : 'right'
                 }}
               />
@@ -186,7 +186,7 @@ export default function MoodRingCard() {
                 style={{ 
                   backgroundColor: `${colors[position.emotion as keyof typeof colors]}40`,
                   borderColor: colors[position.emotion as keyof typeof colors],
-                  color: 'white', // Changed to white text
+                  color: 'white',
                   boxShadow: `0 0 12px ${colors[position.emotion as keyof typeof colors]}40`
                 }}
               >
