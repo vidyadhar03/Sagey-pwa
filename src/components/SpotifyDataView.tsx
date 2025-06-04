@@ -310,7 +310,7 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
         return 'Top';
       };
 
-      const showViewToggle = activeTab === 'tracks' || activeTab === 'artists' || activeTab === 'albums';
+      const showViewToggle = activeTab === 'tracks' || activeTab === 'artists' || activeTab === 'albums' || activeTab === 'recent';
 
       onUpdateTopBar({
         title: getTitle(),
@@ -713,10 +713,10 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
 
       <div className="w-full h-screen overflow-y-auto bg-gradient-to-br from-[#0A0A0A] via-[#1A1A1A] to-[#0A0A0A]">
         {/* Content area with proper top padding based on connection status */}
-        <div className={`max-w-7xl mx-auto px-4 pb-[120px] ${connected ? 'pt-[105px]' : 'pt-4'}`}>
+        <div className={`max-w-7xl mx-auto px-4 pb-[120px] ${connected ? 'pt-[103px]' : 'pt-4'}`}>
           {/* Time Range Selector (for tracks, artists, albums, and genres) - Position below filter chips */}
           {activeTab !== 'recent' && (
-            <div className="mb-6 mt-1">
+            <div className="mb-6 mt-0">
               <div className="flex gap-2 mb-4">
                 <button
                   onClick={() => setTimeRange('short_term')}
@@ -765,7 +765,7 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
 
           {/* Subtle section title for Recent tab */}
           {activeTab === 'recent' && (
-            <div className="mb-6 mt-1">
+            <div className="mb-6 mt-0">
               <div className="flex items-center justify-between">
                 <h3 className="text-white text-lg font-medium">Recently Played</h3>
                 <span className="text-gray-400 text-sm">{recentTracks.length} tracks</span>
@@ -1060,10 +1060,11 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
           <ShareableCards
             onClose={() => setShowShareCards(false)}
             data={{
-              tracks: topTracks,
-              artists: topArtists,
-              albums: topAlbums,
+              tracks: dataCache.current?.tracks[timeRange] || [],
+              artists: dataCache.current?.artists[timeRange] || [],
+              albums: dataCache.current?.albums[timeRange] || [],
               genres: getTopGenres(),
+              recent: dataCache.current?.recent || [],
               timeRange
             }}
           />

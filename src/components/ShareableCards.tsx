@@ -10,12 +10,13 @@ interface ShareableCardsProps {
     artists?: any[];
     albums?: any[];
     genres?: any[];
+    recent?: any[];
     timeRange?: string;
   };
 }
 
 interface CardData {
-  type: 'tracks' | 'artists' | 'albums' | 'genres';
+  type: 'tracks' | 'artists' | 'albums' | 'genres' | 'recent';
   title: string;
   items: any[];
   color: string;
@@ -61,6 +62,15 @@ export default function ShareableCards({ onClose, data }: ShareableCardsProps) {
         title: 'Your Top Genres',
         items: data.genres.slice(0, 5),
         color: '#16803C'
+      });
+    }
+
+    if (data.recent && data.recent.length > 0) {
+      cards.push({
+        type: 'recent',
+        title: 'Recently Played',
+        items: data.recent.slice(0, 5),
+        color: '#FF6B35'
       });
     }
 
@@ -214,6 +224,28 @@ export default function ShareableCards({ onClose, data }: ShareableCardsProps) {
                     />
                   </div>
                   <span className="text-white/60 text-xs w-6">{genre.count}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+
+      case 'recent':
+        return (
+          <div className="space-y-3">
+            {card.items.map((track, index) => (
+              <div key={track.id} className="flex items-center">
+                <span className="text-white/60 font-bold text-lg w-8">#{index + 1}</span>
+                {track.image_url && (
+                  <img 
+                    src={track.image_url} 
+                    alt={track.name}
+                    className="w-10 h-10 rounded mr-3"
+                  />
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-white font-medium truncate text-sm">{track.name}</p>
+                  <p className="text-white/60 text-xs truncate">{track.artist}</p>
                 </div>
               </div>
             ))}
