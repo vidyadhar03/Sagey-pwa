@@ -31,7 +31,8 @@ export async function GET(request: NextRequest) {
     'playlist-read-private',
     'user-read-recently-played',
     'user-top-read',
-    'user-read-currently-playing'
+    'user-read-currently-playing',
+    'user-read-audio-features'
   ].join(' ');
 
     console.log('📋 Spotify scopes (with necessary permissions):', scopes);
