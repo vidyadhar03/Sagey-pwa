@@ -130,11 +130,11 @@ export default function FrameLayout({}: FrameLayoutProps) {
   };
 
   return (
-    <div className="w-full h-screen flex flex-col bg-[#0D0D0F] text-white overflow-hidden">
+    <div className="w-full h-screen flex flex-col bg-[#0D0D0F] text-white">
       {/* Dynamic Top Bar - Only show when Spotify is connected */}
       {connected && <DynamicTopBar activeTab={activeTab} onProfileClick={handleProfileClick} />}
       
-      <main className={`flex-1 relative ${connected ? 'pt-[60px]' : ''}`}>
+      <main className={`flex-1 relative overflow-hidden ${connected ? 'pt-[60px]' : ''}`}>
         {/* Render the active tab component without forced remounting */}
         {renderActiveTab()}
       </main>
