@@ -741,14 +741,52 @@ export default function SpotifyDataView({ initialSection }: SpotifyDataViewProps
             </div>
           )}
 
+          {/* Top Controls Bar - View switcher and Share button */}
+          {!dataLoading && !error && (
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-white font-bold text-xl capitalize">
+                {activeTab === 'recent' ? 'Recently Played' : 
+                 activeTab === 'tracks' ? 'Top Tracks' :
+                 activeTab === 'artists' ? 'Top Artists' :
+                 activeTab === 'albums' ? 'Top Albums' :
+                 activeTab === 'genres' ? 'Top Genres' : 'Explore'}
+              </h2>
+              
+              <div className="flex items-center gap-3">
+                {/* View Mode Toggle */}
+                {(activeTab === 'tracks' || activeTab === 'artists' || activeTab === 'albums') && (
+                  <button
+                    onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
+                    className="p-2 rounded-lg bg-[#2A2A2D] hover:bg-[#3A3A3D] border border-white/10 transition-all"
+                    title={`Switch to ${viewMode === 'list' ? 'grid' : 'list'} view`}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5 text-gray-400">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={getViewModeIcon()} />
+                    </svg>
+                  </button>
+                )}
+                
+                {/* Share Insights Button */}
+                <button
+                  onClick={() => setShowShareCards(true)}
+                  className="p-2 rounded-lg bg-[#1DB954] hover:bg-[#1ed760] border border-[#1DB954] transition-all"
+                  title="Share insights"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5 text-white">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Content */}
           {!dataLoading && !error && (
             <>
-              {/* Recent Tracks - Add top margin to prevent overlap */}
+              {/* Recent Tracks */}
               {activeTab === 'recent' && (
-                <div className="mt-8">
+                <div>
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-white font-medium text-lg">Recently Played</h3>
                     <span className="text-gray-400 text-sm">{recentTracks.length} tracks</span>
                   </div>
                   
@@ -770,7 +808,6 @@ export default function SpotifyDataView({ initialSection }: SpotifyDataViewProps
               {activeTab === 'tracks' && (
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-white font-medium text-lg">Tracks</h3>
                     <span className="text-gray-400 text-sm">{getTimeRangeLabel(timeRange)}</span>
                   </div>
                   
@@ -792,7 +829,6 @@ export default function SpotifyDataView({ initialSection }: SpotifyDataViewProps
               {activeTab === 'artists' && (
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-white font-medium text-lg">Artists</h3>
                     <span className="text-gray-400 text-sm">{getTimeRangeLabel(timeRange)}</span>
                   </div>
                   
@@ -814,7 +850,6 @@ export default function SpotifyDataView({ initialSection }: SpotifyDataViewProps
               {activeTab === 'albums' && (
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-white font-medium text-lg">Albums</h3>
                     <span className="text-gray-400 text-sm">{getTimeRangeLabel(timeRange)}</span>
                   </div>
                   
@@ -900,7 +935,6 @@ export default function SpotifyDataView({ initialSection }: SpotifyDataViewProps
               {activeTab === 'genres' && (
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-white font-medium text-lg">Genres</h3>
                     <span className="text-gray-400 text-sm">Based on your artists</span>
                   </div>
                   
