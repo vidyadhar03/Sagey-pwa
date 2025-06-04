@@ -67,8 +67,8 @@ export default function MoodRingCard() {
       // Convert to radians and adjust for starting position
       const radians = (centerAngle - 90) * (Math.PI / 180);
       
-      // Position around the donut (radius from center)
-      const radius = 80; // Distance from center
+      // Position outside the donut (increased radius to avoid overlap)
+      const radius = 120; // Increased from 80 to 120 to position outside the ring
       const x = Math.cos(radians) * radius;
       const y = Math.sin(radians) * radius;
       
@@ -79,7 +79,7 @@ export default function MoodRingCard() {
         radians,
         centerAngle
       };
-    }).filter(segment => segment.percentage > 5); // Only show segments with >5%
+    }).filter(segment => segment.percentage > 1); // Show all moods with >1% instead of >5%
   };
 
   const floatingPositions = getFloatingPositions();
@@ -99,13 +99,13 @@ export default function MoodRingCard() {
       )}
 
       {/* Donut Chart Container */}
-      <div className="flex justify-center mb-4 relative">
+      <div className="flex justify-center mb-6 relative h-80 w-full">
         {/* Main Donut Chart */}
         <motion.div
           initial={{ scale: 0, rotate: -90 }}
           animate={{ scale: 1, rotate: 0 }}
           transition={{ delay: 0.3, duration: 0.8 }}
-          className="relative w-32 h-32 z-10"
+          className="relative w-32 h-32 z-10 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
         >
           <div
             className={`w-full h-full rounded-full ${isFallback ? 'bg-zinc-700' : ''}`}
@@ -193,10 +193,11 @@ export default function MoodRingCard() {
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: 1 }}
                 transition={{ delay: 1.5 + index * 0.2, duration: 0.4 }}
-                className="absolute top-1/2 w-6 h-px opacity-50 transform -translate-y-1/2"
+                className="absolute top-1/2 h-px opacity-30 transform -translate-y-1/2"
                 style={{
                   backgroundColor: colors[position.emotion as keyof typeof colors],
-                  left: position.x > 0 ? '-24px' : '100%',
+                  width: '32px', // Fixed width for consistent line length
+                  left: position.x > 0 ? '-32px' : '100%',
                   transformOrigin: position.x > 0 ? 'left' : 'right'
                 }}
               />
