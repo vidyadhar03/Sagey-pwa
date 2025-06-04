@@ -307,14 +307,7 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
   useEffect(() => {
     if (onUpdateTopBar && connected) {
       const getTitle = () => {
-        switch (activeTab) {
-          case 'recent': return 'Recently Played';
-          case 'tracks': return 'Top Tracks';
-          case 'artists': return 'Top Artists';
-          case 'albums': return 'Top Albums';
-          case 'genres': return 'Top Genres';
-          default: return 'Explore';
-        }
+        return 'Top';
       };
 
       const showViewToggle = activeTab === 'tracks' || activeTab === 'artists' || activeTab === 'albums';
@@ -720,11 +713,11 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
 
       <div className="w-full h-screen overflow-y-auto bg-gradient-to-br from-[#0A0A0A] via-[#1A1A1A] to-[#0A0A0A]">
         {/* Content area with proper top padding based on connection status */}
-        <div className={`max-w-7xl mx-auto px-4 pb-[120px] ${connected ? 'pt-[130px]' : 'pt-4'}`}>
+        <div className={`max-w-7xl mx-auto px-4 pb-[120px] ${connected ? 'pt-[110px]' : 'pt-4'}`}>
           {/* Time Range Selector (for tracks, artists, albums, and genres) - Position below filter chips */}
           {activeTab !== 'recent' && (
-            <div className="mb-6 mt-6">
-              <div className="flex gap-2">
+            <div className="mb-6 mt-4">
+              <div className="flex gap-2 mb-4">
                 <button
                   onClick={() => setTimeRange('short_term')}
                   className={`py-1.5 px-3 rounded-lg text-xs font-medium transition-all ${
@@ -756,6 +749,27 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
                   All time
                 </button>
               </div>
+              
+              {/* Subtle section title with time range on the right */}
+              <div className="flex items-center justify-between">
+                <h3 className="text-white text-lg font-medium capitalize">
+                  {activeTab === 'tracks' ? 'Tracks' :
+                   activeTab === 'artists' ? 'Artists' :
+                   activeTab === 'albums' ? 'Albums' :
+                   activeTab === 'genres' ? 'Genres' : activeTab}
+                </h3>
+                <span className="text-gray-400 text-sm">{getTimeRangeLabel(timeRange)}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Subtle section title for Recent tab */}
+          {activeTab === 'recent' && (
+            <div className="mb-6 mt-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-white text-lg font-medium">Recently Played</h3>
+                <span className="text-gray-400 text-sm">{recentTracks.length} tracks</span>
+              </div>
             </div>
           )}
 
@@ -780,9 +794,6 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
               {/* Recent Tracks */}
               {activeTab === 'recent' && (
                 <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-gray-400 text-sm">{recentTracks.length} tracks</span>
-                  </div>
                   
                   <div className={getContainerClasses()}>
                     {recentTracks.map((track: any, index: number) => (
@@ -801,9 +812,6 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
               {/* Top Tracks */}
               {activeTab === 'tracks' && (
                 <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-gray-400 text-sm">{getTimeRangeLabel(timeRange)}</span>
-                  </div>
                   
                   <div className={getContainerClasses()}>
                     {topTracks.map((track: any, index: number) => (
@@ -822,9 +830,6 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
               {/* Top Artists */}
               {activeTab === 'artists' && (
                 <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-gray-400 text-sm">{getTimeRangeLabel(timeRange)}</span>
-                  </div>
                   
                   <div className={getContainerClasses()}>
                     {topArtists.map((artist: any, index: number) => (
@@ -843,9 +848,6 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
               {/* Top Albums */}
               {activeTab === 'albums' && (
                 <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-gray-400 text-sm">{getTimeRangeLabel(timeRange)}</span>
-                  </div>
                   
                   <div className={getContainerClasses()}>
                     {topAlbums.map((album, index) => {
@@ -928,9 +930,6 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
               {/* Top Genres */}
               {activeTab === 'genres' && (
                 <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-gray-400 text-sm">Based on your artists</span>
-                  </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {getTopGenres().map(({ genre, count }, index) => {
