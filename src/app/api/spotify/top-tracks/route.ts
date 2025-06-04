@@ -58,13 +58,13 @@ export async function GET(request: NextRequest) {
       name: track?.name,
       artist: track?.artists?.[0]?.name,
       album: track?.album ? {
-        name: track.album.name,
-        release_date: track.album.release_date,
-        release_date_precision: track.album.release_date_precision,
-        id: track.album.id,
-        type: track.album.album_type,
-        total_tracks: track.album.total_tracks,
-        images: track.album.images
+        name: track.album?.name,
+        release_date: track.album?.release_date,
+        release_date_precision: track.album?.release_date_precision,
+        id: track.album?.id,
+        type: track.album?.album_type,
+        total_tracks: track.album?.total_tracks,
+        images: track.album?.images
       } : null,
       popularity: track?.popularity,
       duration_ms: track?.duration_ms,

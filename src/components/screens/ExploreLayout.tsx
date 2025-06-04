@@ -286,8 +286,8 @@ export default function ExploreLayout() {
                         <span className="text-[#1DB954] font-bold w-6">{index + 1}</span>
                         {track.album?.images?.[0] && (
                           <img 
-                            src={track.album.images[0].url} 
-                            alt={track.album.name || 'Album cover'}
+                            src={track.album?.images?.[0]?.url} 
+                            alt={track.album?.name || 'Album cover'}
                             className="w-12 h-12 rounded-lg"
                           />
                         )}
@@ -362,8 +362,8 @@ export default function ExploreLayout() {
                       <div key={`${item.track.id}-${index}`} className="flex items-center gap-4 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
                         {item.track.album?.images?.[0] && (
                           <img 
-                            src={item.track.album.images[0].url} 
-                            alt={item.track.album.name || 'Album cover'}
+                            src={item.track.album?.images?.[0]?.url} 
+                            alt={item.track.album?.name || 'Album cover'}
                             className="w-12 h-12 rounded-lg"
                           />
                         )}

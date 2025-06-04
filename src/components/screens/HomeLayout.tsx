@@ -455,7 +455,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                           <div key={`${track.id}-${item.played_at}`} className="flex items-center gap-4 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
                             {track.album?.images?.[0]?.url && (
                               <img 
-                                src={track.album.images[0].url} 
+                                src={track.album?.images?.[0]?.url} 
                                 alt={track.album?.name || 'Album'}
                                 className="w-12 h-12 mr-4 rounded-lg"
                               />

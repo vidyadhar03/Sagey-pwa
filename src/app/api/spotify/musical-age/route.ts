@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
 
     tracks.forEach((track) => {
       if (track.album?.release_date) {
-        const releaseYear = parseInt(track.album.release_date.substring(0, 4));
+        const releaseYear = parseInt(track.album?.release_date?.substring(0, 4) || '0');
         if (!isNaN(releaseYear) && releaseYear > 1900 && releaseYear <= currentYear) {
           releaseYears.push(releaseYear);
           
