@@ -101,8 +101,24 @@ export function useSpotifyInsights() {
     
     tracks.forEach((track, index) => {
       try {
-        // Handle different track structures
-        const actualTrack = track.track || track;
+        // Handle different track structures and ensure track exists
+        if (!track) {
+          if (index < 3) {
+            console.error(`SAGEY DEBUG: ❌ Track ${index + 1} is null/undefined`);
+          }
+          return;
+        }
+
+        const actualTrack = (track as any).track || track;
+        
+        // Ensure actualTrack exists before accessing properties
+        if (!actualTrack) {
+          if (index < 3) {
+            console.error(`SAGEY DEBUG: ❌ ActualTrack ${index + 1} is null/undefined`);
+          }
+          return;
+        }
+
         const album = actualTrack.album;
         
         if (index < 3) { // Log first 3 tracks for debugging
@@ -115,9 +131,21 @@ export function useSpotifyInsights() {
           });
         }
         
-        // Extract release date from album
-        if (album && album.release_date && typeof album.release_date === 'string' && album.release_date.length >= 4) {
-          const year = parseInt(album.release_date.substring(0, 4));
+        // Extract release date from album - handle both string and object album types
+        let releaseDate = null;
+        if (album) {
+          if (typeof album === 'string') {
+            // Some APIs might return album name as string
+            if (index < 3) {
+              console.error(`SAGEY DEBUG: ❌ Album is string (name only) for track:`, actualTrack?.name);
+            }
+          } else if (typeof album === 'object' && album.release_date) {
+            releaseDate = album.release_date;
+          }
+        }
+        
+        if (releaseDate && typeof releaseDate === 'string' && releaseDate.length >= 4) {
+          const year = parseInt(releaseDate.substring(0, 4));
           if (year > 1900 && year <= new Date().getFullYear()) {
             releaseYears.push(year);
             if (index < 3) {
@@ -127,7 +155,7 @@ export function useSpotifyInsights() {
             console.error(`SAGEY DEBUG: ❌ Invalid year ${year} for track:`, actualTrack?.name);
           }
         } else if (index < 3) {
-          console.error(`SAGEY DEBUG: ❌ No valid release date for track:`, actualTrack?.name, 'Found:', album?.release_date);
+          console.error(`SAGEY DEBUG: ❌ No valid release date for track:`, actualTrack?.name, 'Found:', releaseDate);
         }
       } catch (error) {
         if (index < 3) {
@@ -488,12 +516,17 @@ export function useSpotifyInsights() {
       // Debug: Log first track structure
       if (tracksToAnalyze && tracksToAnalyze.length > 0) {
         const firstTrack = tracksToAnalyze[0];
-        const album = firstTrack?.album;
+        // Cast to any to handle different track structures from Spotify API
+        const actualTrack = (firstTrack as any)?.track || firstTrack;
+        const album = actualTrack?.album;
+        
         console.error('🔍 SAGEY DEBUG: First track structure:', {
           track: firstTrack,
+          actualTrack: actualTrack,
           hasAlbum: !!album,
+          albumType: typeof album,
           albumReleaseDate: album && typeof album === 'object' && 'release_date' in album ? (album as any).release_date : 'N/A',
-          trackName: firstTrack?.name
+          trackName: actualTrack?.name
         });
       }
       

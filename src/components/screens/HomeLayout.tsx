@@ -456,14 +456,14 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                             {track.album?.images?.[0]?.url && (
                               <img 
                                 src={track.album.images[0].url} 
-                                alt={track.album.name}
+                                alt={track.album?.name || 'Album'}
                                 className="w-12 h-12 mr-4 rounded-lg"
                               />
                             )}
                             <div className="flex-1 min-w-0">
                               <h4 className="text-white font-medium truncate">{track.name}</h4>
                               <p className="text-gray-400 text-sm truncate">
-                                {track.artists.map((artist: any) => artist.name).join(', ')} • {track.album.name}
+                                {track.artists?.map((artist: any) => artist.name).join(', ')} • {track.album?.name || 'Unknown Album'}
                               </p>
                               <div className="flex items-center">
                                 <span className="text-xs text-gray-400">{formatDuration(track.duration_ms)}</span>

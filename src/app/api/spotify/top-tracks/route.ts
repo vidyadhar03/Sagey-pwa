@@ -54,10 +54,10 @@ export async function GET(request: NextRequest) {
     
     // Transform and enrich the data
     const tracks = data.items.map((track: any) => ({
-      id: track.id,
-      name: track.name,
-      artist: track.artists[0]?.name,
-      album: {
+      id: track?.id,
+      name: track?.name,
+      artist: track?.artists?.[0]?.name,
+      album: track?.album ? {
         name: track.album.name,
         release_date: track.album.release_date,
         release_date_precision: track.album.release_date_precision,
@@ -65,14 +65,14 @@ export async function GET(request: NextRequest) {
         type: track.album.album_type,
         total_tracks: track.album.total_tracks,
         images: track.album.images
-      },
-      popularity: track.popularity,
-      duration_ms: track.duration_ms,
-      external_urls: track.external_urls,
-      preview_url: track.preview_url,
-      image_url: track.album.images[0]?.url,
+      } : null,
+      popularity: track?.popularity,
+      duration_ms: track?.duration_ms,
+      external_urls: track?.external_urls,
+      preview_url: track?.preview_url,
+      image_url: track?.album?.images?.[0]?.url,
       // Keep legacy album field for backwards compatibility
-      album_name: track.album.name
+      album_name: track?.album?.name
     }));
 
     return NextResponse.json({
