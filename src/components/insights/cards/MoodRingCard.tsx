@@ -34,61 +34,62 @@ export default function MoodRingCard() {
     melancholy: '#9B59B6'
   };
 
-  // Calculate SVG donut segments
+  // Calculate segments with angles
   const segments = Object.entries(emotions).map(([emotion, value], index) => {
     const percentage = total > 0 ? (value / total) * 100 : 0;
     const angle = total > 0 ? (value / total) * 360 : 0;
     return { emotion, value, percentage, angle };
   });
 
-  // SVG circle properties
-  const radius = 45;
-  const circumference = 2 * Math.PI * radius;
-  const center = 60; // SVG center point
+  // SVG properties for the donut
+  const outerRadius = 70;
+  const innerRadius = 45;
+  const center = 90;
 
-  // Calculate stroke-dasharray values for each segment
+  // Calculate path data for each segment
   let accumulatedAngle = 0;
-  const svgSegments = segments.map((segment, index) => {
-    const strokeLength = (segment.percentage / 100) * circumference;
-    const gapLength = circumference - strokeLength;
-    const rotation = accumulatedAngle;
+  const pathSegments = segments.map((segment, index) => {
+    const startAngle = accumulatedAngle;
+    const endAngle = accumulatedAngle + segment.angle;
+    
+    const x1 = center + outerRadius * Math.cos((startAngle - 90) * Math.PI / 180);
+    const y1 = center + outerRadius * Math.sin((startAngle - 90) * Math.PI / 180);
+    const x2 = center + outerRadius * Math.cos((endAngle - 90) * Math.PI / 180);
+    const y2 = center + outerRadius * Math.sin((endAngle - 90) * Math.PI / 180);
+    
+    const x3 = center + innerRadius * Math.cos((endAngle - 90) * Math.PI / 180);
+    const y3 = center + innerRadius * Math.sin((endAngle - 90) * Math.PI / 180);
+    const x4 = center + innerRadius * Math.cos((startAngle - 90) * Math.PI / 180);
+    const y4 = center + innerRadius * Math.sin((startAngle - 90) * Math.PI / 180);
+    
+    const largeArcFlag = segment.angle > 180 ? 1 : 0;
+    
+    const pathData = [
+      `M ${x1} ${y1}`,
+      `A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
+      `L ${x3} ${y3}`,
+      `A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${x4} ${y4}`,
+      'Z'
+    ].join(' ');
+
+    // Calculate label position (on the ring)
+    const labelAngle = startAngle + segment.angle / 2;
+    const labelRadius = (outerRadius + innerRadius) / 2;
+    const labelX = center + labelRadius * Math.cos((labelAngle - 90) * Math.PI / 180);
+    const labelY = center + labelRadius * Math.sin((labelAngle - 90) * Math.PI / 180);
     
     accumulatedAngle += segment.angle;
     
     return {
       ...segment,
-      strokeDasharray: `${strokeLength} ${gapLength}`,
-      rotation,
-      strokeLength
+      pathData,
+      labelX,
+      labelY,
+      labelAngle,
+      startAngle,
+      endAngle
     };
   });
-
-  // Calculate floating label positions
-  const getFloatingPositions = () => {
-    if (isFallback) return [];
-    
-    let currentAngle = -90; // Start at top
-    return segments.map((segment) => {
-      const centerAngle = currentAngle + (segment.angle / 2);
-      const radians = (centerAngle * Math.PI) / 180;
-      
-      // Position much further from the donut for proper clearance
-      const labelRadius = 110; // Increased from 85 for proper spacing
-      const x = Math.cos(radians) * labelRadius;
-      const y = Math.sin(radians) * labelRadius;
-      
-      currentAngle += segment.angle;
-      
-      return {
-        ...segment,
-        x,
-        y,
-        centerAngle
-      };
-    }).filter(segment => segment.percentage > 1);
-  };
-
-  const floatingPositions = getFloatingPositions();
 
   return (
     <InsightCard
@@ -104,179 +105,223 @@ export default function MoodRingCard() {
         </div>
       )}
 
-      {/* SVG Donut Chart Container - Increased size for proper chip clearance */}
-      <div className="flex justify-center mb-4 relative h-64 w-full py-8 px-6"> {/* Increased height and added proper padding */}
+      {/* Premium Mood Ring */}
+      <div className="flex justify-center mb-6 relative">
         <motion.div
-          initial={{ scale: 0, rotate: -90 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{ delay: 0.3, duration: 0.8 }}
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.2, duration: 1, ease: "easeOut" }}
           className="relative"
         >
+          {/* Outer glow ring */}
+          <div className="absolute inset-0 rounded-full blur-xl opacity-30 bg-gradient-to-r from-violet-500 via-pink-500 to-cyan-500 animate-pulse" />
+          
           {/* SVG Donut Chart */}
           <svg 
-            width="120" 
-            height="120" 
-            viewBox="0 0 120 120"
-            className="transform -rotate-90" // Rotate to start from top
+            width="180" 
+            height="180" 
+            viewBox="0 0 180 180"
+            className="relative z-10"
           >
-            {/* Background circle */}
+            {/* Background ring */}
             <circle
               cx={center}
               cy={center}
-              r={radius}
+              r={(outerRadius + innerRadius) / 2}
               fill="none"
-              stroke="#374151"
-              strokeWidth="8"
+              stroke="#1f2937"
+              strokeWidth={outerRadius - innerRadius}
               opacity="0.3"
             />
             
+            {/* Gradient definitions */}
+            <defs>
+              {Object.entries(colors).map(([emotion, color]) => (
+                <radialGradient key={emotion} id={`gradient-${emotion}`} cx="0.5" cy="0.5" r="0.5">
+                  <stop offset="0%" stopColor={color} stopOpacity="1" />
+                  <stop offset="100%" stopColor={color} stopOpacity="0.7" />
+                </radialGradient>
+              ))}
+            </defs>
+            
             {/* Animated segments */}
-            {!isFallback && svgSegments.map((segment, index) => (
-              <motion.circle
-                key={segment.emotion}
-                cx={center}
-                cy={center}
-                r={radius}
-                fill="none"
-                stroke={colors[segment.emotion as keyof typeof colors]}
-                strokeWidth="8"
-                strokeLinecap="round"
-                strokeDasharray={segment.strokeDasharray}
-                style={{
-                  transformOrigin: `${center}px ${center}px`,
-                  transform: `rotate(${segment.rotation}deg)`
-                }}
-                initial={{ strokeDasharray: `0 ${circumference}` }}
-                animate={{ strokeDasharray: segment.strokeDasharray }}
-                transition={{ 
-                  delay: 0.8 + index * 0.2, 
-                  duration: 1.2,
-                  ease: "easeOut"
-                }}
-              />
+            {!isFallback && pathSegments.map((segment, index) => (
+              <g key={segment.emotion}>
+                {/* Main segment with glow */}
+                <motion.path
+                  d={segment.pathData}
+                  fill={`url(#gradient-${segment.emotion})`}
+                  stroke={colors[segment.emotion as keyof typeof colors]}
+                  strokeWidth="1"
+                  filter="drop-shadow(0 0 8px rgba(255,255,255,0.3))"
+                  initial={{ 
+                    opacity: 0,
+                    scale: 0.8,
+                  }}
+                  animate={{ 
+                    opacity: 1,
+                    scale: 1,
+                  }}
+                  transition={{ 
+                    delay: 0.6 + index * 0.2, 
+                    duration: 0.8,
+                    ease: "easeOut"
+                  }}
+                  whileHover={{ 
+                    scale: 1.05,
+                    filter: "drop-shadow(0 0 16px rgba(255,255,255,0.5))"
+                  }}
+                />
+                
+                {/* Percentage label on segment */}
+                {segment.percentage > 5 && (
+                  <motion.text
+                    x={segment.labelX}
+                    y={segment.labelY}
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                    className="text-xs font-bold fill-white"
+                    style={{
+                      filter: `drop-shadow(0 0 4px ${colors[segment.emotion as keyof typeof colors]})`
+                    }}
+                    initial={{ opacity: 0, scale: 0.5 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ 
+                      delay: 1.0 + index * 0.2, 
+                      duration: 0.6,
+                      ease: "backOut"
+                    }}
+                  >
+                    {Math.round(segment.percentage)}%
+                  </motion.text>
+                )}
+              </g>
             ))}
-          </svg>
 
-          {/* Center Icon */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-2xl">🎵</div>
-          </div>
-        </motion.div>
-
-        {/* Floating Percentage Labels */}
-        {!isFallback && floatingPositions.map((position, index) => (
-          <motion.div
-            key={position.emotion}
-            initial={{ 
-              opacity: 0, 
-              scale: 0,
-              x: 0,
-              y: 0
-            }}
-            animate={{ 
-              opacity: 1, 
-              scale: 1,
-              x: position.x,
-              y: position.y
-            }}
-            transition={{ 
-              delay: 1.5 + index * 0.2,
-              duration: 0.6,
-              type: "spring",
-              bounce: 0.4
-            }}
-            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20"
-          >
-            {/* Floating Percentage */}
-            <motion.div
+            {/* Pulsing center */}
+            <motion.circle
+              cx={center}
+              cy={center}
+              r="20"
+              fill="rgba(255,255,255,0.1)"
+              stroke="rgba(255,255,255,0.3)"
+              strokeWidth="1"
               animate={{
-                y: [0, -4, 0],
-                scale: [1, 1.05, 1]
+                r: [18, 22, 18],
+                opacity: [0.3, 0.6, 0.3]
               }}
               transition={{
-                duration: 2.5 + index * 0.4,
+                duration: 3,
                 repeat: Infinity,
                 ease: "easeInOut"
               }}
-              className="relative"
+            />
+            
+            {/* Center icon */}
+            <motion.text
+              x={center}
+              y={center}
+              textAnchor="middle"
+              dominantBaseline="central"
+              className="text-2xl"
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 1.5, duration: 0.8, ease: "backOut" }}
             >
-              {/* Connection line to ring - Extended for new distance */}
-              <motion.div
-                initial={{ scaleX: 0 }}
-                animate={{ scaleX: 1 }}
-                transition={{ delay: 1.8 + index * 0.2, duration: 0.5 }}
-                className="absolute top-1/2 h-px transform -translate-y-1/2"
-                style={{
-                  backgroundColor: colors[position.emotion as keyof typeof colors],
-                  width: '46px', // Increased from 24px to reach ring from new distance
-                  opacity: 0.6,
-                  left: position.x > 0 ? '-46px' : '100%',
-                  transformOrigin: position.x > 0 ? 'left' : 'right'
-                }}
-              />
+              🎵
+            </motion.text>
+          </svg>
 
-              {/* Glow effect */}
-              <div 
-                className="absolute inset-0 rounded-full blur-sm opacity-40"
-                style={{ 
-                  backgroundColor: colors[position.emotion as keyof typeof colors],
-                  scale: 1.4
-                }}
-              />
-              
-              {/* Percentage badge */}
-              <div 
-                className="relative px-2.5 py-1.5 rounded-full text-xs font-bold border-2 backdrop-blur-sm"
-                style={{ 
-                  backgroundColor: `${colors[position.emotion as keyof typeof colors]}20`,
-                  borderColor: colors[position.emotion as keyof typeof colors],
-                  color: 'white',
-                  boxShadow: `0 0 16px ${colors[position.emotion as keyof typeof colors]}30`
-                }}
-              >
-                {Math.round(position.percentage)}%
-              </div>
-            </motion.div>
-          </motion.div>
-        ))}
+          {/* Floating particles */}
+          {!isFallback && (
+            <div className="absolute inset-0">
+              {[...Array(8)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute w-1 h-1 rounded-full"
+                  style={{
+                    backgroundColor: colors[Object.keys(colors)[i % 4] as keyof typeof colors],
+                    opacity: 0.6,
+                    left: '50%',
+                    top: '50%',
+                    transform: 'translate(-50%, -50%)'
+                  }}
+                  animate={{
+                    x: [0, Math.cos(i * 45 * Math.PI / 180) * 100],
+                    y: [0, Math.sin(i * 45 * Math.PI / 180) * 100],
+                    opacity: [0.6, 0, 0.6],
+                    scale: [1, 1.5, 1]
+                  }}
+                  transition={{
+                    duration: 4 + i * 0.5,
+                    repeat: Infinity,
+                    ease: "linear"
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </motion.div>
       </div>
 
       {/* Dominant Mood */}
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6 }}
-        className="text-center mb-4"
+        transition={{ delay: 0.4 }}
+        className="text-center mb-6"
       >
-        <p className={`font-semibold ${isFallback ? 'text-zinc-500' : 'text-white'}`}>
+        <motion.h3 
+          className={`text-lg font-bold ${isFallback ? 'text-zinc-500' : 'text-white'} mb-1`}
+          animate={{ 
+            textShadow: isFallback ? 'none' : '0 0 20px rgba(255,255,255,0.3)' 
+          }}
+        >
           {payload.dominantMood}
-        </p>
+        </motion.h3>
         <p className="text-zinc-400 text-sm">Your musical vibe</p>
       </motion.div>
 
-      {/* Mood Legend */}
+      {/* Enhanced Legend */}
       <motion.div
-        initial={{ opacity: 0, y: 15 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.8 }}
-        className="grid grid-cols-2 gap-3 text-sm"
+        transition={{ delay: 0.6 }}
+        className="grid grid-cols-2 gap-4"
       >
         {segments.map((segment, index) => (
           <motion.div
             key={segment.emotion}
-            initial={{ opacity: 0, x: -10 }}
+            initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 1.0 + index * 0.1 }}
-            className="flex items-center gap-2"
+            transition={{ delay: 0.8 + index * 0.1 }}
+            className="flex items-center gap-3 p-2 rounded-lg bg-zinc-800/30 backdrop-blur-sm"
+            whileHover={{ 
+              scale: 1.02,
+              backgroundColor: 'rgba(39, 39, 42, 0.5)'
+            }}
           >
-            <div 
-              className="w-3 h-3 rounded-full flex-shrink-0"
+            <motion.div 
+              className="w-4 h-4 rounded-full flex-shrink-0"
               style={{ 
-                backgroundColor: isFallback ? '#4a5568' : colors[segment.emotion as keyof typeof colors] 
+                backgroundColor: isFallback ? '#4a5568' : colors[segment.emotion as keyof typeof colors],
+                boxShadow: isFallback ? 'none' : `0 0 8px ${colors[segment.emotion as keyof typeof colors]}50`
+              }}
+              animate={{
+                boxShadow: isFallback ? 'none' : [
+                  `0 0 8px ${colors[segment.emotion as keyof typeof colors]}50`,
+                  `0 0 16px ${colors[segment.emotion as keyof typeof colors]}80`,
+                  `0 0 8px ${colors[segment.emotion as keyof typeof colors]}50`
+                ]
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut"
               }}
             />
             <span 
-              className="capitalize font-medium"
+              className="capitalize font-medium text-sm"
               style={{ 
                 color: isFallback ? '#9ca3af' : colors[segment.emotion as keyof typeof colors] 
               }}
