@@ -74,9 +74,16 @@ interface DataCache {
 
 interface SpotifyDataViewProps {
   initialSection?: string;
+  onUpdateTopBar?: (data: {
+    title: string;
+    showViewToggle: boolean;
+    viewMode: 'list' | 'grid';
+    onViewModeToggle: () => void;
+    onShareClick: () => void;
+  }) => void;
 }
 
-export default function SpotifyDataView({ initialSection }: SpotifyDataViewProps) {
+export default function SpotifyDataView({ initialSection, onUpdateTopBar }: SpotifyDataViewProps) {
   const { connected, user, loading, connect, checkStatus, getTopTracks, getTopArtists, getTopAlbums, getRecentTracks } = useSpotify();
   
   // Core state management - use initialSection if provided
@@ -295,6 +302,32 @@ export default function SpotifyDataView({ initialSection }: SpotifyDataViewProps
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connected, isInitialized]); // Remove initializeData dependency to prevent loops
+
+  // Update top bar when activeTab or viewMode changes
+  useEffect(() => {
+    if (onUpdateTopBar && connected) {
+      const getTitle = () => {
+        switch (activeTab) {
+          case 'recent': return 'Recently Played';
+          case 'tracks': return 'Top Tracks';
+          case 'artists': return 'Top Artists';
+          case 'albums': return 'Top Albums';
+          case 'genres': return 'Top Genres';
+          default: return 'Explore';
+        }
+      };
+
+      const showViewToggle = activeTab === 'tracks' || activeTab === 'artists' || activeTab === 'albums';
+
+      onUpdateTopBar({
+        title: getTitle(),
+        showViewToggle,
+        viewMode,
+        onViewModeToggle: () => setViewMode(viewMode === 'list' ? 'grid' : 'list'),
+        onShareClick: () => setShowShareCards(true)
+      });
+    }
+  }, [activeTab, viewMode, connected, onUpdateTopBar]);
 
   const formatDuration = (ms: number) => {
     const minutes = Math.floor(ms / 60000);
@@ -738,45 +771,6 @@ export default function SpotifyDataView({ initialSection }: SpotifyDataViewProps
           {error && (
             <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 mb-6">
               <p className="text-red-400">{error}</p>
-            </div>
-          )}
-
-          {/* Top Controls Bar - View switcher and Share button */}
-          {!dataLoading && !error && (
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-white font-bold text-xl capitalize">
-                {activeTab === 'recent' ? 'Recently Played' : 
-                 activeTab === 'tracks' ? 'Top Tracks' :
-                 activeTab === 'artists' ? 'Top Artists' :
-                 activeTab === 'albums' ? 'Top Albums' :
-                 activeTab === 'genres' ? 'Top Genres' : 'Explore'}
-              </h2>
-              
-              <div className="flex items-center gap-3">
-                {/* View Mode Toggle */}
-                {(activeTab === 'tracks' || activeTab === 'artists' || activeTab === 'albums') && (
-                  <button
-                    onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
-                    className="p-2 rounded-lg bg-[#2A2A2D] hover:bg-[#3A3A3D] border border-white/10 transition-all"
-                    title={`Switch to ${viewMode === 'list' ? 'grid' : 'list'} view`}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5 text-gray-400">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={getViewModeIcon()} />
-                    </svg>
-                  </button>
-                )}
-                
-                {/* Share Insights Button */}
-                <button
-                  onClick={() => setShowShareCards(true)}
-                  className="p-2 rounded-lg bg-[#1DB954] hover:bg-[#1ed760] border border-[#1DB954] transition-all"
-                  title="Share insights"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5 text-white">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
-                  </svg>
-                </button>
-              </div>
             </div>
           )}
 

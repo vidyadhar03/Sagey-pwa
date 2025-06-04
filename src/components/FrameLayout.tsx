@@ -10,7 +10,21 @@ import UserProfile from './UserProfile';
 import { useSpotify } from '../hooks/useSpotify';
 
 // Dynamic Top Bar Component - Only show when Spotify is connected
-const DynamicTopBar = ({ activeTab, onProfileClick }: { activeTab: string; onProfileClick: () => void }) => {
+const DynamicTopBar = ({ 
+  activeTab, 
+  onProfileClick, 
+  exploreTopBarData 
+}: { 
+  activeTab: string; 
+  onProfileClick: () => void;
+  exploreTopBarData?: {
+    title: string;
+    showViewToggle: boolean;
+    viewMode: 'list' | 'grid';
+    onViewModeToggle: () => void;
+    onShareClick: () => void;
+  };
+}) => {
   const getTopBarContent = () => {
     switch (activeTab) {
       case 'home':
@@ -27,8 +41,9 @@ const DynamicTopBar = ({ activeTab, onProfileClick }: { activeTab: string; onPro
         };
       case 'explore':
         return {
-          title: 'Explore',
-          showProfile: true,
+          title: exploreTopBarData?.title || 'Explore',
+          showProfile: !exploreTopBarData, // Hide profile when explore data is active
+          showExploreControls: !!exploreTopBarData,
           titleAlign: 'left' as const
         };
       case 'insights-plus':
@@ -46,7 +61,7 @@ const DynamicTopBar = ({ activeTab, onProfileClick }: { activeTab: string; onPro
     }
   };
 
-  const { title, showProfile, titleAlign } = getTopBarContent();
+  const { title, showProfile, showExploreControls, titleAlign } = getTopBarContent();
 
   return (
     <header 
@@ -63,8 +78,40 @@ const DynamicTopBar = ({ activeTab, onProfileClick }: { activeTab: string; onPro
           <h1 className="text-xl font-medium text-white">{title}</h1>
         </div>
 
-        {/* Right side - Profile icon (conditional) */}
-        <div className="flex items-center">
+        {/* Right side - Profile icon or Explore controls */}
+        <div className="flex items-center gap-3">
+          {showExploreControls && exploreTopBarData && (
+            <>
+              {/* View Mode Toggle */}
+              {exploreTopBarData.showViewToggle && (
+                <button
+                  onClick={exploreTopBarData.onViewModeToggle}
+                  className="p-2 rounded-lg bg-[#2A2A2D] hover:bg-[#3A3A3D] border border-white/10 transition-all"
+                  title={`Switch to ${exploreTopBarData.viewMode === 'list' ? 'grid' : 'list'} view`}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5 text-gray-400">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={
+                      exploreTopBarData.viewMode === 'list' 
+                        ? "M3 4h18v2H3V4zm0 7h18v2H3v-2zm0 7h18v2H3v-2z"
+                        : "M3 3h7v7H3V3zm11 0h7v7h-7V3zM3 14h7v7H3v-7zm11 0h7v7h-7v-7z"
+                    } />
+                  </svg>
+                </button>
+              )}
+              
+              {/* Share Insights Button */}
+              <button
+                onClick={exploreTopBarData.onShareClick}
+                className="p-2 rounded-lg bg-[#1DB954] hover:bg-[#1ed760] border border-[#1DB954] transition-all"
+                title="Share insights"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5 text-white">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                </svg>
+              </button>
+            </>
+          )}
+          
           {showProfile && (
             <button className="p-2" aria-label="Profile" onClick={onProfileClick}>
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7">
@@ -87,6 +134,13 @@ export default function FrameLayout({}: FrameLayoutProps) {
   const [activeTab, setActiveTab] = useState('home');
   const [exploreOptions, setExploreOptions] = useState<{ section?: string } | undefined>();
   const [showUserProfile, setShowUserProfile] = useState(false);
+  const [exploreTopBarData, setExploreTopBarData] = useState<{
+    title: string;
+    showViewToggle: boolean;
+    viewMode: 'list' | 'grid';
+    onViewModeToggle: () => void;
+    onShareClick: () => void;
+  }>();
   
   // Get Spotify connection status
   const { connected } = useSpotify();
@@ -121,7 +175,7 @@ export default function FrameLayout({}: FrameLayoutProps) {
       case 'insights':
         return <InsightsLayout />;
       case 'explore':
-        return <SpotifyDataView initialSection={exploreOptions?.section} />;
+        return <SpotifyDataView initialSection={exploreOptions?.section} onUpdateTopBar={setExploreTopBarData} />;
       case 'insights-plus':
         return <NewInsightsLayout />;
       default:
@@ -132,7 +186,7 @@ export default function FrameLayout({}: FrameLayoutProps) {
   return (
     <div className="w-full h-screen flex flex-col bg-[#0D0D0F] text-white">
       {/* Dynamic Top Bar - Only show when Spotify is connected */}
-      {connected && <DynamicTopBar activeTab={activeTab} onProfileClick={handleProfileClick} />}
+      {connected && <DynamicTopBar activeTab={activeTab} onProfileClick={handleProfileClick} exploreTopBarData={exploreTopBarData} />}
       
       <main className={`flex-1 relative overflow-hidden ${connected ? 'pt-[60px]' : ''}`}>
         {/* Render the active tab component without forced remounting */}
