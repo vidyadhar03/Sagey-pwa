@@ -125,7 +125,6 @@ export default function GenrePassportCard() {
               </span>
               <RefreshButton 
                 onRefresh={handleRefreshInsight}
-                isLoading={aiLoading}
               />
             </div>
           </motion.div>
@@ -159,7 +158,6 @@ export default function GenrePassportCard() {
               </span>
               <RefreshButton 
                 onRefresh={handleRefreshInsight}
-                isLoading={aiLoading}
               />
             </div>
           </motion.div>

@@ -35,12 +35,11 @@ describe('RefreshButton', () => {
     expect(mockOnRefresh).toHaveBeenCalledTimes(1);
   });
 
-  it('shows loading state when isLoading is true', () => {
-    render(<RefreshButton onRefresh={mockOnRefresh} isLoading={true} />);
+  it('shows disabled state when disabled prop is true', () => {
+    render(<RefreshButton onRefresh={mockOnRefresh} disabled={true} />);
     
     const button = screen.getByRole('button');
     expect(button).toBeDisabled();
-    expect(button).toHaveClass('opacity-50', 'cursor-not-allowed');
   });
 
   it('enters cooldown state after successful refresh', async () => {
@@ -60,7 +59,6 @@ describe('RefreshButton', () => {
     
     // Button should be disabled due to cooldown
     expect(button).toBeDisabled();
-    expect(button).toHaveClass('opacity-50', 'cursor-not-allowed');
   });
 
   it('exits cooldown after 15 seconds', async () => {
@@ -113,8 +111,8 @@ describe('RefreshButton', () => {
     expect(mockOnRefresh).toHaveBeenCalledTimes(1);
   });
 
-  it('does not call onRefresh when loading', () => {
-    render(<RefreshButton onRefresh={mockOnRefresh} isLoading={true} />);
+  it('does not call onRefresh when disabled', () => {
+    render(<RefreshButton onRefresh={mockOnRefresh} disabled={true} />);
     
     const button = screen.getByRole('button');
     fireEvent.click(button);

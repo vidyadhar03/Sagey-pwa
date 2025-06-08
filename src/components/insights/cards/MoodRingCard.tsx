@@ -279,7 +279,6 @@ export default function MoodRingCard() {
             </span>
             <RefreshButton 
               onRefresh={handleRefreshInsight}
-              isLoading={aiLoading}
             />
           </div>
         </motion.div>
@@ -313,7 +312,6 @@ export default function MoodRingCard() {
             </span>
             <RefreshButton 
               onRefresh={handleRefreshInsight}
-              isLoading={aiLoading}
             />
           </div>
         </motion.div>

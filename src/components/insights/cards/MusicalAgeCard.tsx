@@ -179,9 +179,8 @@ export default function MusicalAgeCard() {
                     <span>✨</span>
                     <span>AI Generated</span>
                   </span>
-                  <RefreshButton 
+                                    <RefreshButton
                     onRefresh={handleRefreshInsight}
-                    isLoading={aiInsights.isLoading}
                   />
                 </div>
               </div>

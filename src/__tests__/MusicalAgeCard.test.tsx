@@ -189,8 +189,11 @@ describe('MusicalAgeCard', () => {
     
     // Wait for the sheet to close completely
     await waitFor(() => {
-      const titles = screen.getAllByText(/Musical Age/);
-      expect(titles).toHaveLength(1); // Only the card title should remain
+      // Check that the sheet-specific content is gone
+      expect(screen.queryByText('Your Musical Age')).not.toBeInTheDocument();
+      expect(screen.queryByText('Musical Insights')).not.toBeInTheDocument();
+      // But the card title should still be there
+      expect(screen.getByRole('heading', { name: 'Musical Age' })).toBeInTheDocument();
     });
   });
 });

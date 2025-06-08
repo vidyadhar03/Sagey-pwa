@@ -151,7 +151,6 @@ export default function NightOwlCard() {
             </span>
             <RefreshButton 
               onRefresh={handleRefreshInsight}
-              isLoading={aiLoading}
             />
           </div>
         </motion.div>
@@ -185,7 +184,6 @@ export default function NightOwlCard() {
             </span>
             <RefreshButton 
               onRefresh={handleRefreshInsight}
-              isLoading={aiLoading}
             />
           </div>
         </motion.div>

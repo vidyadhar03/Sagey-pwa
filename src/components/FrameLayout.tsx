@@ -7,6 +7,7 @@ import InsightsLayout from './screens/InsightsLayout';
 import NewInsightsLayout from './screens/NewInsightsLayout';
 import SpotifyDataView from './SpotifyDataView';
 import UserProfile from './UserProfile';
+import RefreshTestPanel from './debug/RefreshTestPanel';
 import { useSpotify } from '../hooks/useSpotify';
 
 // Dynamic Top Bar Component - Only show when Spotify is connected
@@ -190,6 +191,9 @@ export default function FrameLayout({}: FrameLayoutProps) {
       {showUserProfile && (
         <UserProfile onClose={handleCloseUserProfile} />
       )}
+      
+      {/* Debug Panel for Testing Refresh Functionality */}
+      <RefreshTestPanel enabled={true} />
     </div>
   );
 } 

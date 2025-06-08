@@ -87,12 +87,21 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ Successfully generated ${type} insight`);
     console.info(`[AI] Cache`, { cached: result.fromCache, regenerate, type });
+    console.log(`📝 Generated copy: "${result.copy.substring(0, 100)}${result.copy.length > 100 ? '...' : ''}"`);
+    console.log(`🔑 Cache key would be based on user: ${userId}, type: ${type}`);
     
     return NextResponse.json({
       copy: result.copy,
       source: 'ai',
       type,
       cached: result.fromCache,
+      debug: {
+        regenerated: regenerate,
+        timestamp: new Date().toISOString(),
+        userId: userId.substring(0, 10) + '...',
+        copyLength: result.copy.length,
+        firstWords: result.copy.substring(0, 50) + '...'
+      }
     });
 
   } catch (error) {

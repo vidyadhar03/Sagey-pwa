@@ -38,6 +38,10 @@ Examples of tone (vary from these):
 - "🎵 Musical DNA says you're 24! Your ${era} era playlist spans from ${oldest.artist} to ${newest.artist} 🚀"
 - "🎼 ${age} years old musically${stdDev > 2 ? ` (±${stdDev}yr confidence)` : ''} - certified ${era} era connoisseur! 🎯"
 
+IMPORTANT: Generate a completely unique and fresh caption that differs from previous generations. Use creative language, varied emojis, and different phrasing each time.
+
+Generation timestamp: ${new Date().toISOString()}
+
 Generate ONE unique caption only, no quotes or additional text:`;
 }
 
@@ -64,6 +68,10 @@ Requirements:
 Examples of tone (vary from these):
 - "🎵 Your musical mood ring glows ${dominantMood.toLowerCase()}! ${topEmotion[1]}% pure vibes ✨"
 - "🌈 Musical DNA scan: ${dominantMood} energy 😊 Happy ${emotions.happy}% 🔥 Energetic ${emotions.energetic}% 😌 Chill ${emotions.chill}% 🎶"
+
+IMPORTANT: Generate a completely unique and fresh caption that differs from previous generations. Use creative language, varied emojis, and different phrasing each time.
+
+Generation timestamp: ${new Date().toISOString()}
 
 Generate ONE unique caption only, no quotes or additional text:`;
 }
@@ -94,6 +102,10 @@ Requirements:
 Examples of tone (vary from these):
 - "🗺️ Genre passport stamped in ${distinctCount} musical countries! Currently exploring: ${topThree.join(', ')} ✈️"
 - "🧭 Musical ${explorationScore > 80 ? 'globe-trotter' : 'explorer'}: ${distinctCount} genres conquered! Latest discoveries: ${newDiscoveries.join(' & ')} 🌍"
+
+IMPORTANT: Generate a completely unique and fresh caption that differs from previous generations. Use creative language, varied emojis, and different phrasing each time.
+
+Generation timestamp: ${new Date().toISOString()}
 
 Generate ONE unique caption only, no quotes or additional text:`;
 }
@@ -129,6 +141,10 @@ Examples of tone (vary from these):
 - "🌙 Musical night owl detected! Peak vibes hit at ${timeFormat} - when the world sleeps, you groove 🎵"
 - "☀️ Early bird musical energy! ${timeFormat} is when your playlist truly comes alive 🎶"
 - "🦉 ${score}% night owl confirmed! ${afterMidnight > beforeMidnight ? 'Post-midnight' : 'Pre-midnight'} is your musical kingdom 👑"
+
+IMPORTANT: Generate a completely unique and fresh caption that differs from previous generations. Use creative language, varied emojis, and different phrasing each time.
+
+Generation timestamp: ${new Date().toISOString()}
 
 Generate ONE unique caption only, no quotes or additional text:`;
 }

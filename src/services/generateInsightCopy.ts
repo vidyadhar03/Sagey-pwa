@@ -29,11 +29,12 @@ export async function getInsightCopy(
     }
   }
 
-  console.log(`🤖 Generating new ${type} insight for user ${userId}`);
+  console.log(`🤖 Generating new ${type} insight for user ${userId}${regenerate ? ' (REGENERATE=true)' : ''}`);
 
   try {
     // Build prompt
     const prompt = buildPrompt(type, data);
+    console.log(`📋 Prompt being sent to OpenAI (first 200 chars): "${prompt.substring(0, 200)}..."`);
     
     // Call OpenAI
     const openai = getOpenAIClient();
@@ -50,13 +51,15 @@ export async function getInsightCopy(
         }
       ],
       max_tokens: 100,
-      temperature: 0.85, // Higher creativity for more variety
+      temperature: 0.95, // Maximum creativity for unique responses
       top_p: 0.9,
     });
 
     const generatedCopy = completion.choices[0]?.message?.content?.trim() || '';
+    console.log(`🤖 OpenAI returned: "${generatedCopy}"`);
     
     if (!generatedCopy) {
+      console.error('❌ Empty response from OpenAI');
       throw new Error('Empty response from OpenAI');
     }
 
