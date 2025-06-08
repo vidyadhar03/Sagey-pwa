@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import InsightCard from './InsightCard';
 import InsightSkeleton from './InsightSkeleton';
 import { useSpotifyInsights } from '../../../hooks/useSpotifyInsights';
+import { useAIInsights } from '../../../hooks/useAIInsights';
 
 export default function MusicalAgeCard() {
   const { insights, isLoading } = useSpotifyInsights();
@@ -13,6 +14,13 @@ export default function MusicalAgeCard() {
 
   const payload = insights.musicalAge;
   const isFallback = payload.trackCount === 0 || insights.isDefault;
+
+  // AI insights for musical age
+  const aiInsights = useAIInsights('musical_age', {
+    age: payload.age,
+    averageYear: payload.averageYear,
+    description: payload.description,
+  }, !isFallback); // Only fetch AI when we have real data
 
   // Rolling number animation
   useEffect(() => {
@@ -126,6 +134,37 @@ export default function MusicalAgeCard() {
             {payload.description}
           </p>
         </motion.div>
+
+        {/* AI Generated Copy */}
+        {!isFallback && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+            className="mt-4 p-3 bg-white/5 rounded-lg border border-white/10"
+          >
+            {aiInsights.isLoading ? (
+              <div className="flex items-center justify-center space-x-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#1DB954]"></div>
+                <span className="text-xs text-zinc-400">Generating insight...</span>
+              </div>
+            ) : aiInsights.error ? (
+              <p className="text-xs text-zinc-400 text-center">We're speechless 🤫</p>
+            ) : (
+              <div>
+                <p className="text-xs text-zinc-300 leading-relaxed">
+                  {aiInsights.copy}
+                </p>
+                <div className="flex justify-center mt-2">
+                  <span className="text-xs text-zinc-500 flex items-center space-x-1">
+                    <span>✨</span>
+                    <span>AI Generated</span>
+                  </span>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        )}
 
         {/* Additional Info */}
         <motion.div

@@ -1,0 +1,201 @@
+{
+  "tracks": [
+    {
+      "id": "track1",
+      "name": "Bohemian Rhapsody",
+      "artist": "Queen",
+      "album": { "name": "A Night at the Opera", "release_date": "1975-11-21" },
+      "release_date": "1975-11-21",
+      "duration_ms": 355000,
+      "popularity": 85,
+      "audio_features": {
+        "energy": 0.6,
+        "valence": 0.7,
+        "danceability": 0.5,
+        "acousticness": 0.3
+      },
+      "played_at": "2024-01-15T10:30:00Z"
+    },
+    {
+      "id": "track2", 
+      "name": "Blinding Lights",
+      "artist": "The Weeknd",
+      "album": { "name": "After Hours", "release_date": "2020-03-20" },
+      "release_date": "2020-03-20",
+      "duration_ms": 200040,
+      "popularity": 95,
+      "audio_features": {
+        "energy": 0.73,
+        "valence": 0.33,
+        "danceability": 0.514,
+        "acousticness": 0.001
+      },
+      "played_at": "2024-01-15T14:20:00Z"
+    },
+    {
+      "id": "track3",
+      "name": "Hotel California",
+      "artist": "Eagles", 
+      "album": { "name": "Hotel California", "release_date": "1976-12-08" },
+      "release_date": "1976-12-08",
+      "duration_ms": 391000,
+      "popularity": 78,
+      "audio_features": {
+        "energy": 0.56,
+        "valence": 0.38,
+        "danceability": 0.65,
+        "acousticness": 0.17
+      },
+      "played_at": "2024-01-15T16:45:00Z"
+    },
+    {
+      "id": "track4",
+      "name": "Shape of You",
+      "artist": "Ed Sheeran",
+      "album": { "name": "÷ (Divide)", "release_date": "2017-03-03" },
+      "release_date": "2017-03-03", 
+      "duration_ms": 233713,
+      "popularity": 89,
+      "audio_features": {
+        "energy": 0.652,
+        "valence": 0.931,
+        "danceability": 0.825,
+        "acousticness": 0.581
+      },
+      "played_at": "2024-01-15T20:15:00Z"
+    },
+    {
+      "id": "track5",
+      "name": "Stairway to Heaven",
+      "artist": "Led Zeppelin",
+      "album": { "name": "Led Zeppelin IV", "release_date": "1971-11-08" },
+      "release_date": "1971-11-08",
+      "duration_ms": 482000,
+      "popularity": 82,
+      "audio_features": {
+        "energy": 0.48,
+        "valence": 0.42,
+        "danceability": 0.38,
+        "acousticness": 0.35
+      },
+      "played_at": "2024-01-15T22:30:00Z"
+    },
+    {
+      "id": "track6",
+      "name": "Bad Guy",
+      "artist": "Billie Eilish",
+      "album": { "name": "When We All Fall Asleep, Where Do We Go?", "release_date": "2019-03-29" },
+      "release_date": "2019-03-29",
+      "duration_ms": 194088,
+      "popularity": 91,
+      "audio_features": {
+        "energy": 0.43,
+        "valence": 0.56,
+        "danceability": 0.7,
+        "acousticness": 0.12
+      },
+      "played_at": "2024-01-16T08:00:00Z"
+    },
+    {
+      "id": "track7",
+      "name": "Sweet Child O' Mine",
+      "artist": "Guns N' Roses",
+      "album": { "name": "Appetite for Destruction", "release_date": "1987-07-21" },
+      "release_date": "1987-07-21",
+      "duration_ms": 356000,
+      "popularity": 85,
+      "audio_features": {
+        "energy": 0.88,
+        "valence": 0.75,
+        "danceability": 0.52,
+        "acousticness": 0.02
+      },
+      "played_at": "2024-01-16T12:30:00Z"
+    },
+    {
+      "id": "track8",
+      "name": "Watermelon Sugar",
+      "artist": "Harry Styles",
+      "album": { "name": "Fine Line", "release_date": "2019-12-13" },
+      "release_date": "2019-12-13",
+      "duration_ms": 174000,
+      "popularity": 87,
+      "audio_features": {
+        "energy": 0.816,
+        "valence": 0.557,
+        "danceability": 0.548,
+        "acousticness": 0.122
+      },
+      "played_at": "2024-01-16T18:45:00Z"
+    },
+    {
+      "id": "track9",
+      "name": "Someone Like You",
+      "artist": "Adele",
+      "album": { "name": "21", "release_date": "2011-01-24" },
+      "release_date": "2011-01-24",
+      "duration_ms": 285000,
+      "popularity": 80,
+      "audio_features": {
+        "energy": 0.3,
+        "valence": 0.2,
+        "danceability": 0.5,
+        "acousticness": 0.9
+      },
+      "played_at": "2024-01-16T21:00:00Z"
+    },
+    {
+      "id": "track10",
+      "name": "Levitating",
+      "artist": "Dua Lipa",
+      "album": { "name": "Future Nostalgia", "release_date": "2020-03-27" },
+      "release_date": "2020-03-27",
+      "duration_ms": 203064,
+      "popularity": 92,
+      "audio_features": {
+        "energy": 0.702,
+        "valence": 0.915,
+        "danceability": 0.698,
+        "acousticness": 0.00883
+      },
+      "played_at": "2024-01-17T09:15:00Z"
+    }
+  ],
+  "artists": [
+    {
+      "id": "artist1",
+      "name": "Queen",
+      "genres": ["rock", "classic rock", "british rock"],
+      "popularity": 85,
+      "followers": 28000000
+    },
+    {
+      "id": "artist2",
+      "name": "The Weeknd", 
+      "genres": ["pop", "canadian pop", "electropop"],
+      "popularity": 95,
+      "followers": 31000000
+    },
+    {
+      "id": "artist3",
+      "name": "Eagles",
+      "genres": ["rock", "classic rock", "country rock"],
+      "popularity": 78,
+      "followers": 12000000
+    },
+    {
+      "id": "artist4",
+      "name": "Ed Sheeran",
+      "genres": ["pop", "singer-songwriter", "acoustic pop"],
+      "popularity": 89,
+      "followers": 47000000
+    },
+    {
+      "id": "artist5",
+      "name": "Led Zeppelin",
+      "genres": ["rock", "hard rock", "classic rock"],
+      "popularity": 82,
+      "followers": 15000000
+    }
+  ]
+} 
