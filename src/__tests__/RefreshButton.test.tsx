@@ -130,4 +130,27 @@ describe('RefreshButton', () => {
     const button = screen.getByRole('button');
     expect(button).toHaveClass('custom-class');
   });
+
+  it('shows blue icon color in idle state', () => {
+    render(<RefreshButton onRefresh={mockOnRefresh} />);
+    
+    const icon = screen.getByRole('button').querySelector('svg');
+    expect(icon).toHaveClass('text-blue-400');
+  });
+
+  it('shows blue icon with reduced opacity during cooldown', async () => {
+    mockOnRefresh.mockResolvedValueOnce(undefined);
+    
+    render(<RefreshButton onRefresh={mockOnRefresh} />);
+    
+    const button = screen.getByRole('button');
+    fireEvent.click(button);
+    
+    await waitFor(() => {
+      expect(mockOnRefresh).toHaveBeenCalled();
+    });
+    
+    const icon = button.querySelector('svg');
+    expect(icon).toHaveClass('text-blue-300/50');
+  });
 }); 

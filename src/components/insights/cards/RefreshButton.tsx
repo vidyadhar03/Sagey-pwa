@@ -49,10 +49,10 @@ export default function RefreshButton({ onRefresh, isLoading = false, className 
       >
         <RotateCcw 
           size={14} 
-          className={`${
+          className={`h-4 w-4 ${
             cooldown || isLoading 
-              ? 'text-zinc-500' 
-              : 'text-zinc-400 hover:text-zinc-300'
+              ? 'animate-spin text-blue-300/50' 
+              : 'text-blue-400 hover:text-blue-300'
           }`} 
         />
       </motion.div>

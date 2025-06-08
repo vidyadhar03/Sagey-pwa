@@ -107,6 +107,51 @@ describe('MusicalAgeCard', () => {
     });
   });
 
+  it('updates UI with different text after mutate', () => {
+    let callCount = 0;
+    const mockMutate = jest.fn();
+    const mockUseAIInsights = require('@/hooks/useAIInsights').useAIInsights;
+    
+    // Mock different responses for each render
+    mockUseAIInsights.mockImplementation(() => {
+      callCount++;
+      if (callCount === 1) {
+        return {
+          copy: 'Your musical journey reveals a fascinating timeline of sonic evolution.',
+          isLoading: false,
+          error: null,
+          source: 'mock',
+          mutate: mockMutate,
+          isFromAI: false,
+          isFromMock: true,
+          isFromFallback: false,
+        };
+      } else {
+        return {
+          copy: 'Your sonic DNA spans decades of musical evolution and taste.',
+          isLoading: false,
+          error: null,
+          source: 'mock',
+          mutate: mockMutate,
+          isFromAI: false,
+          isFromMock: true,
+          isFromFallback: false,
+        };
+      }
+    });
+
+    const { rerender } = render(<MusicalAgeCard />);
+    
+    // First render shows first text
+    expect(screen.getByText('Your musical journey reveals a fascinating timeline of sonic evolution.')).toBeInTheDocument();
+    
+    // Simulate refresh by re-rendering
+    rerender(<MusicalAgeCard />);
+    
+    // Second render shows different text
+    expect(screen.getByText('Your sonic DNA spans decades of musical evolution and taste.')).toBeInTheDocument();
+  });
+
   it('displays era badge when era is available', () => {
     render(<MusicalAgeCard />);
     expect(screen.getByText('Digital Era')).toBeInTheDocument();

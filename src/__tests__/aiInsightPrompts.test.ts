@@ -31,21 +31,21 @@ describe('AI Insight Prompts', () => {
     it('includes era field in the prompt', () => {
       const prompt = buildPrompt('musical_age', mockMusicalAgeData);
       
-      expect(prompt).toContain('"era": "Digital"');
-      expect(prompt).toContain('Digital Era');
+      expect(prompt).toContain('Era: Digital');
+      expect(prompt).toContain('Digital era');
     });
 
     it('includes all new fields from A2 specification', () => {
       const prompt = buildPrompt('musical_age', mockMusicalAgeData);
       
-      // Check JSON payload includes all fields (with pretty-print spacing)
-      expect(prompt).toContain('"age": 15');
-      expect(prompt).toContain('"era": "Digital"');
-      expect(prompt).toContain('"trackCount": 150');
-      expect(prompt).toContain('"stdDev": 8');
-      expect(prompt).toContain('"averageYear": 2009');
-      expect(prompt).toContain('"oldest"');
-      expect(prompt).toContain('"newest"');
+      // Check readable format includes all fields
+      expect(prompt).toContain('Musical Age: 15 years');
+      expect(prompt).toContain('Era: Digital');
+      expect(prompt).toContain('based on 150 tracks');
+      expect(prompt).toContain('Standard Deviation: 8 years');
+      expect(prompt).toContain('avg year: 2009');
+      expect(prompt).toContain('Oldest Track: "Bohemian Rhapsody"');
+      expect(prompt).toContain('Newest Track: "Blinding Lights"');
     });
 
     it('includes oldest and newest track information', () => {
@@ -60,7 +60,7 @@ describe('AI Insight Prompts', () => {
     it('includes confidence interval hint', () => {
       const prompt = buildPrompt('musical_age', mockMusicalAgeData);
       
-      expect(prompt).toContain('±8 yr confidence');
+      expect(prompt).toContain('±8yr confidence');
     });
 
     it('includes era context in examples', () => {
@@ -70,36 +70,20 @@ describe('AI Insight Prompts', () => {
       expect(prompt).toContain('era connoisseur');
     });
 
-    it('maintains proper JSON structure', () => {
+    it('maintains readable format structure', () => {
       const prompt = buildPrompt('musical_age', mockMusicalAgeData);
       
-      // Extract the JSON part between the first { and matching }
-      const startIndex = prompt.indexOf('{');
-      expect(startIndex).toBeGreaterThan(-1);
+      // Check that the prompt has proper structure with context section
+      expect(prompt).toContain('Context:');
+      expect(prompt).toContain('Requirements:');
+      expect(prompt).toContain('Examples of tone');
+      expect(prompt).toContain('Generate ONE unique caption only');
       
-      let braceCount = 0;
-      let endIndex = -1;
-      
-      for (let i = startIndex; i < prompt.length; i++) {
-        if (prompt[i] === '{') braceCount++;
-        if (prompt[i] === '}') braceCount--;
-        if (braceCount === 0) {
-          endIndex = i;
-          break;
-        }
-      }
-      
-      expect(endIndex).toBeGreaterThan(startIndex);
-      
-      const jsonStr = prompt.substring(startIndex, endIndex + 1);
-      expect(() => JSON.parse(jsonStr)).not.toThrow();
-      
-      // Verify the parsed JSON has our expected structure
-      const parsed = JSON.parse(jsonStr);
-      expect(parsed.age).toBe(15);
-      expect(parsed.era).toBe('Digital');
-      expect(parsed.oldest).toBeDefined();
-      expect(parsed.newest).toBeDefined();
+      // Verify key information is present in readable format
+      expect(prompt).toContain('Musical Age: 15');
+      expect(prompt).toContain('Era: Digital');
+      expect(prompt).toContain('Queen');
+      expect(prompt).toContain('The Weeknd');
     });
   });
 
@@ -126,7 +110,7 @@ describe('AI Insight Prompts', () => {
 
       const prompt = buildPrompt('genre_passport', mockData);
       
-      expect(prompt).toContain('15 different music genres');
+      expect(prompt).toContain('Distinct genre count: 15');
       expect(prompt).toContain('rock, pop, indie');
       expect(prompt).toContain('75/100');
     });

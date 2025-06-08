@@ -86,6 +86,7 @@ export async function POST(request: NextRequest) {
     const result = await getInsightCopy(userId, type as InsightType, payload, regenerate);
 
     console.log(`✅ Successfully generated ${type} insight`);
+    console.info(`[AI] Cache`, { cached: result.fromCache, regenerate, type });
     
     return NextResponse.json({
       copy: result.copy,

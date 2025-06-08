@@ -50,7 +50,7 @@ export async function getInsightCopy(
         }
       ],
       max_tokens: 100,
-      temperature: 0.8, // Higher creativity
+      temperature: 0.85, // Higher creativity for more variety
       top_p: 0.9,
     });
 
