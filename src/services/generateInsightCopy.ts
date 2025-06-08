@@ -36,8 +36,19 @@ export async function getInsightCopy(
     const prompt = buildPrompt(type, data);
     console.log(`📋 Prompt being sent to OpenAI (first 200 chars): "${prompt.substring(0, 200)}..."`);
     
+    // Check if OpenAI API key is available
+    const openaiKey = process.env.OPENAI_API_KEY;
+    if (!openaiKey) {
+      console.error('❌ OPENAI_API_KEY is not set in environment variables');
+      throw new Error('OPENAI_API_KEY not configured');
+    }
+    
+    console.log(`🔑 OpenAI API Key available: ${openaiKey.substring(0, 10)}...${openaiKey.substring(-5)}`);
+    
     // Call OpenAI
     const openai = getOpenAIClient();
+    console.log(`📡 Making OpenAI API call...`);
+    
     const completion = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [
@@ -57,9 +68,17 @@ export async function getInsightCopy(
 
     const generatedCopy = completion.choices[0]?.message?.content?.trim() || '';
     console.log(`🤖 OpenAI returned: "${generatedCopy}"`);
+    console.log(`📊 OpenAI response details:`, {
+      id: completion.id,
+      model: completion.model,
+      usage: completion.usage,
+      choices: completion.choices.length,
+      finishReason: completion.choices[0]?.finish_reason
+    });
     
     if (!generatedCopy) {
       console.error('❌ Empty response from OpenAI');
+      console.error('🔍 Full OpenAI response:', JSON.stringify(completion, null, 2));
       throw new Error('Empty response from OpenAI');
     }
 
@@ -73,6 +92,19 @@ export async function getInsightCopy(
   } catch (error) {
     console.error(`❌ Failed to generate ${type} insight:`, error);
     
+    // Log more details about the error
+    if (error instanceof Error) {
+      console.error(`Error name: ${error.name}`);
+      console.error(`Error message: ${error.message}`);
+      console.error(`Error stack: ${error.stack}`);
+    }
+    
+    // Check if it's an OpenAI specific error
+    if (error && typeof error === 'object' && 'status' in error) {
+      console.error(`OpenAI API Status: ${(error as any).status}`);
+      console.error(`OpenAI API Error: ${JSON.stringify(error, null, 2)}`);
+    }
+    
     // Return fallback copy based on insight type
     const fallbackCopy = getFallbackCopy(type, data);
     
@@ -84,29 +116,65 @@ export async function getInsightCopy(
 }
 
 /**
- * Fallback copy when AI generation fails
+ * Fallback copy when AI generation fails - now with variations
  */
 function getFallbackCopy(type: InsightType, data: InsightPayload): string {
+  // Add timestamp and randomization to create unique fallback responses
+  const timestamp = Date.now();
+  const randomSeed = timestamp % 1000;
+  
+  console.log(`🔄 Generating fallback copy for ${type} (seed: ${randomSeed})`);
+  
   switch (type) {
     case 'musical_age':
       const ageData = data as any;
-      return `🎵 Your musical age: ${ageData.age} years! Based on your taste for ${ageData.averageYear}s vibes ✨`;
+      const ageVariations = [
+        `🎵 Your musical age: ${ageData.age} years! Based on your taste for ${ageData.averageYear}s vibes ✨`,
+        `🎂 Musical DNA reveals: ${ageData.age} years of pure taste! Those ${ageData.averageYear}s hits shaped your soul 🎶`,
+        `⏰ Time machine detected! Musical age ${ageData.age} - you're living in ${ageData.averageYear} forever 🚀`,
+        `🎼 Age scanner complete: ${ageData.age} musical years! ${ageData.averageYear}s energy flows through you ✨`
+      ];
+      return ageVariations[randomSeed % ageVariations.length];
     
     case 'mood_ring':
       const moodData = data as any;
-      return `🌈 Your musical mood ring glows ${moodData.dominantMood.toLowerCase()}! Pure vibes detected 🎶`;
+      const moodVariations = [
+        `🌈 Your musical mood ring glows ${moodData.dominantMood.toLowerCase()}! Pure vibes detected 🎶`,
+        `💫 Emotional spectrum: ${moodData.dominantMood.toLowerCase()} energy radiates from your playlist! 🎵`,
+        `🔮 Mood analysis complete: ${moodData.dominantMood.toLowerCase()} vibes dominate your musical soul ✨`,
+        `🌟 Musical aura scan: ${moodData.dominantMood.toLowerCase()} frequencies detected! Your playlist heals 🎧`
+      ];
+      return moodVariations[randomSeed % moodVariations.length];
     
     case 'genre_passport':
       const genreData = data as any;
-      return `🗺️ Musical explorer! You've journeyed through ${genreData.totalGenres} different genres 🎵`;
+      const genreVariations = [
+        `🗺️ Musical explorer! You've journeyed through ${genreData.totalGenres} different genres 🎵`,
+        `🧭 Genre adventurer level: ${genreData.explorationScore}! ${genreData.totalGenres} musical worlds conquered ✈️`,
+        `🌍 Passport stamped in ${genreData.totalGenres} genre countries! Your musical wanderlust is real 🎶`,
+        `🎫 Genre collection: ${genreData.totalGenres} unique stamps! True musical world traveler detected ✨`
+      ];
+      return genreVariations[randomSeed % genreVariations.length];
     
     case 'night_owl_pattern':
       const timeData = data as any;
       const isNight = timeData.isNightOwl;
-      return `${isNight ? '🌙' : '☀️'} ${isNight ? 'Night owl' : 'Early bird'} musical energy detected! Peak listening powers activated 🎶`;
+      const nightVariations = [
+        `${isNight ? '🌙' : '☀️'} ${isNight ? 'Night owl' : 'Early bird'} musical energy detected! Peak listening powers activated 🎶`,
+        `${isNight ? '🦉' : '🐓'} Musical rhythm: ${isNight ? 'nocturnal' : 'morning'} vibes! Peak hour: ${timeData.peakHour}:00 ✨`,
+        `${isNight ? '🌟' : '🌅'} ${isNight ? 'After-hours' : 'Dawn'} playlist champion! Your music hits different at ${timeData.peakHour}:00 🎵`,
+        `${isNight ? '🌆' : '🌄'} ${isNight ? 'Midnight' : 'Sunrise'} soundtrack master! Peak musical powers: ${timeData.peakHour}:00 🎧`
+      ];
+      return nightVariations[randomSeed % nightVariations.length];
     
     default:
-      return '🎵 Your musical DNA is truly unique! Keep exploring those beats ✨';
+      const defaultVariations = [
+        '🎵 Your musical DNA is truly unique! Keep exploring those beats ✨',
+        '🎶 Musical genius detected! Your taste is one-of-a-kind 🌟',
+        '🎧 Sonic explorer! Your playlist tells an amazing story ✨',
+        '🎼 Musical architect! You build soundscapes like art 🎨'
+      ];
+      return defaultVariations[randomSeed % defaultVariations.length];
   }
 }
 
@@ -114,7 +182,19 @@ function getFallbackCopy(type: InsightType, data: InsightPayload): string {
  * Check if AI generation is available
  */
 export function isAIEnabled(): boolean {
-  return !!(process.env.OPENAI_API_KEY && process.env.NEXT_PUBLIC_DISABLE_AI !== 'true');
+  const hasKey = !!process.env.OPENAI_API_KEY;
+  const isDisabled = process.env.NEXT_PUBLIC_DISABLE_AI === 'true';
+  const result = hasKey && !isDisabled;
+  
+  console.log('🔍 AI Environment Check:', {
+    hasOpenAIKey: hasKey,
+    keyPrefix: process.env.OPENAI_API_KEY?.substring(0, 10) + '...',
+    disableFlag: process.env.NEXT_PUBLIC_DISABLE_AI,
+    isDisabled,
+    finalResult: result
+  });
+  
+  return result;
 }
 
 /**
