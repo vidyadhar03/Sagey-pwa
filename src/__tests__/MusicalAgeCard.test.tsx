@@ -7,12 +7,17 @@ jest.mock('@/hooks/useSpotifyInsights', () => ({
     insights: {
       musicalAge: {
         age: 13,
-        averageYear: 2012,
-        description: 'Your music taste spans 13 years of musical history',
-        oldest: 1971,
-        newest: 2024,
-        trackCount: 10,
         era: 'Digital',
+        trackCount: 10,
+        averageYear: 2012,
+        stdDev: 8,
+        oldest: { title: 'Bohemian Rhapsody', artist: 'Queen', year: 1975 },
+        newest: { title: 'Blinding Lights', artist: 'The Weeknd', year: 2020 },
+        decadeBuckets: [
+          { decade: 1970, weight: 5.2 },
+          { decade: 2010, weight: 25.3 }
+        ],
+        description: 'Your music taste spans 13 years of musical history',
       },
       isDefault: false,
     },

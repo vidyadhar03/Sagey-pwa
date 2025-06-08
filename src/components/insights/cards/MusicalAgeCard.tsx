@@ -15,12 +15,8 @@ export default function MusicalAgeCard() {
   const payload = insights.musicalAge;
   const isFallback = payload.trackCount === 0 || insights.isDefault;
 
-  // AI insights for musical age
-  const aiInsights = useAIInsights('musical_age', {
-    age: payload.age,
-    averageYear: payload.averageYear,
-    description: payload.description,
-  }, !isFallback); // Only fetch AI when we have real data
+  // AI insights for musical age - pass the full payload now that it includes all fields
+  const aiInsights = useAIInsights('musical_age', payload, !isFallback); // Only fetch AI when we have real data
 
   // Rolling number animation
   useEffect(() => {

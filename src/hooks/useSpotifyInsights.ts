@@ -2,17 +2,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useSpotify } from './useSpotify';
+import { getMusicalAgePayload, getMoodRingPayload, getGenrePassportPayload, getNightOwlPayload, type MusicalAgePayload } from '../utils/insightSelectors';
 
 // Match the interface from useMockInsights.ts for compatibility
 export interface SpotifyInsightsData {
-  musicalAge: {
-    age: number;
-    description: string;
-    averageYear: number;
-    oldest: number;
-    newest: number;
-    trackCount: number;
-  };
+  musicalAge: MusicalAgePayload;
   moodRing: {
     emotions: {
       happy: number;
@@ -44,11 +38,14 @@ export interface SpotifyInsightsData {
 const DEFAULT_INSIGHTS: SpotifyInsightsData = {
   musicalAge: {
     age: 0,
-    description: "Connect Spotify to discover your musical age",
+    era: 'Streaming',
+    trackCount: 0,
     averageYear: new Date().getFullYear(),
-    oldest: new Date().getFullYear(),
-    newest: new Date().getFullYear(),
-    trackCount: 0
+    stdDev: 0,
+    oldest: { title: 'Connect Spotify', artist: 'to unlock insights', year: new Date().getFullYear() },
+    newest: { title: 'Connect Spotify', artist: 'to unlock insights', year: new Date().getFullYear() },
+    decadeBuckets: [],
+    description: 'Connect Spotify to discover your musical age'
   },
   moodRing: {
     emotions: { happy: 0, energetic: 0, chill: 0, melancholy: 0 },
@@ -85,136 +82,6 @@ export function useSpotifyInsights() {
 
   // Circuit breaker: prevent API spam by enforcing minimum time between calls
   const MIN_LOAD_INTERVAL = 2000; // 2 seconds minimum between loads
-
-  // Calculate musical age from track data
-  const calculateMusicalAge = useCallback((tracks: any[]) => {
-    console.error('🎂 SAGEY DEBUG: calculateMusicalAge - processing', tracks?.length, 'tracks');
-    
-    if (!tracks || tracks.length === 0) {
-      console.error('❌ SAGEY DEBUG: calculateMusicalAge - No tracks provided');
-      return DEFAULT_INSIGHTS.musicalAge;
-    }
-
-    console.error('🔍 SAGEY DEBUG: Extracting release years from track data...');
-    
-    const releaseYears: number[] = [];
-    
-    tracks.forEach((track, index) => {
-      try {
-        // Handle different track structures and ensure track exists
-        if (!track) {
-          if (index < 3) {
-            console.error(`SAGEY DEBUG: ❌ Track ${index + 1} is null/undefined`);
-          }
-          return;
-        }
-
-        const actualTrack = (track as any).track || track;
-        
-        // Ensure actualTrack exists before accessing properties
-        if (!actualTrack) {
-          if (index < 3) {
-            console.error(`SAGEY DEBUG: ❌ ActualTrack ${index + 1} is null/undefined`);
-          }
-          return;
-        }
-
-        const album = actualTrack.album;
-        
-        if (index < 3) { // Log first 3 tracks for debugging
-          console.error(`SAGEY DEBUG Track ${index + 1}:`, {
-            name: actualTrack?.name,
-            hasAlbum: !!album,
-            albumType: typeof album,
-            releaseDate: album?.release_date,
-            fullAlbum: album
-          });
-        }
-        
-        // Extract release date from album - handle both string and object album types
-        let releaseDate = null;
-        if (album) {
-          if (typeof album === 'string') {
-            // Some APIs might return album name as string
-            if (index < 3) {
-              console.error(`SAGEY DEBUG: ❌ Album is string (name only) for track:`, actualTrack?.name);
-            }
-          } else if (typeof album === 'object' && album.release_date) {
-            releaseDate = album.release_date;
-          }
-        }
-        
-        if (releaseDate && typeof releaseDate === 'string' && releaseDate.length >= 4) {
-          const year = parseInt(releaseDate.substring(0, 4));
-          if (year > 1900 && year <= new Date().getFullYear()) {
-            releaseYears.push(year);
-            if (index < 3) {
-              console.error(`SAGEY DEBUG: ✅ Valid year ${year} extracted from track:`, actualTrack?.name);
-            }
-          } else if (index < 3) {
-            console.error(`SAGEY DEBUG: ❌ Invalid year ${year} for track:`, actualTrack?.name);
-          }
-        } else if (index < 3) {
-          console.error(`SAGEY DEBUG: ❌ No valid release date for track:`, actualTrack?.name, 'Found:', releaseDate);
-        }
-      } catch (error) {
-        if (index < 3) {
-          console.error(`SAGEY DEBUG: ❌ Error processing track ${index + 1}:`, error);
-        }
-      }
-    });
-
-    console.error('📊 SAGEY DEBUG: Release years extracted:', {
-      totalTracks: tracks.length,
-      validYears: releaseYears.length,
-      yearRange: releaseYears.length > 0 ? 
-        `${Math.min(...releaseYears)}-${Math.max(...releaseYears)}` : 'none',
-      firstFewYears: releaseYears.slice(0, 10)
-    });
-
-    if (releaseYears.length === 0) {
-      console.error('❌ SAGEY DEBUG: No valid release years found - using current year as fallback');
-      const currentYear = new Date().getFullYear();
-      return {
-        age: 0,
-        description: "Connect Spotify to discover your musical age",
-        averageYear: currentYear,
-        oldest: currentYear,
-        newest: currentYear,
-        trackCount: tracks.length
-      };
-    }
-
-    const averageYear = Math.round(releaseYears.reduce((sum, year) => sum + year, 0) / releaseYears.length);
-    const currentYear = new Date().getFullYear();
-    const age = Math.max(0, currentYear - averageYear);
-    const oldest = Math.min(...releaseYears);
-    const newest = Math.max(...releaseYears);
-
-    let description = "Your music taste spans multiple eras";
-    if (age < 5) description = "Your taste is cutting-edge and contemporary";
-    else if (age < 15) description = "You have a modern musical palette";
-    else if (age < 25) description = "Your taste reflects the golden era of digital music";
-    else description = "You appreciate the classics and timeless hits";
-
-    const result = {
-      age,
-      description,
-      averageYear,
-      oldest,
-      newest,
-      trackCount: tracks.length
-    };
-
-    console.error('✅ SAGEY DEBUG: Musical Age calculated successfully!', {
-      age: result.age,
-      averageYear: result.averageYear,
-      trackCount: result.trackCount,
-      validYearsCount: releaseYears.length
-    });
-    
-    return result;
-  }, []);
 
   // Calculate mood distribution from audio features
   const calculateMoodRing = useCallback(async (tracks: any[]) => {
@@ -539,13 +406,15 @@ export function useSpotifyInsights() {
 
       // Calculate Musical Age first (no API calls needed) - ADD DEBUGGING INFO TO DESCRIPTION
       console.error('🎂 SAGEY DEBUG: Starting Musical Age calculation with', tracksToAnalyze.length, 'tracks...');
-      const musicalAge = calculateMusicalAge(tracksToAnalyze);
+      const musicalAge = getMusicalAgePayload({ tracks: tracksToAnalyze });
       
       console.error('🎂 SAGEY DEBUG: Musical Age result:', {
         age: musicalAge.age,
+        era: musicalAge.era,
         description: musicalAge.description,
         trackCount: musicalAge.trackCount,
-        averageYear: musicalAge.averageYear
+        averageYear: musicalAge.averageYear,
+        stdDev: musicalAge.stdDev
       });
 
       // Calculate Genre Passport (uses artist data, should work)
@@ -599,7 +468,7 @@ export function useSpotifyInsights() {
     } finally {
       setIsLoading(false);
     }
-  }, [connected, getRecentTracks, getTopTracks, calculateMusicalAge, calculateMoodRing, calculateGenrePassport, calculateNightOwlPattern, lastLoadTime]);
+  }, [connected, getRecentTracks, getTopTracks, calculateMoodRing, calculateGenrePassport, calculateNightOwlPattern, lastLoadTime]);
 
   // Fixed useEffect - only depend on connected, not loadInsights to prevent infinite loop
   useEffect(() => {
