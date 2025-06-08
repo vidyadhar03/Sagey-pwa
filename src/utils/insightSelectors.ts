@@ -1,12 +1,23 @@
 // Insight selectors for calculating musical insights from Spotify data
 
+import { weightedMedianReleaseYear, weightedStandardDeviation, WeightedData } from './stats';
+
+export interface TrackBrief {
+  title: string;
+  artist: string;
+  year: number;
+}
+
 export interface MusicalAgePayload {
   age: number;
-  averageYear: number;
-  description: string;
-  oldest: number;
-  newest: number;
+  era: "Vinyl" | "Analog" | "Digital" | "Streaming";
   trackCount: number;
+  averageYear: number;
+  stdDev: number;
+  oldest: TrackBrief;
+  newest: TrackBrief;
+  decadeBuckets: { decade: number; weight: number }[];
+  description: string;
 }
 
 export interface MoodRingPayload {
@@ -41,51 +52,165 @@ export function getMusicalAgePayload(data: any): MusicalAgePayload {
   const tracks = data.tracks || [];
   
   if (tracks.length === 0) {
+    const currentYear = new Date().getFullYear();
     return {
       age: 0,
-      averageYear: new Date().getFullYear(),
+      averageYear: currentYear,
       description: 'No tracks available',
-      oldest: new Date().getFullYear(),
-      newest: new Date().getFullYear(),
-      trackCount: 0
+      oldest: { title: '', artist: '', year: currentYear },
+      newest: { title: '', artist: '', year: currentYear },
+      trackCount: 0,
+      era: 'Streaming',
+      stdDev: 0,
+      decadeBuckets: []
     };
   }
 
-  const releaseYears = tracks
-    .map((track: any) => {
-      const releaseDate = track.release_date || track.album?.release_date;
-      return releaseDate ? new Date(releaseDate).getFullYear() : null;
+  // Sample last 200 plays with ≥30s duration
+  const validTracks = tracks
+    .filter((track: any) => {
+      const duration = track.duration_ms || 0;
+      return duration >= 30000; // 30 seconds in milliseconds
     })
-    .filter((year: number | null): year is number => year !== null);
+    .slice(0, 200);
 
-  if (releaseYears.length === 0) {
+  if (validTracks.length === 0) {
+    const currentYear = new Date().getFullYear();
     return {
       age: 0,
-      averageYear: new Date().getFullYear(),
-      description: 'No valid release dates',
-      oldest: new Date().getFullYear(),
-      newest: new Date().getFullYear(),
-      trackCount: tracks.length
+      averageYear: currentYear,
+      description: 'No valid tracks',
+      oldest: { title: '', artist: '', year: currentYear },
+      newest: { title: '', artist: '', year: currentYear },
+      trackCount: 0,
+      era: 'Streaming',
+      stdDev: 0,
+      decadeBuckets: []
     };
   }
 
-  // Calculate average year
-  const averageYear = Math.round(releaseYears.reduce((sum: number, year: number) => sum + year, 0) / releaseYears.length);
-  
-  // Calculate musical age (current year - average year)
-  const currentYear = new Date().getFullYear();
-  const age = Math.max(0, currentYear - averageYear);
+  // Group tracks by ID and calculate play counts and last play dates
+  const trackGroups = new Map<string, {
+    track: any;
+    playCount: number;
+    lastPlayedAt: Date;
+    year: number;
+  }>();
 
-  const oldest = Math.min(...releaseYears);
-  const newest = Math.max(...releaseYears);
+  const now = new Date();
+
+  validTracks.forEach((track: any) => {
+    const trackId = track.id || `${track.name}-${track.artist || track.artists?.[0]?.name}`;
+    const releaseDate = track.release_date || track.album?.release_date;
+    const year = releaseDate ? new Date(releaseDate).getFullYear() : new Date().getFullYear();
+    const playedAt = track.played_at ? new Date(track.played_at) : now;
+
+    if (!trackGroups.has(trackId)) {
+      trackGroups.set(trackId, {
+        track,
+        playCount: 0,
+        lastPlayedAt: playedAt,
+        year
+      });
+    }
+
+    const group = trackGroups.get(trackId)!;
+    group.playCount++;
+    if (playedAt > group.lastPlayedAt) {
+      group.lastPlayedAt = playedAt;
+    }
+  });
+
+  // Calculate weights and prepare data for weighted calculations
+  const weightedData: WeightedData[] = [];
+  let totalWeight = 0;
+  let weightedYearSum = 0;
+
+  Array.from(trackGroups.values()).forEach(group => {
+    const deltasDays = Math.max(0, (now.getTime() - group.lastPlayedAt.getTime()) / (1000 * 60 * 60 * 24));
+    const weight = group.playCount * Math.exp(-deltasDays / 60); // λ = 60 days
+    
+    weightedData.push({ year: group.year, weight });
+    totalWeight += weight;
+    weightedYearSum += group.year * weight;
+  });
+
+  if (totalWeight === 0) {
+    const currentYear = new Date().getFullYear();
+    return {
+      age: 0,
+      averageYear: currentYear,
+      description: 'No weighted data available',
+      oldest: { title: '', artist: '', year: currentYear },
+      newest: { title: '', artist: '', year: currentYear },
+      trackCount: validTracks.length,
+      era: 'Streaming',
+      stdDev: 0,
+      decadeBuckets: []
+    };
+  }
+
+  // Calculate core stats
+  const medianYear = weightedMedianReleaseYear(weightedData);
+  const currentYear = new Date().getFullYear();
+  const age = Math.max(0, Math.round(currentYear - medianYear));
+  const averageYear = Math.round(weightedYearSum / totalWeight);
+  const stdDev = Math.round(weightedStandardDeviation(weightedData, averageYear));
+
+  // Find oldest and newest tracks
+  const sortedGroups = Array.from(trackGroups.values()).sort((a, b) => a.year - b.year);
+  const oldestGroup = sortedGroups[0];
+  const newestGroup = sortedGroups[sortedGroups.length - 1];
+
+  const oldest: TrackBrief = {
+    title: oldestGroup.track.name || 'Unknown',
+    artist: oldestGroup.track.artist || oldestGroup.track.artists?.[0]?.name || 'Unknown Artist',
+    year: oldestGroup.year
+  };
+
+  const newest: TrackBrief = {
+    title: newestGroup.track.name || 'Unknown',
+    artist: newestGroup.track.artist || newestGroup.track.artists?.[0]?.name || 'Unknown Artist',
+    year: newestGroup.year
+  };
+
+  // Calculate decade buckets
+  const decadeBuckets: { decade: number; weight: number }[] = [];
+  const decadeWeights = new Map<number, number>();
+
+  weightedData.forEach(({ year, weight }) => {
+    const decade = Math.floor(year / 10) * 10;
+    decadeWeights.set(decade, (decadeWeights.get(decade) || 0) + weight);
+  });
+
+  Array.from(decadeWeights.entries())
+    .sort(([a], [b]) => a - b)
+    .forEach(([decade, weight]) => {
+      decadeBuckets.push({ decade, weight: Math.round(weight * 100) / 100 });
+    });
+
+  // Determine era based on median year
+  let era: "Vinyl" | "Analog" | "Digital" | "Streaming";
+  if (medianYear < 1970) {
+    era = "Vinyl";
+  } else if (medianYear < 1990) {
+    era = "Analog";
+  } else if (medianYear < 2010) {
+    era = "Digital";
+  } else {
+    era = "Streaming";
+  }
 
   return {
     age,
+    era,
+    trackCount: validTracks.length,
     averageYear,
-    description: `Your music taste spans ${age} years of musical history`,
+    stdDev,
     oldest,
     newest,
-    trackCount: tracks.length
+    decadeBuckets,
+    description: `Your music taste spans ${age} years of musical history`
   };
 }
 

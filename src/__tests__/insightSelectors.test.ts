@@ -8,14 +8,62 @@ import sampleData from './fixtures/sampleSpotifyData.json';
 
 describe('Insight Selectors', () => {
   describe('getMusicalAgePayload', () => {
-    it('computes musical age correctly', () => {
+    it('computes musical age correctly with new algorithm', () => {
       const result = getMusicalAgePayload(sampleData);
       
       expect(result.age).toBeGreaterThan(0);
       expect(result.averageYear).toBeGreaterThan(1950);
       expect(result.averageYear).toBeLessThan(2025);
       expect(result.trackCount).toBe(10);
-      expect(result.oldest).toBeLessThanOrEqual(result.newest);
+      expect(result.oldest.year).toBeLessThanOrEqual(result.newest.year);
+    });
+
+    it('includes all new fields from A2 specification', () => {
+      const result = getMusicalAgePayload(sampleData);
+      
+      // Test era field
+      expect(['Vinyl', 'Analog', 'Digital', 'Streaming']).toContain(result.era);
+      
+      // Test stdDev
+      expect(typeof result.stdDev).toBe('number');
+      expect(result.stdDev).toBeGreaterThanOrEqual(0);
+      
+      // Test oldest/newest as TrackBrief objects
+      expect(result.oldest).toHaveProperty('title');
+      expect(result.oldest).toHaveProperty('artist'); 
+      expect(result.oldest).toHaveProperty('year');
+      expect(result.newest).toHaveProperty('title');
+      expect(result.newest).toHaveProperty('artist');
+      expect(result.newest).toHaveProperty('year');
+      
+      // Test decadeBuckets
+      expect(Array.isArray(result.decadeBuckets)).toBe(true);
+      expect(result.decadeBuckets.length).toBeGreaterThan(0);
+      result.decadeBuckets.forEach(bucket => {
+        expect(bucket).toHaveProperty('decade');
+        expect(bucket).toHaveProperty('weight');
+        expect(typeof bucket.decade).toBe('number');
+        expect(typeof bucket.weight).toBe('number');
+      });
+    });
+
+    it('processes fixture data correctly (10 tracks spanning 1971-2020)', () => {
+      const result = getMusicalAgePayload(sampleData);
+      
+      expect(result.trackCount).toBe(10);
+      expect(result.decadeBuckets.length).toBeGreaterThanOrEqual(3); // 1970s, 1980s, 2010s, 2020s
+      expect(result.stdDev).toBeGreaterThan(0); // Should have variance
+      
+      // Era should match median year rule - sample data is mostly modern
+      expect(['Digital', 'Streaming']).toContain(result.era);
+      
+      // Oldest should be from 1971 (Stairway to Heaven)
+      expect(result.oldest.year).toBe(1971);
+      expect(result.oldest.title).toBe('Stairway to Heaven');
+      expect(result.oldest.artist).toBe('Led Zeppelin');
+      
+      // Newest should be from 2020 (Blinding Lights or Levitating)
+      expect(result.newest.year).toBe(2020);
     });
 
     it('handles empty track data', () => {
@@ -24,14 +72,61 @@ describe('Insight Selectors', () => {
       expect(result.age).toBe(0);
       expect(result.trackCount).toBe(0);
       expect(result.description).toBe('No tracks available');
+      expect(result.era).toBe('Streaming');
+      expect(result.stdDev).toBe(0);
+      expect(result.decadeBuckets).toHaveLength(0);
+      expect(result.oldest.title).toBe('');
+      expect(result.newest.title).toBe('');
     });
 
-    it('calculates average year from release dates', () => {
+    it('filters tracks by duration (≥30s)', () => {
+      const dataWithShortTracks = {
+        tracks: [
+          ...sampleData.tracks,
+          {
+            id: 'short1',
+            name: 'Short Track',
+            artist: 'Test Artist',
+            album: { name: 'Test Album', release_date: '2020-01-01' },
+            release_date: '2020-01-01',
+            duration_ms: 15000, // 15 seconds - should be filtered out
+            played_at: '2024-01-15T10:00:00Z'
+          }
+        ]
+      };
+      
+      const result = getMusicalAgePayload(dataWithShortTracks);
+      
+      // Should still be 10 tracks (short track filtered out)
+      expect(result.trackCount).toBe(10);
+    });
+
+    it('handles tracks without played_at timestamps', () => {
+      const dataWithoutTimestamps = {
+        tracks: sampleData.tracks.map(track => ({
+          ...track,
+          played_at: undefined
+        }))
+      };
+      
+      const result = getMusicalAgePayload(dataWithoutTimestamps);
+      
+      expect(result.trackCount).toBe(10);
+      expect(result.age).toBeGreaterThanOrEqual(0);
+      expect(result.decadeBuckets.length).toBeGreaterThan(0);
+    });
+
+    it('calculates weighted statistics correctly', () => {
       const result = getMusicalAgePayload(sampleData);
       
-      // Our sample data spans 1971-2020, average should be around 1990s
-      expect(result.averageYear).toBeGreaterThan(1980);
-      expect(result.averageYear).toBeLessThan(2010);
+      // Should use weighted median, not simple average
+      expect(result.age).toBeGreaterThan(0);
+      expect(result.averageYear).toBeGreaterThan(1970);
+      expect(result.averageYear).toBeLessThan(2025);
+      
+      // Standard deviation should reflect the spread in years
+      expect(result.stdDev).toBeGreaterThan(0);
+      expect(result.stdDev).toBeLessThan(100); // Reasonable bound
     });
   });
 
