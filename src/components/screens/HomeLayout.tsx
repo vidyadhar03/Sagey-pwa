@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import MusicalAgeEstimator from '../MusicalAgeEstimator';
 import UserProfile from '../UserProfile';
 import SpotifyDebugPanel from '../SpotifyDebugPanel';
 import TopAppBar from '../TopAppBar';
@@ -397,18 +396,6 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                 </div>
               )}
             </motion.section>
-
-            {/* Musical Age Section */}
-            {connected && (
-              <motion.section
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="mb-8"
-              >
-                <MusicalAgeEstimator />
-              </motion.section>
-            )}
 
             {/* Data Display Section - Only show if connected */}
             {connected && (
