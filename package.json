@@ -4,10 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "cross-env NEXT_TELEMETRY_DISABLED=1 next dev -H 0.0.0.0",
-    "build": "npm run cleanup && cross-env NODE_OPTIONS=\"--max-old-space-size=8192 --no-warnings\" NEXT_TELEMETRY_DISABLED=1 DISABLE_OPENCOLLECTIVE=1 CI=true next build",
+    "build": "pnpm run cleanup && cross-env NODE_OPTIONS=\"--max-old-space-size=8192 --no-warnings\" NEXT_TELEMETRY_DISABLED=1 DISABLE_OPENCOLLECTIVE=1 CI=true next build",
     "build:standard": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192 --no-warnings\" NEXT_TELEMETRY_DISABLED=1 DISABLE_OPENCOLLECTIVE=1 CI=true next build",
     "build:debug": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192 --no-warnings --inspect\" NEXT_TELEMETRY_DISABLED=1 DISABLE_OPENCOLLECTIVE=1 CI=true next build",
-    "build:clean": "npm run cleanup && npm run build",
+    "build:clean": "pnpm run cleanup && pnpm run build",
     "build:windows": "powershell -ExecutionPolicy Bypass -File build-windows.ps1",
     "start": "cross-env NEXT_TELEMETRY_DISABLED=1 next start",
     "test": "jest --passWithNoTests",
@@ -16,9 +16,8 @@
     "lint": "next lint --fix",
     "lint:check": "next lint",
     "cleanup": "node scripts/cleanup.js",
-    "clean": "npm run cleanup",
-    "clean:all": "npm run cleanup && rimraf node_modules package-lock.json && npm cache clean --force",
-    "postinstall": "npm audit fix --force || true"
+    "clean": "pnpm run cleanup",
+    "clean:all": "pnpm run cleanup && rimraf node_modules pnpm-lock.yaml && pnpm store prune"
   },
   "dependencies": {
     "framer-motion": "^12.12.1",
