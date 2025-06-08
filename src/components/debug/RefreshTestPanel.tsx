@@ -25,12 +25,9 @@ export default function RefreshTestPanel({ enabled = false }: RefreshTestPanelPr
       const mockPayload = {
         musical_age: {
           age: 25,
-          era: "Digital",
-          trackCount: 150,
-          stdDev: 8,
           averageYear: 2015,
-          oldest: { title: "Bohemian Rhapsody", artist: "Queen" },
-          newest: { title: "As It Was", artist: "Harry Styles" }
+          description: "Your music taste spans decades of musical evolution and creativity",
+          actualAge: 30
         },
         mood_ring: {
           emotions: { happy: 40, energetic: 30, chill: 20, melancholy: 10 },
