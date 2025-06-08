@@ -5,17 +5,25 @@ import { motion, AnimatePresence } from 'framer-motion';
 import InsightCard from './InsightCard';
 import InsightSkeleton from './InsightSkeleton';
 import { useSpotifyInsights } from '../../../hooks/useSpotifyInsights';
+import { useAIInsights } from '../../../hooks/useAIInsights';
 
 export default function GenrePassportCard() {
   const { insights, isLoading } = useSpotifyInsights();
   const [showModal, setShowModal] = useState(false);
 
+  const payload = insights.genrePassport;
+  const isFallback = (payload?.totalGenres === 0 || insights.isDefault) ?? true;
+
+  // AI Insights - Only fetch when not in fallback mode
+  const { copy, isLoading: aiLoading, error: aiError } = useAIInsights(
+    'genre_passport', 
+    payload,
+    !isFallback && !isLoading // Pass enabled flag as third parameter
+  );
+
   if (isLoading) {
     return <InsightSkeleton />;
   }
-
-  const payload = insights.genrePassport;
-  const isFallback = payload.totalGenres === 0 || insights.isDefault;
 
   const handleShare = () => {
     console.log('Sharing Genre Passport insight...');
@@ -93,6 +101,49 @@ export default function GenrePassportCard() {
           </p>
           <p className="text-zinc-400 text-sm">Your taste spans {payload.totalGenres} genres</p>
         </motion.div>
+
+        {/* AI Generated Copy */}
+        {!isFallback && !aiLoading && !aiError && copy && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+            className="bg-white/5 rounded-xl p-4 mb-4 border border-white/10"
+          >
+            <p className="text-sm leading-snug">{copy}</p>
+            <span className="mt-1 inline-flex items-center gap-1 text-xs text-zinc-400">
+              ✨ AI Generated
+            </span>
+          </motion.div>
+        )}
+
+        {/* Loading skeleton for AI */}
+        {!isFallback && aiLoading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="bg-white/5 rounded-xl p-4 mb-4 border border-white/10"
+          >
+            <div className="animate-pulse">
+              <div className="h-4 bg-white/10 rounded w-3/4 mb-2"></div>
+              <div className="h-4 bg-white/10 rounded w-1/2"></div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Error state */}
+        {!isFallback && aiError && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="bg-white/5 rounded-xl p-4 mb-4 border border-white/10"
+          >
+            <p className="text-sm leading-snug text-zinc-400">We&apos;re speechless 🤫</p>
+            <span className="mt-1 inline-flex items-center gap-1 text-xs text-zinc-500">
+              ✨ AI Generated
+            </span>
+          </motion.div>
+        )}
 
         {/* Exploration Score */}
         <motion.div

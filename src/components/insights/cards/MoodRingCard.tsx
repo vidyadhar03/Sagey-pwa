@@ -5,16 +5,24 @@ import { motion } from 'framer-motion';
 import InsightCard from './InsightCard';
 import InsightSkeleton from './InsightSkeleton';
 import { useSpotifyInsights } from '../../../hooks/useSpotifyInsights';
+import { useAIInsights } from '../../../hooks/useAIInsights';
 
 export default function MoodRingCard() {
   const { insights, isLoading } = useSpotifyInsights();
 
+  const payload = insights.moodRing;
+  const isFallback = (payload?.distribution?.length === 0 || insights.isDefault) ?? true;
+
+  // AI Insights - Only fetch when not in fallback mode
+  const { copy, isLoading: aiLoading, error: aiError } = useAIInsights(
+    'mood_ring', 
+    payload,
+    !isFallback && !isLoading // Pass enabled flag as third parameter
+  );
+
   if (isLoading) {
     return <InsightSkeleton />;
   }
-
-  const payload = insights.moodRing;
-  const isFallback = payload.distribution.length === 0 || insights.isDefault;
 
   const handleShare = () => {
     console.log('Sharing Mood Ring insight...');
@@ -35,7 +43,7 @@ export default function MoodRingCard() {
   };
 
   // Calculate segments with angles
-  const segments = Object.entries(emotions).map(([emotion, value], index) => {
+      const segments = Object.entries(emotions).map(([emotion, value]) => {
     const percentage = total > 0 ? (value / total) * 100 : 0;
     const angle = total > 0 ? (value / total) * 360 : 0;
     return { emotion, value, percentage, angle };
@@ -48,7 +56,7 @@ export default function MoodRingCard() {
 
   // Calculate path data for each segment
   let accumulatedAngle = 0;
-  const pathSegments = segments.map((segment, index) => {
+  const pathSegments = segments.map((segment) => {
     const startAngle = accumulatedAngle;
     const endAngle = accumulatedAngle + segment.angle;
     
@@ -136,7 +144,7 @@ export default function MoodRingCard() {
             </defs>
             
             {/* Animated segments */}
-            {!isFallback && pathSegments.map((segment, index) => (
+            {!isFallback && pathSegments.map((segment, segmentIndex) => (
               <motion.path
                 key={segment.emotion}
                 d={segment.pathData}
@@ -153,7 +161,7 @@ export default function MoodRingCard() {
                   scale: 1,
                 }}
                 transition={{ 
-                  delay: 0.6 + index * 0.2, 
+                  delay: 0.6 + segmentIndex * 0.2, 
                   duration: 0.8,
                   ease: "easeOut"
                 }}
@@ -201,25 +209,25 @@ export default function MoodRingCard() {
           {/* Floating particles */}
           {!isFallback && (
             <div className="absolute inset-0">
-              {[...Array(8)].map((_, i) => (
+              {[...Array(8)].map((_, particleIndex) => (
                 <motion.div
-                  key={i}
+                  key={particleIndex}
                   className="absolute w-1 h-1 rounded-full"
                   style={{
-                    backgroundColor: colors[Object.keys(colors)[i % 4] as keyof typeof colors],
+                    backgroundColor: colors[Object.keys(colors)[particleIndex % 4] as keyof typeof colors],
                     opacity: 0.6,
                     left: '50%',
                     top: '50%',
                     transform: 'translate(-50%, -50%)'
                   }}
                   animate={{
-                    x: [0, Math.cos(i * 45 * Math.PI / 180) * 100],
-                    y: [0, Math.sin(i * 45 * Math.PI / 180) * 100],
+                    x: [0, Math.cos(particleIndex * 45 * Math.PI / 180) * 100],
+                    y: [0, Math.sin(particleIndex * 45 * Math.PI / 180) * 100],
                     opacity: [0.6, 0, 0.6],
                     scale: [1, 1.5, 1]
                   }}
                   transition={{
-                    duration: 4 + i * 0.5,
+                    duration: 4 + particleIndex * 0.5,
                     repeat: Infinity,
                     ease: "linear"
                   }}
@@ -247,6 +255,49 @@ export default function MoodRingCard() {
         </motion.h3>
         <p className="text-zinc-400 text-sm">Your musical vibe</p>
       </motion.div>
+
+      {/* AI Generated Copy */}
+      {!isFallback && !aiLoading && !aiError && copy && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="bg-white/5 rounded-xl p-4 mb-6 border border-white/10"
+        >
+          <p className="text-sm leading-snug">{copy}</p>
+          <span className="mt-1 inline-flex items-center gap-1 text-xs text-zinc-400">
+            ✨ AI Generated
+          </span>
+        </motion.div>
+      )}
+
+      {/* Loading skeleton for AI */}
+      {!isFallback && aiLoading && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="bg-white/5 rounded-xl p-4 mb-6 border border-white/10"
+        >
+          <div className="animate-pulse">
+            <div className="h-4 bg-white/10 rounded w-3/4 mb-2"></div>
+            <div className="h-4 bg-white/10 rounded w-1/2"></div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Error state */}
+      {!isFallback && aiError && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="bg-white/5 rounded-xl p-4 mb-6 border border-white/10"
+        >
+          <p className="text-sm leading-snug text-zinc-400">We&apos;re speechless 🤫</p>
+          <span className="mt-1 inline-flex items-center gap-1 text-xs text-zinc-500">
+            ✨ AI Generated
+          </span>
+        </motion.div>
+      )}
 
       {/* Clean Legend with Percentages */}
       <motion.div

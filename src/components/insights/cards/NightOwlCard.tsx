@@ -5,16 +5,24 @@ import { motion } from 'framer-motion';
 import InsightCard from './InsightCard';
 import InsightSkeleton from './InsightSkeleton';
 import { useSpotifyInsights } from '../../../hooks/useSpotifyInsights';
+import { useAIInsights } from '../../../hooks/useAIInsights';
 
 export default function NightOwlCard() {
   const { insights, isLoading } = useSpotifyInsights();
 
+  const payload = insights.nightOwlPattern;
+  const isFallback = (payload?.histogram?.every(val => val === 0) || insights.isDefault) ?? true;
+
+  // AI Insights - Only fetch when not in fallback mode
+  const { copy, isLoading: aiLoading, error: aiError } = useAIInsights(
+    'night_owl_pattern', 
+    payload,
+    !isFallback && !isLoading // Pass enabled flag as third parameter
+  );
+
   if (isLoading) {
     return <InsightSkeleton />;
   }
-
-  const payload = insights.nightOwlPattern;
-  const isFallback = payload.histogram.every(val => val === 0) || insights.isDefault;
 
   const handleShare = () => {
     console.log('Sharing Night Owl Pattern insight...');
@@ -119,6 +127,49 @@ export default function NightOwlCard() {
           Peak listening at {formatHour(peakHour)}
         </p>
       </motion.div>
+
+      {/* AI Generated Copy */}
+      {!isFallback && !aiLoading && !aiError && copy && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.9 }}
+          className="bg-white/5 rounded-xl p-4 mb-4 border border-white/10"
+        >
+          <p className="text-sm leading-snug">{copy}</p>
+          <span className="mt-1 inline-flex items-center gap-1 text-xs text-zinc-400">
+            ✨ AI Generated
+          </span>
+        </motion.div>
+      )}
+
+      {/* Loading skeleton for AI */}
+      {!isFallback && aiLoading && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="bg-white/5 rounded-xl p-4 mb-4 border border-white/10"
+        >
+          <div className="animate-pulse">
+            <div className="h-4 bg-white/10 rounded w-3/4 mb-2"></div>
+            <div className="h-4 bg-white/10 rounded w-1/2"></div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Error state */}
+      {!isFallback && aiError && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="bg-white/5 rounded-xl p-4 mb-4 border border-white/10"
+        >
+          <p className="text-sm leading-snug text-zinc-400">We&apos;re speechless 🤫</p>
+          <span className="mt-1 inline-flex items-center gap-1 text-xs text-zinc-500">
+            ✨ AI Generated
+          </span>
+        </motion.div>
+      )}
 
       {/* Score */}
       <motion.div

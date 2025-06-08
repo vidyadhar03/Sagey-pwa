@@ -22,7 +22,12 @@ beforeEach(() => {
       typeof args[0] === 'string' && 
       (args[0].includes('linearGradient') ||
        args[0].includes('unrecognized in this browser') ||
-       args[0].includes('update to TransitionRootFn'))
+       args[0].includes('update to TransitionRootFn') ||
+       args[0].includes('React does not recognize the `whileHover` prop') ||
+       args[0].includes('React does not recognize the `whileTap` prop') ||
+       args[0].includes('React does not recognize the `animate` prop') ||
+       args[0].includes('React does not recognize the `initial` prop') ||
+       args[0].includes('React does not recognize the `transition` prop'))
     ) {
       return;
     }
