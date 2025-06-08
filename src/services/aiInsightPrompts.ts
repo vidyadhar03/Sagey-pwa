@@ -1,23 +1,32 @@
 import { 
   InsightType, 
   InsightPayload, 
-  MusicalAgePayload, 
   MoodRingPayload, 
   GenrePassportPayload, 
   NightOwlPatternPayload 
 } from '../lib/openaiClient';
+
+import { MusicalAgePayload } from '../utils/insightSelectors';
 
 /**
  * Builds AI prompts for generating fun, quirky copy for insight cards
  */
 
 function buildMusicalAgePrompt(data: MusicalAgePayload): string {
+  const { age, era, trackCount, stdDev, averageYear, oldest, newest } = data;
+  
   return `Generate a fun, quirky, social-media-ready caption for someone's "Musical Age" insight.
 
 Context:
-- Their calculated musical age is ${data.age} years old
-- This is based on an average release year of ${data.averageYear}
-- Their actual age is ${data.actualAge || 'unknown'}
+${JSON.stringify({
+  age,
+  era,
+  trackCount, 
+  stdDev,
+  averageYear,
+  oldest,
+  newest
+}, null, 2)}
 
 Requirements:
 - Keep it under 140 characters
@@ -26,10 +35,14 @@ Requirements:
 - Be positive and fun
 - Include the musical age number
 - Make it sound like a fun personality trait
+- You may optionally mention "±${stdDev} yr confidence" for statistical flair
+- You can reference their "${era} Era" musical taste if relevant
+- Feel free to mention their oldest track (${oldest.title} by ${oldest.artist}) or newest (${newest.title} by ${newest.artist}) for personality
 
 Examples of tone:
-- "🎂 Your ears are stuck in 2010! Musical age: 27 - clearly you peaked during the indie rock renaissance ✨"
-- "🎵 Musical DNA says you're 24! Your playlist is basically a time machine to the golden era 🚀"
+- "🎂 Your ears are stuck in 2010! Musical age: 27 - clearly you peaked during the Digital era ✨"
+- "🎵 Musical DNA says you're 24! Your ${era} era playlist spans from ${oldest.artist} to ${newest.artist} 🚀"
+- "🎼 ${age} years old musically (±${stdDev}yr confidence) - certified ${era} era connoisseur! 🎯"
 
 Generate ONE caption only, no quotes or additional text:`;
 }

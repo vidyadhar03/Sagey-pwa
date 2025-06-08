@@ -271,7 +271,7 @@ export function useSpotifyInsights() {
       };
 
       // Calculate mood scores based on genre matches
-      let moodScores = { happy: 0, energetic: 0, chill: 0, melancholy: 0 };
+      const moodScores = { happy: 0, energetic: 0, chill: 0, melancholy: 0 };
       
       allGenres.forEach(genre => {
         const lowerGenre = genre.toLowerCase();

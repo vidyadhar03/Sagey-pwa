@@ -1,0 +1,149 @@
+import { buildPrompt } from '@/services/aiInsightPrompts';
+import { MusicalAgePayload } from '@/utils/insightSelectors';
+import type { MoodRingPayload, GenrePassportPayload, NightOwlPatternPayload } from '@/lib/openaiClient';
+
+describe('AI Insight Prompts', () => {
+  describe('buildPrompt for musical_age', () => {
+    const mockMusicalAgeData: MusicalAgePayload = {
+      age: 15,
+      era: 'Digital',
+      trackCount: 150,
+      averageYear: 2009,
+      stdDev: 8,
+      oldest: {
+        title: 'Bohemian Rhapsody',
+        artist: 'Queen',
+        year: 1975
+      },
+      newest: {
+        title: 'Blinding Lights',
+        artist: 'The Weeknd', 
+        year: 2020
+      },
+      decadeBuckets: [
+        { decade: 1970, weight: 5.2 },
+        { decade: 2000, weight: 15.8 },
+        { decade: 2010, weight: 25.3 }
+      ],
+      description: 'Your music taste spans 15 years of musical history'
+    };
+
+    it('includes era field in the prompt', () => {
+      const prompt = buildPrompt('musical_age', mockMusicalAgeData);
+      
+      expect(prompt).toContain('"era": "Digital"');
+      expect(prompt).toContain('Digital Era');
+    });
+
+    it('includes all new fields from A2 specification', () => {
+      const prompt = buildPrompt('musical_age', mockMusicalAgeData);
+      
+      // Check JSON payload includes all fields (with pretty-print spacing)
+      expect(prompt).toContain('"age": 15');
+      expect(prompt).toContain('"era": "Digital"');
+      expect(prompt).toContain('"trackCount": 150');
+      expect(prompt).toContain('"stdDev": 8');
+      expect(prompt).toContain('"averageYear": 2009');
+      expect(prompt).toContain('"oldest"');
+      expect(prompt).toContain('"newest"');
+    });
+
+    it('includes oldest and newest track information', () => {
+      const prompt = buildPrompt('musical_age', mockMusicalAgeData);
+      
+      expect(prompt).toContain('Bohemian Rhapsody');
+      expect(prompt).toContain('Queen');
+      expect(prompt).toContain('Blinding Lights');
+      expect(prompt).toContain('The Weeknd');
+    });
+
+    it('includes confidence interval hint', () => {
+      const prompt = buildPrompt('musical_age', mockMusicalAgeData);
+      
+      expect(prompt).toContain('±8 yr confidence');
+    });
+
+    it('includes era context in examples', () => {
+      const prompt = buildPrompt('musical_age', mockMusicalAgeData);
+      
+      expect(prompt).toContain('Digital era');
+      expect(prompt).toContain('era connoisseur');
+    });
+
+    it('maintains proper JSON structure', () => {
+      const prompt = buildPrompt('musical_age', mockMusicalAgeData);
+      
+      // Extract the JSON part between the first { and matching }
+      const startIndex = prompt.indexOf('{');
+      expect(startIndex).toBeGreaterThan(-1);
+      
+      let braceCount = 0;
+      let endIndex = -1;
+      
+      for (let i = startIndex; i < prompt.length; i++) {
+        if (prompt[i] === '{') braceCount++;
+        if (prompt[i] === '}') braceCount--;
+        if (braceCount === 0) {
+          endIndex = i;
+          break;
+        }
+      }
+      
+      expect(endIndex).toBeGreaterThan(startIndex);
+      
+      const jsonStr = prompt.substring(startIndex, endIndex + 1);
+      expect(() => JSON.parse(jsonStr)).not.toThrow();
+      
+      // Verify the parsed JSON has our expected structure
+      const parsed = JSON.parse(jsonStr);
+      expect(parsed.age).toBe(15);
+      expect(parsed.era).toBe('Digital');
+      expect(parsed.oldest).toBeDefined();
+      expect(parsed.newest).toBeDefined();
+    });
+  });
+
+  describe('buildPrompt for other insight types', () => {
+    it('builds mood_ring prompt correctly', () => {
+      const mockData: MoodRingPayload = {
+        emotions: { happy: 30, energetic: 25, chill: 25, melancholy: 20 },
+        dominantMood: 'happy'
+      };
+
+      const prompt = buildPrompt('mood_ring', mockData);
+      
+      expect(prompt).toContain('happy');
+      expect(prompt).toContain('30%');
+      expect(prompt).toContain('Mood Ring');
+    });
+
+    it('builds genre_passport prompt correctly', () => {
+      const mockData: GenrePassportPayload = {
+        totalGenres: 15,
+        topGenres: ['rock', 'pop', 'indie'],
+        explorationScore: 75
+      };
+
+      const prompt = buildPrompt('genre_passport', mockData);
+      
+      expect(prompt).toContain('15 different music genres');
+      expect(prompt).toContain('rock, pop, indie');
+      expect(prompt).toContain('75/100');
+    });
+
+    it('builds night_owl_pattern prompt correctly', () => {
+      const mockData: NightOwlPatternPayload = {
+        hourlyData: new Array(24).fill(0),
+        peakHour: 22,
+        isNightOwl: true,
+        score: 85
+      };
+
+      const prompt = buildPrompt('night_owl_pattern', mockData);
+      
+      expect(prompt).toContain('Night Owl');
+      expect(prompt).toContain('10PM');
+      expect(prompt).toContain('85/100');
+    });
+  });
+}); 

@@ -12,6 +12,7 @@ jest.mock('@/hooks/useSpotifyInsights', () => ({
         oldest: 1971,
         newest: 2024,
         trackCount: 10,
+        era: 'Digital',
       },
       isDefault: false,
     },
@@ -66,6 +67,11 @@ describe('MusicalAgeCard', () => {
     expect(screen.getByText('Your musical journey reveals a fascinating timeline of sonic evolution.')).toBeInTheDocument();
     expect(screen.getByText('✨')).toBeInTheDocument();
     expect(screen.getByText('AI Generated')).toBeInTheDocument();
+  });
+
+  it('displays era badge when era is available', () => {
+    render(<MusicalAgeCard />);
+    expect(screen.getByText('Digital Era')).toBeInTheDocument();
   });
 });
 
