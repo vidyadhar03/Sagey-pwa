@@ -20,6 +20,8 @@
     "clean:all": "pnpm run cleanup && rimraf node_modules pnpm-lock.yaml && pnpm store prune"
   },
   "dependencies": {
+    "@headlessui/react": "2.2.4",
+    "@heroicons/react": "2.2.0",
     "framer-motion": "^12.12.1",
     "ioredis": "5.6.1",
     "next": "15.3.2",
@@ -27,6 +29,7 @@
     "openai": "5.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "recharts": "2.15.3",
     "zod": "3.25.49"
   },
   "devDependencies": {

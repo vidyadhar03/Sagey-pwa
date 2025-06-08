@@ -6,11 +6,13 @@ import InsightCard from './InsightCard';
 import InsightSkeleton from './InsightSkeleton';
 import { useSpotifyInsights } from '../../../hooks/useSpotifyInsights';
 import { useAIInsights } from '../../../hooks/useAIInsights';
+import MusicalAgeDetailSheet from '../detail/MusicalAgeDetailSheet';
 
 export default function MusicalAgeCard() {
   const { insights, isLoading } = useSpotifyInsights();
   const [displayAge, setDisplayAge] = useState(0);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const payload = insights.musicalAge;
   const isFallback = payload.trackCount === 0 || insights.isDefault;
@@ -190,7 +192,31 @@ export default function MusicalAgeCard() {
             </p>
           </div>
         </motion.div>
+
+        {/* View Details CTA */}
+        {!isFallback && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.9 }}
+            className="flex justify-center mt-3"
+          >
+            <button
+              onClick={() => setOpen(true)}
+              className="text-sm underline text-green-400 hover:text-green-300 transition-colors"
+            >
+              View details ▸
+            </button>
+          </motion.div>
+        )}
       </InsightCard>
+
+      {/* Musical Age Detail Sheet */}
+      <MusicalAgeDetailSheet
+        payload={payload}
+        open={open}
+        onClose={() => setOpen(false)}
+      />
     </>
   );
 } 

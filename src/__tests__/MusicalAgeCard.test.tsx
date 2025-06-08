@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import MusicalAgeCard from '@/components/insights/cards/MusicalAgeCard';
 
 // Mock the useSpotifyInsights hook
@@ -78,6 +78,43 @@ describe('MusicalAgeCard', () => {
     render(<MusicalAgeCard />);
     expect(screen.getByText('Digital Era')).toBeInTheDocument();
   });
+
+  it('displays "View details" CTA when not in fallback mode', () => {
+    render(<MusicalAgeCard />);
+    expect(screen.getByText('View details ▸')).toBeInTheDocument();
+  });
+
+  it('opens detail sheet when CTA is clicked', () => {
+    render(<MusicalAgeCard />);
+    
+    const ctaButton = screen.getByText('View details ▸');
+    fireEvent.click(ctaButton);
+    
+    // Should open the detail sheet
+    expect(screen.getByText('Your Musical Age')).toBeInTheDocument();
+    expect(screen.getByText('Musical Insights')).toBeInTheDocument();
+  });
+
+  it('closes detail sheet when close button is clicked', async () => {
+    render(<MusicalAgeCard />);
+
+    // Open the sheet
+    const ctaButton = screen.getByText('View details ▸');
+    fireEvent.click(ctaButton);
+    
+    // Verify it's open
+    expect(screen.getByText('Your Musical Age')).toBeInTheDocument();
+
+    // Close it
+    const closeButton = screen.getByLabelText('Close');
+    fireEvent.click(closeButton);
+    
+    // Wait for the sheet to close completely
+    await waitFor(() => {
+      const titles = screen.getAllByText(/Musical Age/);
+      expect(titles).toHaveLength(1); // Only the card title should remain
+    });
+  });
 });
 
 describe('MusicalAgeCard AI States', () => {
@@ -114,29 +151,37 @@ describe('MusicalAgeCard AI States', () => {
   });
 });
 
-describe('MusicalAgeCard Loading State', () => {
-  beforeEach(() => {
-    // Mock loading state
-    jest.doMock('@/hooks/useSpotifyInsights', () => ({
-      useSpotifyInsights: () => ({
-        insights: null,
-        isLoading: true,
-        isFallback: false,
-      }),
+describe('MusicalAgeCard Fallback State', () => {
+  it('hides "View details" CTA when in fallback mode', () => {
+    // Store original mock
+    const originalMock = require('@/hooks/useSpotifyInsights').useSpotifyInsights;
+    
+    // Mock fallback state directly on the module
+    require('@/hooks/useSpotifyInsights').useSpotifyInsights = jest.fn(() => ({
+      insights: {
+        musicalAge: {
+          age: 0,
+          era: 'Streaming',
+          trackCount: 0,
+          averageYear: 2024,
+          stdDev: 0,
+          oldest: { title: 'Connect Spotify', artist: 'to unlock insights', year: 2024 },
+          newest: { title: 'Connect Spotify', artist: 'to unlock insights', year: 2024 },
+          decadeBuckets: [],
+          description: 'Connect Spotify to discover your musical age'
+        },
+        isDefault: true,
+      },
+      isLoading: false,
     }));
-  });
-
-  afterEach(() => {
-    jest.dontMock('@/hooks/useSpotifyInsights');
-  });
-
-  it('shows loading skeleton when data is loading', () => {
-    // Re-require the component to get the new mock  
-    const LoadingMusicalAgeCard = require('@/components/insights/cards/MusicalAgeCard').default;
     
-    render(<LoadingMusicalAgeCard />);
+    render(<MusicalAgeCard />);
     
-    // Should render without crashing during loading
-    expect(screen.getByText('Musical Age')).toBeInTheDocument();
+    // Should not show the CTA when in fallback mode
+    expect(screen.queryByText('View details ▸')).not.toBeInTheDocument();
+    expect(screen.getByText('Connect Spotify to unlock this insight')).toBeInTheDocument();
+    
+    // Restore original mock
+    require('@/hooks/useSpotifyInsights').useSpotifyInsights = originalMock;
   });
 }); 
