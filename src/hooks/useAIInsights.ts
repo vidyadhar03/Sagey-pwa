@@ -94,11 +94,13 @@ export function useAIInsights<T extends InsightType>(
     try {
       // Check if AI is disabled for development
       if (process.env.NEXT_PUBLIC_DISABLE_AI === 'true') {
-        console.log('🎭 Using mock AI copy for development');
+        console.log(`🎭 ${regenerate ? 'Refreshing with new' : 'Using'} mock AI copy for development`);
         // Simulate network delay
         await new Promise(resolve => setTimeout(resolve, 500));
+        const newCopy = getMockCopy(type);
+        console.log(`📄 Generated new mock copy: "${newCopy.substring(0, 50)}..."`);
         setData({
-          copy: getMockCopy(type),
+          copy: newCopy,
           source: 'mock'
         });
         setIsLoading(false);

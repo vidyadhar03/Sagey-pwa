@@ -36,11 +36,19 @@ export const mockAICopy: Record<InsightType, string[]> = {
 
 /**
  * Get random mock copy for an insight type
+ * Enhanced with timestamp for better refresh demonstration
  */
 export function getMockCopy(type: InsightType): string {
   const options = mockAICopy[type];
   const randomIndex = Math.floor(Math.random() * options.length);
-  return options[randomIndex];
+  const baseCopy = options[randomIndex];
+  
+  // Add subtle variation for refresh demonstration
+  const variations = ['🎵', '🎶', '✨', '🌟', '🎧', '🎼'];
+  const randomEmoji = variations[Math.floor(Math.random() * variations.length)];
+  
+  // Replace first emoji with a random one to show refresh is working
+  return baseCopy.replace(/^[^\w\s]+/, randomEmoji);
 }
 
 /**
