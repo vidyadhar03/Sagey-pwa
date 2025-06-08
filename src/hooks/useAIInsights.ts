@@ -85,11 +85,75 @@ export function useAIInsights<T extends InsightType>(
     fetchInsight();
   }, [type, JSON.stringify(payload), enabled]);
 
+  const mutate = async (options?: { regenerate?: boolean }) => {
+    const regenerate = options?.regenerate || false;
+    
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Check if AI is disabled for development
+      if (process.env.NEXT_PUBLIC_DISABLE_AI === 'true') {
+        console.log('🎭 Using mock AI copy for development');
+        // Simulate network delay
+        await new Promise(resolve => setTimeout(resolve, 500));
+        setData({
+          copy: getMockCopy(type),
+          source: 'mock'
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      console.log(`🔍 ${regenerate ? 'Regenerating' : 'Fetching'} AI insight for ${type}`);
+      
+      const response = await fetch('/api/insights/ai', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type,
+          payload,
+          regenerate
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.error) {
+        console.warn('⚠️ AI API returned error:', result.error);
+      }
+
+      setData({
+        copy: result.copy || 'Your musical insight is being generated...',
+        source: result.source || 'unknown'
+      });
+
+    } catch (err) {
+      console.error('❌ Failed to fetch AI insight:', err);
+      setError(err instanceof Error ? err.message : 'Unknown error');
+      
+      // Fallback to mock copy on error
+      setData({
+        copy: getMockCopy(type),
+        source: 'fallback'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     copy: data?.copy || '',
     source: data?.source || 'unknown',
     isLoading,
     error,
+    mutate,
     // Utility functions
     isFromAI: data?.source === 'ai',
     isFromMock: data?.source === 'mock',

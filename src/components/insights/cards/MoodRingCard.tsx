@@ -4,6 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import InsightCard from './InsightCard';
 import InsightSkeleton from './InsightSkeleton';
+import RefreshButton from './RefreshButton';
 import { useSpotifyInsights } from '../../../hooks/useSpotifyInsights';
 import { useAIInsights } from '../../../hooks/useAIInsights';
 
@@ -14,11 +15,18 @@ export default function MoodRingCard() {
   const isFallback = (payload?.distribution?.length === 0 || insights.isDefault) ?? true;
 
   // AI Insights - Only fetch when not in fallback mode
-  const { copy, isLoading: aiLoading, error: aiError } = useAIInsights(
+  const aiInsights = useAIInsights(
     'mood_ring', 
     payload,
     !isFallback && !isLoading // Pass enabled flag as third parameter
   );
+  const { copy, isLoading: aiLoading, error: aiError, mutate } = aiInsights;
+
+  const handleRefreshInsight = async () => {
+    if (mutate) {
+      await mutate({ regenerate: true });
+    }
+  };
 
   if (isLoading) {
     return <InsightSkeleton />;
@@ -265,9 +273,15 @@ export default function MoodRingCard() {
           className="bg-white/5 rounded-xl p-4 mb-6 border border-white/10"
         >
           <p className="text-sm leading-snug">{copy}</p>
-          <span className="mt-1 inline-flex items-center gap-1 text-xs text-zinc-400">
-            ✨ AI Generated
-          </span>
+          <div className="flex justify-between items-center mt-1">
+            <span className="inline-flex items-center gap-1 text-xs text-zinc-400">
+              ✨ AI Generated
+            </span>
+            <RefreshButton 
+              onRefresh={handleRefreshInsight}
+              isLoading={aiLoading}
+            />
+          </div>
         </motion.div>
       )}
 
@@ -293,9 +307,15 @@ export default function MoodRingCard() {
           className="bg-white/5 rounded-xl p-4 mb-6 border border-white/10"
         >
           <p className="text-sm leading-snug text-zinc-400">We&apos;re speechless 🤫</p>
-          <span className="mt-1 inline-flex items-center gap-1 text-xs text-zinc-500">
-            ✨ AI Generated
-          </span>
+          <div className="flex justify-between items-center mt-1">
+            <span className="inline-flex items-center gap-1 text-xs text-zinc-500">
+              ✨ AI Generated
+            </span>
+            <RefreshButton 
+              onRefresh={handleRefreshInsight}
+              isLoading={aiLoading}
+            />
+          </div>
         </motion.div>
       )}
 

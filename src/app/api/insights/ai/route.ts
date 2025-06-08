@@ -66,7 +66,8 @@ export async function POST(request: NextRequest) {
 
     // Parse and validate request body
     const body = await request.json();
-    console.log('📥 Received AI insight request:', { type: body.type });
+    const regenerate = body.regenerate === true || request.nextUrl.searchParams.get('regenerate') === 'true';
+    console.log('📥 Received AI insight request:', { type: body.type, regenerate });
 
     const validatedData = RequestSchema.parse(body);
     const { type, payload } = validatedData;
@@ -82,15 +83,15 @@ export async function POST(request: NextRequest) {
     console.log(`🔍 Generating ${type} insight for user ${userId}`);
 
     // Generate AI copy
-    const copy = await getInsightCopy(userId, type as InsightType, payload);
+    const result = await getInsightCopy(userId, type as InsightType, payload, regenerate);
 
     console.log(`✅ Successfully generated ${type} insight`);
     
     return NextResponse.json({
-      copy,
+      copy: result.copy,
       source: 'ai',
       type,
-      cached: false, // Could enhance to return cache status
+      cached: result.fromCache,
     });
 
   } catch (error) {
@@ -119,7 +120,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Optional: GET endpoint for health check
-export async function GET(request: NextRequest) {
+export async function GET() {
   return NextResponse.json({
     status: 'ok',
     aiEnabled: isAIEnabled(),

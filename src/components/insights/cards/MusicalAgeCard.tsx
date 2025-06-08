@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import InsightCard from './InsightCard';
 import InsightSkeleton from './InsightSkeleton';
+import RefreshButton from './RefreshButton';
 import { useSpotifyInsights } from '../../../hooks/useSpotifyInsights';
 import { useAIInsights } from '../../../hooks/useAIInsights';
 import MusicalAgeDetailSheet from '../detail/MusicalAgeDetailSheet';
@@ -19,6 +20,12 @@ export default function MusicalAgeCard() {
 
   // AI insights for musical age - pass the full payload now that it includes all fields
   const aiInsights = useAIInsights('musical_age', payload, !isFallback); // Only fetch AI when we have real data
+
+  const handleRefreshInsight = async () => {
+    if (aiInsights.mutate) {
+      await aiInsights.mutate({ regenerate: true });
+    }
+  };
 
   // Rolling number animation
   useEffect(() => {
@@ -167,11 +174,15 @@ export default function MusicalAgeCard() {
                 <p className="text-xs text-zinc-300 leading-relaxed">
                   {aiInsights.copy}
                 </p>
-                <div className="flex justify-center mt-2">
+                <div className="flex justify-between items-center mt-2">
                   <span className="text-xs text-zinc-500 flex items-center space-x-1">
                     <span>✨</span>
                     <span>AI Generated</span>
                   </span>
+                  <RefreshButton 
+                    onRefresh={handleRefreshInsight}
+                    isLoading={aiInsights.isLoading}
+                  />
                 </div>
               </div>
             )}

@@ -13,17 +13,20 @@ import {
 export async function getInsightCopy(
   userId: string, 
   type: InsightType, 
-  data: InsightPayload
-): Promise<string> {
+  data: InsightPayload,
+  regenerate: boolean = false
+): Promise<{ copy: string; fromCache: boolean }> {
   // Generate cache key
   const dataHash = hashInsightData(data);
   const cacheKey = generateCacheKey(userId, type, dataHash);
   
-  // Check cache first
-  const cachedCopy = await getCachedValue(cacheKey);
-  if (cachedCopy) {
-    console.log(`📋 Cache hit for ${type} insight for user ${userId}`);
-    return cachedCopy;
+  // Check cache first (skip if regenerating)
+  if (!regenerate) {
+    const cachedCopy = await getCachedValue(cacheKey);
+    if (cachedCopy) {
+      console.log(`📋 Cache hit for ${type} insight for user ${userId}`);
+      return { copy: cachedCopy, fromCache: true };
+    }
   }
 
   console.log(`🤖 Generating new ${type} insight for user ${userId}`);
@@ -62,7 +65,7 @@ export async function getInsightCopy(
     await setCachedValue(cacheKey, generatedCopy, ttlMinutes);
 
     console.log(`✅ Generated and cached ${type} insight: "${generatedCopy.substring(0, 50)}..."`);
-    return generatedCopy;
+    return { copy: generatedCopy, fromCache: false };
 
   } catch (error) {
     console.error(`❌ Failed to generate ${type} insight:`, error);
@@ -73,7 +76,7 @@ export async function getInsightCopy(
     // Cache fallback for a shorter time (1 hour) to retry sooner
     await setCachedValue(cacheKey, fallbackCopy, 60);
     
-    return fallbackCopy;
+    return { copy: fallbackCopy, fromCache: false };
   }
 }
 
@@ -124,7 +127,8 @@ export async function batchGenerateInsights(
   await Promise.all(
     insights.map(async ({ type, data }) => {
       try {
-        results[type] = await getInsightCopy(userId, type, data);
+        const result = await getInsightCopy(userId, type, data);
+        results[type] = result.copy;
       } catch (error) {
         console.error(`Failed to generate ${type} insight:`, error);
         results[type] = getFallbackCopy(type, data);

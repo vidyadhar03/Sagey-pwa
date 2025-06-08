@@ -32,6 +32,7 @@ jest.mock('@/hooks/useAIInsights', () => ({
     isLoading: false,
     error: null,
     source: 'mock',
+    mutate: jest.fn(),
     isFromAI: false,
     isFromMock: true,
     isFromFallback: false,
@@ -72,6 +73,38 @@ describe('MusicalAgeCard', () => {
     expect(screen.getByText('Your musical journey reveals a fascinating timeline of sonic evolution.')).toBeInTheDocument();
     expect(screen.getByText('✨')).toBeInTheDocument();
     expect(screen.getByText('AI Generated')).toBeInTheDocument();
+  });
+
+  it('displays refresh button in AI copy section', () => {
+    render(<MusicalAgeCard />);
+    
+    // Should have a refresh button
+    const refreshButton = screen.getByLabelText('Refresh AI insight');
+    expect(refreshButton).toBeInTheDocument();
+  });
+
+  it('calls mutate with regenerate flag when refresh button is clicked', async () => {
+    const mockMutate = jest.fn().mockResolvedValueOnce(undefined);
+    const mockUseAIInsights = require('@/hooks/useAIInsights').useAIInsights;
+    mockUseAIInsights.mockReturnValueOnce({
+      copy: 'Your musical journey reveals a fascinating timeline of sonic evolution.',
+      isLoading: false,
+      error: null,
+      source: 'mock',
+      mutate: mockMutate,
+      isFromAI: false,
+      isFromMock: true,
+      isFromFallback: false,
+    });
+
+    render(<MusicalAgeCard />);
+    
+    const refreshButton = screen.getByLabelText('Refresh AI insight');
+    fireEvent.click(refreshButton);
+    
+    await waitFor(() => {
+      expect(mockMutate).toHaveBeenCalledWith({ regenerate: true });
+    });
   });
 
   it('displays era badge when era is available', () => {
@@ -125,6 +158,7 @@ describe('MusicalAgeCard AI States', () => {
       isLoading: true,
       error: null,
       source: 'unknown',
+      mutate: jest.fn(),
       isFromAI: false,
       isFromMock: false,
       isFromFallback: false,
@@ -141,6 +175,7 @@ describe('MusicalAgeCard AI States', () => {
       isLoading: false,
       error: 'API Error',
       source: 'unknown',
+      mutate: jest.fn(),
       isFromAI: false,
       isFromMock: false,
       isFromFallback: false,
