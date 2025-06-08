@@ -3,7 +3,7 @@
 import React, { Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { motion } from 'framer-motion';
-import { XMarkIcon, ShareIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, ShareIcon, MusicalNoteIcon } from '@heroicons/react/24/outline';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { MusicalAgePayload } from '../../../utils/insightSelectors';
 import { useAIInsights } from '../../../hooks/useAIInsights';
@@ -28,6 +28,35 @@ export default function MusicalAgeDetailSheet({ payload, open, onClose }: Props)
   const handleShare = () => {
     console.log('Sharing Musical Age details...');
     // TODO: Implement sharing functionality
+  };
+
+  // Animation variants for staggered sections
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.1
+      }
+    }
+  };
+
+  const sectionVariants = {
+    hidden: { 
+      opacity: 0, 
+      x: -30,
+      y: 20 
+    },
+    visible: {
+      opacity: 1,
+      x: 0,
+      y: 0,
+      transition: {
+        duration: 0.5,
+        ease: "easeOut"
+      }
+    }
   };
 
   return (
@@ -82,36 +111,55 @@ export default function MusicalAgeDetailSheet({ payload, open, onClose }: Props)
                     </button>
                   </div>
 
-                  <div className="px-6 pb-6">
+                  <motion.div
+                    className="px-6 pb-6"
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                  >
                     {/* Hero gradient panel */}
-                    <div className="bg-gradient-to-r from-purple-600/30 to-pink-500/30 rounded-xl p-6 mb-6 border border-white/10">
+                    <motion.div 
+                      variants={sectionVariants}
+                      className="bg-gradient-to-r from-purple-600/30 to-pink-500/30 rounded-xl p-6 mb-6 border border-white/10"
+                    >
                       <Dialog.Title
                         id="musical-age-sheet-title"
-                        className="text-2xl font-bold text-neutral-100 mb-2"
+                        className="flex items-center text-2xl font-bold text-neutral-100 mb-4"
                       >
+                        <motion.div
+                          className="mr-3 p-2 rounded-full bg-white/10 border border-white/20"
+                          whileHover={{ scale: 1.1, rotate: 15 }}
+                          whileTap={{ scale: 0.9 }}
+                          transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                        >
+                          <MusicalNoteIcon className="h-6 w-6 text-green-400" />
+                        </motion.div>
                         Your Musical Age
                       </Dialog.Title>
                       
-                      <div className="flex items-center gap-4 mb-4">
-                        <span className="text-6xl font-bold bg-gradient-to-r from-green-400 via-green-300 to-green-500 bg-clip-text text-transparent">
-                          {payload.age}
-                        </span>
-                        <div>
+                      <div className="flex flex-col items-center text-center mb-4">
+                        <div className="flex items-center gap-3 mb-2">
+                          <span className="text-6xl font-bold bg-gradient-to-r from-green-400 via-green-300 to-green-500 bg-clip-text text-transparent">
+                            {payload.age}
+                          </span>
                           <span className="text-xl text-neutral-200">years</span>
-                          {payload.stdDev > 0 && (
-                            <div className="text-sm text-neutral-300">
-                              ±{payload.stdDev} yr confidence
-                            </div>
-                          )}
+                          <div className="rounded-full bg-zinc-800 px-3 py-1 text-sm text-green-400 border border-white/10">
+                            {payload.era} Era
+                          </div>
                         </div>
-                        <div className="rounded-full bg-zinc-800 px-3 py-1 text-sm text-green-400 border border-white/10">
-                          {payload.era} Era
-                        </div>
+                        {payload.stdDev > 0 && (
+                          <div className="text-sm text-neutral-300">
+                            ±{payload.stdDev} yr confidence
+                          </div>
+                        )}
                       </div>
-                    </div>
+                    </motion.div>
 
                     {/* Stats row */}
-                    <div className="flex flex-wrap gap-2 text-sm text-neutral-300 mb-6 justify-center">
+                    <motion.div 
+                      variants={sectionVariants}
+                      className="flex flex-wrap gap-2 text-sm text-neutral-300 mb-6 justify-center"
+                    >
                       <span>Based on {payload.trackCount} tracks</span>
                       <span>•</span>
                       <span>Avg. year {payload.averageYear}</span>
@@ -121,10 +169,13 @@ export default function MusicalAgeDetailSheet({ payload, open, onClose }: Props)
                           <span>±{payload.stdDev} yrs</span>
                         </>
                       )}
-                    </div>
+                    </motion.div>
 
                     {/* Oldest / Newest tracks panel */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <motion.div 
+                      variants={sectionVariants}
+                      className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6"
+                    >
                       <div className="bg-white/5 rounded-lg p-4 border border-white/10">
                         <h3 className="text-sm font-semibold text-neutral-300 mb-2">Oldest Track</h3>
                         <div className="text-neutral-100">
@@ -142,11 +193,14 @@ export default function MusicalAgeDetailSheet({ payload, open, onClose }: Props)
                           <div className="text-xs text-neutral-400">{payload.newest.year}</div>
                         </div>
                       </div>
-                    </div>
+                    </motion.div>
 
                     {/* Decade histogram */}
                     {chartData.length > 0 && (
-                      <div className="bg-white/5 rounded-lg p-4 border border-white/10 mb-6">
+                      <motion.div 
+                        variants={sectionVariants}
+                        className="bg-white/5 rounded-lg p-4 border border-white/10 mb-6"
+                      >
                         <h3 className="text-lg font-semibold text-neutral-100 mb-4">Music Across Decades</h3>
                         <div className="h-64">
                           <ResponsiveContainer width="100%" height="100%">
@@ -185,11 +239,14 @@ export default function MusicalAgeDetailSheet({ payload, open, onClose }: Props)
                             </BarChart>
                           </ResponsiveContainer>
                         </div>
-                      </div>
+                      </motion.div>
                     )}
 
                     {/* AI Generated paragraph */}
-                    <div className="bg-white/5 rounded-lg p-4 border border-white/10 mb-6">
+                    <motion.div 
+                      variants={sectionVariants}
+                      className="bg-white/5 rounded-lg p-4 border border-white/10 mb-6"
+                    >
                       <h3 className="text-lg font-semibold text-neutral-100 mb-3">Musical Insights</h3>
                       {aiInsights.isLoading ? (
                         <div className="flex items-center space-x-2">
@@ -211,19 +268,24 @@ export default function MusicalAgeDetailSheet({ payload, open, onClose }: Props)
                           </div>
                         </div>
                       )}
-                    </div>
+                    </motion.div>
 
                     {/* Share button */}
-                    <div className="flex justify-center">
-                      <button
+                    <motion.div 
+                      variants={sectionVariants}
+                      className="flex justify-center"
+                    >
+                      <motion.button
                         onClick={handleShare}
                         className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition-colors"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                       >
                         <ShareIcon className="h-5 w-5" />
                         <span>Share Musical Age</span>
-                      </button>
-                    </div>
-                  </div>
+                      </motion.button>
+                    </motion.div>
+                  </motion.div>
                 </motion.div>
               </Dialog.Panel>
             </Transition.Child>
