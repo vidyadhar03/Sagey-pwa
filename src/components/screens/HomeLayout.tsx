@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import UserProfile from '../UserProfile';
 import SpotifyDebugPanel from '../SpotifyDebugPanel';
@@ -76,7 +76,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
   }, [addLog, connected, user, loading]);
 
   // Initialize home data - now only fetches top tracks/artists
-  const initializeHomeData = async () => {
+  const initializeHomeData = useCallback(async () => {
     console.log('🏠 HomeLayout: Starting initialization (Tops only)...');
     setDataLoading(true);
     
@@ -99,7 +99,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
     } finally {
       setDataLoading(false);
     }
-  };
+  }, [getTopTracks, getTopArtists]);
 
   useEffect(() => {
     // Check for Spotify authentication errors in URL parameters

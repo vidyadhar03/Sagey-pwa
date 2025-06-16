@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 // Debug logging integration
 const debugAddLog: ((type: 'info' | 'warning' | 'error' | 'success', category: 'auth' | 'api' | 'cookie' | 'redirect' | 'network' | 'status', message: string, details?: any) => void) | null = null;
@@ -170,7 +170,7 @@ export function useSpotify() {
   });
 
   // Check connection status
-  const checkStatus = async () => {
+  const checkStatus = useCallback(async () => {
     console.log('🔍 useSpotify: Starting connection status check');
     
     try {
@@ -233,10 +233,10 @@ export function useSpotify() {
         error: 'Failed to check connection'
       });
     }
-  };
+  }, []);
 
   // Connect to Spotify
-  const connect = () => {
+  const connect = useCallback(() => {
     console.log('🚀 useSpotify: Starting Spotify authentication process');
     
     // Enhanced mobile debugging
@@ -296,10 +296,10 @@ export function useSpotify() {
         stack: error instanceof Error ? error.stack : undefined
       });
     }
-  };
+  }, []);
 
   // Fetch recent tracks
-  const getRecentTracks = async (): Promise<RecentlyPlayedTrack[]> => {
+  const getRecentTracks = useCallback(async (): Promise<RecentlyPlayedTrack[]> => {
     console.log('🎵 getRecentTracks: Starting fetch');
     
     if (!status.connected) {
@@ -408,10 +408,10 @@ export function useSpotify() {
     } finally {
       globalDataCache.isLoading[cacheKey] = false;
     }
-  };
+  }, [status.connected]);
 
   // Fetch top tracks
-  const getTopTracks = async (timeRange: 'short_term' | 'medium_term' | 'long_term' = 'medium_term'): Promise<SpotifyTrack[]> => {
+  const getTopTracks = useCallback(async (timeRange: 'short_term' | 'medium_term' | 'long_term' = 'medium_term'): Promise<SpotifyTrack[]> => {
     console.log('🎵 getTopTracks: Starting fetch with timeRange:', timeRange);
     
     if (!status.connected) {
@@ -519,10 +519,10 @@ export function useSpotify() {
     } finally {
       globalDataCache.isLoading[cacheKey] = false;
     }
-  };
+  }, [status.connected]);
 
   // Fetch top artists
-  const getTopArtists = async (timeRange: 'short_term' | 'medium_term' | 'long_term' = 'medium_term'): Promise<SpotifyArtist[]> => {
+  const getTopArtists = useCallback(async (timeRange: 'short_term' | 'medium_term' | 'long_term' = 'medium_term'): Promise<SpotifyArtist[]> => {
     console.log('🎤 getTopArtists: Starting fetch with timeRange:', timeRange);
     
     if (!status.connected) {
@@ -609,10 +609,10 @@ export function useSpotify() {
     } finally {
       globalDataCache.isLoading[cacheKey] = false;
     }
-  };
+  }, [status.connected]);
 
   // Fetch top albums
-  const getTopAlbums = async (timeRange: 'short_term' | 'medium_term' | 'long_term' = 'medium_term'): Promise<SpotifyAlbum[]> => {
+  const getTopAlbums = useCallback(async (timeRange: 'short_term' | 'medium_term' | 'long_term' = 'medium_term'): Promise<SpotifyAlbum[]> => {
     if (!status.connected) {
       throw new Error('Spotify not connected');
     }
@@ -626,10 +626,10 @@ export function useSpotify() {
 
     const data = await response.json();
     return data.albums;
-  };
+  }, [status.connected]);
 
   // Fetch audio features for tracks
-  const getAudioFeatures = async (trackIds: string[]): Promise<AudioFeatures[]> => {
+  const getAudioFeatures = useCallback(async (trackIds: string[]): Promise<AudioFeatures[]> => {
     console.log('🎵 getAudioFeatures called with:', { connected: status.connected, trackCount: trackIds.length });
     
     if (!status.connected) {
@@ -679,10 +679,10 @@ export function useSpotify() {
       console.error('❌ getAudioFeatures: Exception occurred:', error);
       throw error;
     }
-  };
+  }, [status.connected]);
 
   // Get music insights (combines multiple API calls)
-  const getMusicInsights = async () => {
+  const getMusicInsights = useCallback(async () => {
     if (!status.connected) {
       throw new Error('Spotify not connected');
     }
@@ -731,10 +731,10 @@ export function useSpotify() {
       console.error('Failed to get music insights:', error);
       throw error;
     }
-  };
+  }, [status.connected, getRecentTracks, getTopTracks, getAudioFeatures]);
 
   // Logout/Disconnect from Spotify
-  const logout = async () => {
+  const logout = useCallback(async () => {
     console.log('🚪 useSpotify: Starting logout process');
     
     try {
@@ -792,7 +792,7 @@ export function useSpotify() {
         error: 'Logout failed, but session cleared locally'
       });
     }
-  };
+  }, []);
 
   // Get cache status for debugging
   const getCacheStatus = () => {
@@ -808,7 +808,7 @@ export function useSpotify() {
 
   useEffect(() => {
     checkStatus();
-  }, []);
+  }, [checkStatus]);
 
   return {
     ...status,
