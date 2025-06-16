@@ -364,13 +364,16 @@ export function useSpotify() {
 
       const data = await response.json();
 
-      if (!data.items) {
+      // API returns {tracks: [...], total: N} structure
+      const tracksData = data.tracks || data.items || [];
+      
+      if (!tracksData || tracksData.length === 0) {
         console.warn('⚠️ useSpotify: No recent tracks found in API response.');
         return [];
       }
 
-      // Normalize track data
-      const tracks: RecentlyPlayedTrack[] = data.items.map((item: any) => ({
+      // Normalize track data from the API response
+      const tracks: RecentlyPlayedTrack[] = tracksData.map((item: any) => ({
         played_at: item.played_at,
         track: {
           id: item.track.id,
@@ -483,33 +486,37 @@ export function useSpotify() {
 
       const data = await response.json();
 
-      // Normalize track data
-      const tracks: SpotifyTrack[] = data.items.map((item: any) => ({
+      // API returns {tracks: [...], total: N} structure
+      const tracksData = data.tracks || data.items || [];
+      
+      if (!tracksData || tracksData.length === 0) {
+        console.warn('⚠️ useSpotify: No top tracks found in API response.');
+        return [];
+      }
+
+      // Normalize track data from flattened API response
+      const tracks: SpotifyTrack[] = tracksData.map((item: any) => ({
         id: item.id,
         name: item.name,
-        artists: item.artists.map((a: any) => ({
+        artists: item.artists ? item.artists.map((a: any) => ({
           id: a.id,
           name: a.name,
           external_urls: a.external_urls
-        })),
+        })) : [{ id: item.artist || '', name: item.artist || 'Unknown Artist', external_urls: { spotify: '' } }],
         album: {
-          id: item.album.id,
-          name: item.album.name,
-          release_date: item.album.release_date,
-          release_date_precision: item.album.release_date_precision,
-          images: item.album.images.map((i: any) => ({
-            url: i.url,
-            height: i.height,
-            width: i.width
-          })),
-          external_urls: item.album.external_urls
+          id: item.album?.id || '',
+          name: item.album?.name || item.album_name || 'Unknown Album',
+          release_date: item.album?.release_date || '',
+          release_date_precision: item.album?.release_date_precision || 'day',
+          images: item.album?.images || [{ url: item.image_url || '', height: 640, width: 640 }],
+          external_urls: item.album?.external_urls || { spotify: '' }
         },
-        duration_ms: item.duration_ms,
-        explicit: item.explicit,
-        popularity: item.popularity,
-        preview_url: item.preview_url,
-        external_urls: item.external_urls,
-        uri: item.uri
+        duration_ms: item.duration_ms || 0,
+        explicit: item.explicit || false,
+        popularity: item.popularity || 0,
+        preview_url: item.preview_url || null,
+        external_urls: item.external_urls || { spotify: '' },
+        uri: item.uri || ''
       }));
       
       // Cache the data

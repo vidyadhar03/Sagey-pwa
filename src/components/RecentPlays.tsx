@@ -14,10 +14,15 @@ export default function RecentPlays() {
       try {
         setLoading(true);
         const recentTracks = await getRecentTracks();
+        console.log('🎵 RecentPlays: Data received:', { 
+          tracks: recentTracks, 
+          length: recentTracks?.length, 
+          firstTrack: recentTracks?.[0] 
+        });
         setTracks(recentTracks || []);
       } catch (err) {
+        console.error('❌ RecentPlays: Error fetching tracks:', err);
         setError('Failed to load recent tracks.');
-        console.error(err);
       } finally {
         setLoading(false);
       }
