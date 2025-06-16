@@ -1,6 +1,7 @@
 import { buildPrompt } from '@/services/aiInsightPrompts';
 import { MusicalAgePayload } from '@/utils/insightSelectors';
 import type { MoodRingPayload, GenrePassportPayload, NightOwlPatternPayload } from '@/lib/openaiClient';
+import { RadarPayload } from '@/features/radar/types';
 
 describe('AI Insight Prompts', () => {
   describe('buildPrompt for musical_age', () => {
@@ -128,6 +129,50 @@ describe('AI Insight Prompts', () => {
       expect(prompt).toContain('Night Owl');
       expect(prompt).toContain('10PM');
       expect(prompt).toContain('85/100');
+    });
+  });
+
+  describe('buildPrompt for radar_summary', () => {
+    const mockRadarData: RadarPayload = {
+      scores: {
+        'Positivity': 85,
+        'Energy': 70,
+        'Exploration': 40,
+        'Nostalgia': 92,
+        'Night-Owl': 20,
+      },
+      stats: {
+        positivity: { weightedMeanValence: 0, percentage: 0 },
+        energy: { weightedMeanEnergy: 0, weightedMeanTempo: 0 },
+        exploration: { genreCount: 0, entropy: 0, normalizedEntropy: 0 },
+        nostalgia: { medianTrackAge: 0 },
+        nightOwl: { nightPlayCount: 0, totalPlayCount: 0, percentage: 0 },
+      },
+      suggestions: [],
+      trackCount: 100,
+      isDefault: false,
+    };
+
+    it('should create a prompt with all five axis scores', () => {
+      const prompt = buildPrompt('radar_summary', mockRadarData);
+      expect(prompt).toContain('Positivity Score: 85');
+      expect(prompt).toContain('Energy Score: 70');
+      expect(prompt).toContain('Exploration Score: 40');
+      expect(prompt).toContain('Nostalgia Score: 92');
+      expect(prompt).toContain('Night-Owl Score: 20');
+    });
+
+    it('should correctly identify the strongest and weakest traits', () => {
+      const prompt = buildPrompt('radar_summary', mockRadarData);
+      expect(prompt).toContain('Strongest Trait: Nostalgia (92)');
+      expect(prompt).toContain('Weakest Trait: Night-Owl (20)');
+    });
+
+    it('should include the specified system message and requirements', () => {
+      const prompt = buildPrompt('radar_summary', mockRadarData);
+      expect(prompt).toContain("You are Sagey's fun music coach.");
+      expect(prompt).toContain("First sentence should highlight the strongest trait");
+      expect(prompt).toContain("Second sentence should playfully mention the weakest trait");
     });
   });
 }); 

@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { RadarPayload } from '../features/radar/types';
 
 // Singleton OpenAI client
 let openaiClient: OpenAI | null = null;
@@ -23,7 +24,7 @@ export function getOpenAIClient(): OpenAI {
 }
 
 // Type definitions for AI insight types
-export type InsightType = 'musical_age' | 'mood_ring' | 'genre_passport' | 'night_owl_pattern';
+export type InsightType = 'musical_age' | 'mood_ring' | 'genre_passport' | 'night_owl_pattern' | 'radar_summary';
 
 export interface MusicalAgePayload {
   age: number;
@@ -60,6 +61,7 @@ export interface InsightPayloadMap {
   mood_ring: MoodRingPayload;
   genre_passport: GenrePassportPayload;
   night_owl_pattern: NightOwlPatternPayload;
+  radar_summary: RadarPayload;
 }
 
 export type InsightPayload = InsightPayloadMap[InsightType]; 

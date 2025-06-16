@@ -2,55 +2,10 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSpotify } from '../hooks/useSpotify';
+import { useSpotify, SpotifyTrack, SpotifyArtist, SpotifyAlbum, RecentlyPlayedTrack } from '../hooks/useSpotify';
 import { useSpotifyDebug } from '../hooks/useSpotifyDebug';
 import ShareableCards from './ShareableCards';
 import TopAppBar from './TopAppBar';
-
-interface SpotifyTrack {
-  id: string;
-  name: string;
-  artist: string;
-  album: string | {
-    name: string;
-    release_date?: string;
-    release_date_precision?: string;
-    id: string;
-    type?: string;
-    total_tracks?: number;
-    images?: Array<{ url: string }>;
-  };
-  played_at?: string;
-  duration_ms: number;
-  external_urls: { spotify: string };
-  preview_url?: string;
-  image_url?: string;
-  popularity?: number;
-  album_name?: string; // Legacy fallback
-}
-
-interface SpotifyArtist {
-  id: string;
-  name: string;
-  genres: string[];
-  popularity: number;
-  followers: number;
-  external_urls: { spotify: string };
-  image_url?: string;
-}
-
-interface SpotifyAlbum {
-  id: string;
-  name: string;
-  artist: string;
-  artists: string;
-  release_date: string;
-  total_tracks: number;
-  external_urls: { spotify: string };
-  image_url?: string;
-  album_type: string;
-  track_count: number;
-}
 
 // Data cache interface for better organization
 interface DataCache {
@@ -69,7 +24,7 @@ interface DataCache {
     medium_term?: SpotifyAlbum[];
     long_term?: SpotifyAlbum[];
   };
-  recent?: SpotifyTrack[];
+  recent?: RecentlyPlayedTrack[];
 }
 
 interface SpotifyDataViewProps {
@@ -86,7 +41,6 @@ interface SpotifyDataViewProps {
 export default function SpotifyDataView({ initialSection, onUpdateTopBar }: SpotifyDataViewProps) {
   const { connected, user, loading, connect, checkStatus, getTopTracks, getTopArtists, getTopAlbums, getRecentTracks } = useSpotify();
   
-  // Core state management - use initialSection if provided
   const [activeTab, setActiveTab] = useState<'tracks' | 'artists' | 'genres' | 'albums' | 'recent'>(
     (initialSection as 'tracks' | 'artists' | 'genres' | 'albums' | 'recent') || 'tracks'
   );
@@ -98,7 +52,6 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
   const [genreRetryCount, setGenreRetryCount] = useState(0);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Data cache using useRef for persistence
   const dataCache = useRef<DataCache>({
     tracks: {},
     artists: {},
@@ -106,21 +59,17 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
     recent: undefined
   });
 
-  // Loading state management using useRef
   const loadingStates = useRef({
     initializing: false,
     loadingTabs: new Set<string>()
   });
 
-  // Current data state - computed from cache
-  const [recentTracks, setRecentTracks] = useState<SpotifyTrack[]>([]);
+  const [recentTracks, setRecentTracks] = useState<RecentlyPlayedTrack[]>([]);
   const [topTracks, setTopTracks] = useState<SpotifyTrack[]>([]);
   const [topArtists, setTopArtists] = useState<SpotifyArtist[]>([]);
   const [topAlbums, setTopAlbums] = useState<SpotifyAlbum[]>([]);
 
-  // Initial data load - only once when connected
   const initializeData = useCallback(async () => {
-    // Prevent concurrent initialization
     if (loadingStates.current.initializing) {
       console.log('⚠️ Initialization already in progress, skipping');
       return;
@@ -132,11 +81,9 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
     setError(null);
     
     try {
-      // Load default tab data (tracks, short_term) directly without cache check
       console.log('🔄 Loading fresh tracks data for short_term (initial)');
       const tracksData = await getTopTracks('short_term');
       
-      // Cache and set the result
       dataCache.current.tracks.short_term = tracksData || [];
       setTopTracks(tracksData || []);
       
@@ -149,9 +96,8 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
       setDataLoading(false);
       loadingStates.current.initializing = false;
     }
-  }, [getTopTracks]); // Only depend on the direct API call
+  }, [getTopTracks]);
 
-  // Load data when tab/time range changes (after initialization)
   useEffect(() => {
     if (!connected) {
       console.log('⚠️ Not connected, skipping data load');
@@ -163,7 +109,6 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
       return;
     }
 
-    // Check if we already have the data cached
     const needsLoading = (() => {
       switch (activeTab) {
         case 'tracks':
@@ -182,11 +127,9 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
 
     if (needsLoading) {
       console.log(`📊 Loading fresh data for ${activeTab} (${timeRange})`);
-      // Call the function directly instead of relying on dependency
       const loadData = async () => {
         const loadingKey = `${activeTab}-${timeRange}`;
         
-        // Prevent concurrent loading of the same data
         if (loadingStates.current.loadingTabs.has(loadingKey)) {
           console.log(`⚠️ Already loading ${loadingKey}, skipping`);
           return;
@@ -229,7 +172,6 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
             }
               
             case 'genres': {
-              // For genres, we need artists data
               const cacheKey = timeRange as keyof DataCache['artists'];
               console.log(`🔄 Loading fresh artists data for ${timeRange} (genres)`);
               data = await getTopArtists(timeRange);
@@ -259,7 +201,6 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
       
       loadData();
     } else {
-      // Update display state with cached data
       console.log(`✅ Using cached data for ${activeTab} (${timeRange})`);
       switch (activeTab) {
         case 'tracks':
@@ -277,22 +218,17 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
           break;
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [connected, isInitialized, activeTab, timeRange]); // Remove all function dependencies
+  }, [connected, isInitialized, activeTab, timeRange]);
 
-  // Check connection status on mount only
   useEffect(() => {
     console.log('🔍 Checking Spotify connection status...');
     checkStatus();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Intentionally empty dependency array
+  }, []);
 
-  // Initialize data when connected (only once)
   useEffect(() => {
     console.log('🔄 Connection state change:', { connected, isInitialized, initializing: loadingStates.current.initializing });
     
     if (connected && !isInitialized) {
-      // Prevent multiple initialization attempts
       if (!loadingStates.current.initializing) {
         console.log('🚀 Starting initialization...');
         initializeData();
@@ -300,10 +236,8 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
         console.log('⚠️ Initialization already in progress, waiting...');
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [connected, isInitialized]); // Remove initializeData dependency to prevent loops
+  }, [connected, isInitialized]);
 
-  // Update top bar when activeTab or viewMode changes
   useEffect(() => {
     if (onUpdateTopBar && connected) {
       const getTitle = () => {
@@ -363,7 +297,6 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
       setError(null);
       
       try {
-        // Try different time ranges to get genre data using our optimized loading
         const timeRanges: ('short_term' | 'medium_term' | 'long_term')[] = ['long_term', 'medium_term', 'short_term'];
         
         for (const range of timeRanges) {
@@ -427,7 +360,6 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
 
   const getContainerClasses = () => {
     if (viewMode === 'grid') {
-      // Change to 2 columns for grid view
       return 'grid grid-cols-2 gap-4';
     }
     return 'space-y-4';
@@ -441,7 +373,6 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
   };
 
   const renderTrackItem = useCallback((track: any, index: number) => {
-    // Add null safety checks
     if (!track || !track.id) {
       return null;
     }
@@ -477,7 +408,6 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
                   <span className="text-xs text-[#1DB954]">{track.popularity}% popularity</span>
                 </>
               )}
-              {/* Add played_at time for recent tracks */}
               {track.played_at && (
                 <>
                   <span className="text-gray-400 mx-1">•</span>
@@ -518,7 +448,6 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
   }, [viewMode, formatDuration, formatPlayedAt, getItemClasses]);
 
   const renderArtistItem = useCallback((artist: any, index: number) => {
-    // Add null safety checks
     if (!artist || !artist.id) {
       return null;
     }
@@ -597,6 +526,42 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
     );
   }, [viewMode, formatNumber, getItemClasses]);
 
+  const renderContent = () => {
+    if (activeTab === 'recent') {
+      if (dataLoading && recentTracks.length === 0) {
+        return <p className="text-center text-zinc-400">Loading recent plays...</p>;
+      }
+
+      if (recentTracks.length === 0) {
+        return <p className="text-center text-zinc-400">No recent tracks found.</p>;
+      }
+      
+      return (
+        <div className={getContainerClasses()}>
+          {recentTracks.map((item, index) => {
+            const track = item.track;
+            if (!track) return null;
+
+            return (
+              <div key={`${track.id}-${item.played_at}`} className={getItemClasses()}>
+                {track.album?.images?.[0]?.url && (
+                  <img src={track.album.images[0].url} alt={track.album.name} className="w-12 h-12 mr-4 rounded-lg" />
+                )}
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-white font-medium truncate">{track.name}</h4>
+                  <p className="text-gray-400 text-sm truncate">
+                    {track.artists?.map(artist => artist.name).join(', ')}
+                  </p>
+                </div>
+                <span className="text-xs text-zinc-400">{formatPlayedAt(item.played_at)}</span>
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+  };
+
   if (loading) {
     return (
       <div className="w-full h-screen flex items-center justify-center bg-gradient-to-br from-[#0A0A0A] via-[#1A1A1A] to-[#0A0A0A]">
@@ -632,7 +597,6 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
 
   return (
     <>
-      {/* TopAppBar - Only show when Spotify is not connected */}
       {!connected && (
         <TopAppBar 
           title="Explore"
@@ -641,18 +605,16 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
         />
       )}
       
-      {/* Merged Filter Chips - Position based on connection status */}
       {connected && (
         <div 
           className="fixed top-[60px] left-0 right-0 z-30"
           style={{
             background: 'rgba(18, 18, 20, 0.8)',
             backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)', // For Safari
+            WebkitBackdropFilter: 'blur(20px)',
           }}
         >
           <div className="max-w-7xl mx-auto">
-            {/* Add padding to left but not right to allow Recent chip to reach screen edge */}
             <div className="pl-4 pr-0 py-3">
               <div className="flex gap-2 overflow-x-auto scrollbar-none pb-2 pr-4">
                 <button
@@ -712,9 +674,7 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
       )}
 
       <div className="w-full h-screen overflow-y-auto bg-gradient-to-br from-[#0A0A0A] via-[#1A1A1A] to-[#0A0A0A]">
-        {/* Content area with proper top padding based on connection status */}
         <div className={`max-w-7xl mx-auto px-4 pb-[120px] ${connected ? 'pt-[103px]' : 'pt-4'}`}>
-          {/* Time Range Selector (for tracks, artists, albums, and genres) - Position below filter chips */}
           {activeTab !== 'recent' && (
             <div className="mb-6 mt-0">
               <div className="flex gap-2 mb-4">
@@ -750,7 +710,6 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
                 </button>
               </div>
               
-              {/* Subtle section title with time range on the right */}
               <div className="flex items-center justify-between">
                 <h3 className="text-white text-lg font-medium capitalize">
                   {activeTab === 'tracks' ? 'Tracks' :
@@ -763,7 +722,6 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
             </div>
           )}
 
-          {/* Subtle section title for Recent tab */}
           {activeTab === 'recent' && (
             <div className="mb-6 mt-0">
               <div className="flex items-center justify-between">
@@ -773,7 +731,6 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
             </div>
           )}
 
-          {/* Loading State */}
           {dataLoading && (
             <div className="flex items-center justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1DB954]"></div>
@@ -781,95 +738,37 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
             </div>
           )}
 
-          {/* Error State */}
           {error && (
             <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 mb-6">
               <p className="text-red-400">{error}</p>
             </div>
           )}
 
-          {/* Content */}
           {!dataLoading && !error && (
             <>
-              {/* Recent Tracks */}
               {activeTab === 'recent' && (
                 <div>
                   
                   <div className={getContainerClasses()}>
-                    {recentTracks.map((item: any, index: number) => {
-                      // Handle recent tracks structure (item.track)
-                      if (!item || !item.track) {
-                        return null;
-                      }
-                      
+                    {recentTracks.map((item, index) => {
                       const track = item.track;
-                      if (!track || !track.id) {
-                        return null;
-                      }
+                      if (!track) return null;
 
-                      const isGrid = viewMode === 'grid';
-                      
                       return (
-                        <div 
-                          key={`${track.id}-${item.played_at}`} 
-                          className={`${getItemClasses()} animate-fadeInUp`}
-                          style={{ animationDelay: `${index * 50}ms` }}
-                        >
-                          <div className={`flex ${isGrid ? 'flex-col' : 'items-center'}`}>
-                            {!isGrid && <span className="text-[#1DB954] font-bold text-lg mr-4 w-6">#{index + 1}</span>}
-                            {track.album?.images?.[0]?.url && (
-                              <img 
-                                src={track.album.images[0].url} 
-                                alt={track.album?.name || 'Album'}
-                                className={`${isGrid ? 'w-full aspect-square mb-3' : 'w-12 h-12 mr-4'} rounded-lg`}
-                              />
-                            )}
-                            <div className={`${isGrid ? '' : 'flex-1 min-w-0'}`}>
-                              {isGrid && <span className="text-[#1DB954] font-bold text-sm mb-1 block">#{index + 1}</span>}
-                              <h4 className={`text-white font-medium ${isGrid ? 'text-sm mb-1' : ''} truncate`}>{track.name || 'Unknown Track'}</h4>
-                              <p className={`text-gray-400 text-sm truncate ${isGrid ? 'mb-2' : ''}`}>
-                                {track.artists?.map((artist: any) => artist.name).join(', ') || 'Unknown Artist'} • {track.album?.name || 'Unknown Album'}
-                              </p>
-                              <div className="flex items-center">
-                                <span className="text-xs text-gray-400">{track.duration_ms ? formatDuration(track.duration_ms) : '--:--'}</span>
-                                {item.played_at && (
-                                  <>
-                                    <span className="text-gray-400 mx-1">•</span>
-                                    <span className="text-xs text-orange-400">{formatPlayedAt(item.played_at)}</span>
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                            {!isGrid && (
-                              <a 
-                                href={track.external_urls?.spotify || `https://open.spotify.com/track/${track.id}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="ml-2 p-2 rounded-full bg-[#1DB954]/20 hover:bg-[#1DB954]/30 transition-all"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-4 h-4 text-[#1DB954]">
-                                  <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.84-.179-.959-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.361 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.42 1.56-.299.421-1.02.599-1.559.3z"/>
-                                </svg>
-                              </a>
-                            )}
-                          </div>
-                          {isGrid && (
-                            <div className="mt-3 flex justify-center">
-                              <a 
-                                href={track.external_urls?.spotify || `https://open.spotify.com/track/${track.id}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="p-2 rounded-full bg-[#1DB954]/20 hover:bg-[#1DB954]/30 transition-all"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-4 h-4 text-[#1DB954]">
-                                  <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.84-.179-.959-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.361 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.42 1.56-.299.421-1.02.599-1.559.3z"/>
-                                </svg>
-                              </a>
-                            </div>
+                        <div key={`${track.id}-${item.played_at}`} className={getItemClasses()}>
+                          {track.album?.images?.[0]?.url && (
+                            <img src={track.album.images[0].url} alt={track.album.name} className="w-12 h-12 mr-4 rounded-lg" />
                           )}
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-white font-medium truncate">{track.name}</h4>
+                            <p className="text-gray-400 text-sm truncate">
+                              {track.artists?.map(artist => artist.name).join(', ')}
+                            </p>
+                          </div>
+                          <span className="text-xs text-zinc-400">{formatPlayedAt(item.played_at)}</span>
                         </div>
                       );
-                    }).filter(Boolean)}
+                    })}
                   </div>
 
                   {recentTracks.length === 0 && (
@@ -880,7 +779,6 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
                 </div>
               )}
 
-              {/* Top Tracks */}
               {activeTab === 'tracks' && (
                 <div>
                   
@@ -898,7 +796,6 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
                 </div>
               )}
 
-              {/* Top Artists */}
               {activeTab === 'artists' && (
                 <div>
                   
@@ -916,13 +813,11 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
                 </div>
               )}
 
-              {/* Top Albums */}
               {activeTab === 'albums' && (
                 <div>
                   
                   <div className={getContainerClasses()}>
                     {topAlbums.map((album, index) => {
-                      // Add null safety checks
                       if (!album || !album.id) {
                         return null;
                       }
@@ -998,7 +893,6 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
                 </div>
               )}
 
-              {/* Top Genres */}
               {activeTab === 'genres' && (
                 <div>
                   
@@ -1055,7 +949,6 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
           )}
         </div>
 
-        {/* Shareable Cards Modal */}
         {showShareCards && (
           <ShareableCards
             onClose={() => setShowShareCards(false)}

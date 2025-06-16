@@ -30,20 +30,40 @@ interface SpotifyStatus {
   error?: string;
 }
 
-interface SpotifyTrack {
+export interface SpotifyTrack {
   id: string;
   name: string;
-  artist: string;
-  album: string;
-  played_at?: string;
+  artists: SpotifyArtistSummary[];
+  album: SpotifyAlbumSummary;
   duration_ms: number;
+  explicit: boolean;
+  popularity: number;
+  preview_url: string | null;
   external_urls: { spotify: string };
-  preview_url?: string;
-  image_url?: string;
-  popularity?: number;
+  uri: string;
 }
 
-interface SpotifyArtist {
+export interface SpotifyArtistSummary {
+  id: string;
+  name: string;
+  external_urls: { spotify: string };
+}
+
+export interface SpotifyAlbumSummary {
+  id: string;
+  name: string;
+  release_date: string;
+  release_date_precision: string;
+  images: Array<{ url: string; height: number; width: number }>;
+  external_urls: { spotify: string };
+}
+
+export interface RecentlyPlayedTrack {
+  track: SpotifyTrack;
+  played_at: string;
+}
+
+export interface SpotifyArtist {
   id: string;
   name: string;
   genres: string[];
@@ -51,9 +71,10 @@ interface SpotifyArtist {
   followers: number;
   external_urls: { spotify: string };
   image_url?: string;
+  track_count: number;
 }
 
-interface SpotifyAlbum {
+export interface SpotifyAlbum {
   id: string;
   name: string;
   artist: string;
@@ -66,7 +87,8 @@ interface SpotifyAlbum {
   track_count: number;
 }
 
-interface AudioFeatures {
+export interface AudioFeatures {
+  id: string;
   energy: number;
   valence: number;
   danceability: number;
@@ -277,7 +299,7 @@ export function useSpotify() {
   };
 
   // Fetch recent tracks
-  const getRecentTracks = async (): Promise<SpotifyTrack[]> => {
+  const getRecentTracks = async (): Promise<RecentlyPlayedTrack[]> => {
     console.log('🎵 getRecentTracks: Starting fetch');
     
     if (!status.connected) {
@@ -314,14 +336,7 @@ export function useSpotify() {
 
     try {
       console.log('📡 getRecentTracks: Making API request');
-      const response = await fetch('/api/spotify/recent-tracks', {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await fetch('/api/spotify/recent-tracks');
       
       console.log('📡 getRecentTracks: Response received', {
         status: response.status,
@@ -348,14 +363,44 @@ export function useSpotify() {
       }
 
       const data = await response.json();
-      const tracks = data.tracks || [];
-      
-      console.log('✅ getRecentTracks: Data received', {
-        tracksCount: tracks.length,
-        total: data.total,
-        firstTrack: tracks[0]
-      });
-      
+
+      if (!data.items) {
+        console.warn('⚠️ useSpotify: No recent tracks found in API response.');
+        return [];
+      }
+
+      // Normalize track data
+      const tracks: RecentlyPlayedTrack[] = data.items.map((item: any) => ({
+        played_at: item.played_at,
+        track: {
+          id: item.track.id,
+          name: item.track.name,
+          artists: item.track.artists.map((a: any) => ({
+            id: a.id,
+            name: a.name,
+            external_urls: a.external_urls
+          })),
+          album: {
+            id: item.track.album.id,
+            name: item.track.album.name,
+            release_date: item.track.album.release_date,
+            release_date_precision: item.track.album.release_date_precision,
+            images: item.track.album.images.map((i: any) => ({
+              url: i.url,
+              height: i.height,
+              width: i.width
+            })),
+            external_urls: item.track.album.external_urls
+          },
+          duration_ms: item.track.duration_ms,
+          explicit: item.track.explicit,
+          popularity: item.track.popularity,
+          preview_url: item.track.preview_url,
+          external_urls: item.track.external_urls,
+          uri: item.track.uri
+        }
+      }));
+
       // Cache the data
       setCacheData(cacheKey, tracks);
       
@@ -437,14 +482,35 @@ export function useSpotify() {
       }
 
       const data = await response.json();
-      const tracks = data.tracks || [];
-      
-      console.log('✅ getTopTracks: Data received', {
-        tracksCount: tracks.length,
-        total: data.total,
-        timeRange: data.time_range,
-        firstTrack: tracks[0]
-      });
+
+      // Normalize track data
+      const tracks: SpotifyTrack[] = data.items.map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        artists: item.artists.map((a: any) => ({
+          id: a.id,
+          name: a.name,
+          external_urls: a.external_urls
+        })),
+        album: {
+          id: item.album.id,
+          name: item.album.name,
+          release_date: item.album.release_date,
+          release_date_precision: item.album.release_date_precision,
+          images: item.album.images.map((i: any) => ({
+            url: i.url,
+            height: i.height,
+            width: i.width
+          })),
+          external_urls: item.album.external_urls
+        },
+        duration_ms: item.duration_ms,
+        explicit: item.explicit,
+        popularity: item.popularity,
+        preview_url: item.preview_url,
+        external_urls: item.external_urls,
+        uri: item.uri
+      }));
       
       // Cache the data
       setCacheData(cacheKey, tracks);
@@ -563,7 +629,7 @@ export function useSpotify() {
   };
 
   // Fetch audio features for tracks
-  const getAudioFeatures = async (trackIds: string[]): Promise<{ aggregate: AudioFeatures; audio_features: any[] }> => {
+  const getAudioFeatures = async (trackIds: string[]): Promise<AudioFeatures[]> => {
     console.log('🎵 getAudioFeatures called with:', { connected: status.connected, trackCount: trackIds.length });
     
     if (!status.connected) {
@@ -580,7 +646,11 @@ export function useSpotify() {
       const ids = trackIds.join(',');
       console.log('🔄 getAudioFeatures: Making API request...');
       
-      const response = await fetch(`/api/spotify/audio-features?ids=${ids}`);
+      const response = await fetch('/api/spotify/audio-features', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ trackIds }),
+      });
       
       console.log('📡 getAudioFeatures: API response status:', response.status);
       
@@ -595,18 +665,7 @@ export function useSpotify() {
         // Don't throw for 403/401 errors - just return empty result
         if (response.status === 403 || response.status === 401) {
           console.log('🔄 getAudioFeatures: Auth error, returning empty result');
-          return {
-            aggregate: {
-              energy: 0,
-              valence: 0,
-              danceability: 0,
-              acousticness: 0,
-              instrumentalness: 0,
-              tempo: 0,
-              mood_score: 0
-            },
-            audio_features: []
-          };
+          return [];
         }
         
         throw new Error(`HTTP ${response.status}: ${errorText}`);
@@ -614,7 +673,7 @@ export function useSpotify() {
 
       const data = await response.json();
       console.log('✅ getAudioFeatures: Success');
-      return data;
+      return data.audio_features;
       
     } catch (error) {
       console.error('❌ getAudioFeatures: Exception occurred:', error);
@@ -630,33 +689,42 @@ export function useSpotify() {
 
     try {
       // Fetch recent and top tracks
-      const [recentTracks, topTracks] = await Promise.all([
-        getRecentTracks(),
-        getTopTracks('short_term')
-      ]);
+      const recentTracks: RecentlyPlayedTrack[] = await getRecentTracks();
+      const topTracks: SpotifyTrack[] = await getTopTracks('medium_term');
 
       // Get audio features for top tracks
-      const topTrackIds = topTracks.slice(0, 20).map(track => track.id);
-      const audioFeatures = await getAudioFeatures(topTrackIds);
+      const trackIds = [...new Set([
+        ...recentTracks.map(t => t.track.id),
+        ...topTracks.map(t => t.id)
+      ])];
+      const audioFeatures: AudioFeatures[] = await getAudioFeatures(trackIds);
 
       // Calculate listening stats
       const totalTracks = recentTracks.length;
-      const uniqueArtists = [...new Set(recentTracks.map(track => track.artist))];
-      
-      // Estimate daily listening time (based on recent tracks)
-      const totalDuration = recentTracks.reduce((sum, track) => sum + track.duration_ms, 0);
-      const avgTrackDuration = totalDuration / totalTracks;
-      const estimatedDailyMinutes = Math.round((avgTrackDuration * 20) / (1000 * 60)); // Rough estimate
+      const uniqueArtists = new Set(recentTracks.map(item => item.track.artists.map(a => a.name).join(',')));
+      const totalDurationMs = recentTracks.reduce((sum, item) => sum + item.track.duration_ms, 0);
+      const estimatedDailyMinutes = Math.round(totalDurationMs / 1000 / 60 / 30); // Assuming 30-day window
+
+      const featuresMap = new Map(audioFeatures.map(f => [f.id, f]));
 
       return {
         recentTracks,
         topTracks,
-        audioFeatures: audioFeatures.aggregate,
+        audioFeatures: audioFeatures.map(feature => ({
+          id: feature.id,
+          energy: feature.energy,
+          valence: feature.valence,
+          danceability: feature.danceability,
+          acousticness: feature.acousticness,
+          instrumentalness: feature.instrumentalness,
+          tempo: feature.tempo,
+          mood_score: feature.mood_score
+        })),
         stats: {
           totalTracks,
-          uniqueArtists: uniqueArtists.length,
+          uniqueArtists: uniqueArtists.size,
           estimatedDailyMinutes,
-          moodScore: audioFeatures.aggregate.mood_score
+          moodScore: audioFeatures.reduce((sum, feature) => sum + feature.mood_score, 0) / audioFeatures.length
         }
       };
     } catch (error) {

@@ -14,6 +14,19 @@ export interface Props {
   onClose(): void;
 }
 
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-neutral-800/80 backdrop-blur-sm text-white p-3 rounded-lg border border-neutral-600">
+        <p className="font-bold text-lg">{`${label}`}</p>
+        <p className="text-sm">{`Popularity: ${payload[0].value.toFixed(1)}%`}</p>
+      </div>
+    );
+  }
+
+  return null;
+};
+
 export default function MusicalAgeDetailSheet({ payload, open, onClose }: Props) {
   // Get AI insights for richer text content
   const aiInsights = useAIInsights('musical_age', payload, true);
@@ -202,40 +215,24 @@ export default function MusicalAgeDetailSheet({ payload, open, onClose }: Props)
                         className="bg-white/5 rounded-lg p-4 border border-white/10 mb-6"
                       >
                         <h3 className="text-lg font-semibold text-neutral-100 mb-4">Music Across Decades</h3>
-                        <div className="h-64">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                              <XAxis 
-                                dataKey="decade" 
-                                axisLine={false}
-                                tickLine={false}
-                                tick={{ fill: '#a3a3a3', fontSize: 12 }}
-                              />
-                              <YAxis 
-                                axisLine={false}
-                                tickLine={false}
-                                tick={{ fill: '#a3a3a3', fontSize: 12 }}
-                              />
-                              <Tooltip
-                                contentStyle={{
-                                  backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                                  borderRadius: '8px',
-                                  color: '#e5e5e5'
-                                }}
-                                labelStyle={{ color: '#a3a3a3' }}
-                              />
+                        <div className="text-sm text-neutral-300 mb-4">How your music taste spreads out over time.</div>
+                        <div style={{'--chart-gradient-start': '#22c55e', '--chart-gradient-end': '#16a34a'} as React.CSSProperties} data-testid="chart-container">
+                          <ResponsiveContainer width="100%" height={200}>
+                            <BarChart data={chartData} margin={{ top: 20, right: 0, left: -20, bottom: 0 }}>
+                              <defs>
+                                <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="var(--chart-gradient-start)" />
+                                  <stop offset="95%" stopColor="var(--chart-gradient-end)" />
+                                </linearGradient>
+                              </defs>
+                              <XAxis dataKey="decade" tickLine={false} axisLine={false} tick={{ fill: '#a3a3a3' }} />
+                              <YAxis hide={true} />
+                              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }} />
                               <Bar 
                                 dataKey="weight" 
                                 fill="url(#barGradient)"
                                 radius={[4, 4, 0, 0]}
                               />
-                              <defs>
-                                <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="0%" stopColor="#22c55e" />
-                                  <stop offset="100%" stopColor="#16a34a" />
-                                </linearGradient>
-                              </defs>
                             </BarChart>
                           </ResponsiveContainer>
                         </div>

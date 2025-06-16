@@ -7,6 +7,7 @@ import {
 } from '../lib/openaiClient';
 
 import { MusicalAgePayload } from '../utils/insightSelectors';
+import { RadarPayload } from '../features/radar/types';
 
 /**
  * Builds AI prompts for generating fun, quirky copy for insight cards
@@ -149,6 +150,42 @@ Generation timestamp: ${new Date().toISOString()}
 Generate ONE unique caption only, no quotes or additional text:`;
 }
 
+function buildRadarSummaryPrompt(data: RadarPayload): string {
+  const { scores } = data;
+  
+  // Find strongest and weakest axes
+  const scoreEntries = Object.entries(scores);
+  const strongest = scoreEntries.reduce((a, b) => a[1] > b[1] ? a : b);
+  const weakest = scoreEntries.reduce((a, b) => a[1] < b[1] ? a : b);
+
+  return `You are Sagey's fun music coach. Output two playful sentences that summarize a user's Music Radar based on the data below.
+
+Context:
+- Positivity Score: ${scores.Positivity.toFixed(0)}
+- Energy Score: ${scores.Energy.toFixed(0)}
+- Exploration Score: ${scores.Exploration.toFixed(0)}
+- Nostalgia Score: ${scores.Nostalgia.toFixed(0)}
+- Night-Owl Score: ${scores['Night-Owl'].toFixed(0)}
+- Strongest Trait: ${strongest[0]} (${strongest[1].toFixed(0)})
+- Weakest Trait: ${weakest[0]} (${weakest[1].toFixed(0)})
+
+Requirements:
+- Always two sentences.
+- First sentence should highlight the strongest trait in a fun, positive way.
+- Second sentence should playfully mention the weakest trait as an area for "practice" or "discovery".
+- Use a coaching/motivational tone.
+- Use emojis.
+- Vary your language and approach for uniqueness.
+
+Examples of tone (vary from these):
+- "Your music radar is buzzing with Positivity! 📈 Let's try to dial up the Exploration dial and discover some new sonic worlds. 🗺️"
+- "Amazing energy! Your playlists are a powerhouse of motivation. 💪 Maybe we can explore some more nostalgic tracks to balance things out. 🕰️"
+
+IMPORTANT: Generate a completely unique and fresh summary that differs from previous generations.
+
+Generate ONE unique summary only, no quotes or additional text:`;
+}
+
 export function buildPrompt(type: InsightType, data: InsightPayload): string {
   switch (type) {
     case 'musical_age':
@@ -159,6 +196,8 @@ export function buildPrompt(type: InsightType, data: InsightPayload): string {
       return buildGenrePassportPrompt(data as GenrePassportPayload);
     case 'night_owl_pattern':
       return buildNightOwlPatternPrompt(data as NightOwlPatternPayload);
+    case 'radar_summary':
+      return buildRadarSummaryPrompt(data as RadarPayload);
     default:
       throw new Error(`Unknown insight type: ${type}`);
   }

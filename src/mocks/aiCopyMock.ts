@@ -5,6 +5,10 @@ import { InsightType } from '../lib/openaiClient';
  */
 
 export const mockAICopy: Record<InsightType, string[]> = {
+  radar_summary: [
+    "Your music taste is an enigma, wrapped in a riddle, shrouded in sick beats.",
+    "Based on your listening, you're a true night owl with a love for high-energy bangers. Time to sleep?",
+  ],
   musical_age: [
     "🎂 Your ears are stuck in 2010! Musical age: 27 - clearly you peaked during the indie rock renaissance ✨",
     "🎵 Musical DNA says you're 24! Your playlist is basically a time machine to the golden era 🚀",
@@ -56,6 +60,7 @@ export function getMockCopy(type: InsightType): string {
  */
 export function getAllMockCopies(): Record<InsightType, string> {
   return {
+    radar_summary: getMockCopy('radar_summary'),
     musical_age: getMockCopy('musical_age'),
     mood_ring: getMockCopy('mood_ring'),
     genre_passport: getMockCopy('genre_passport'),

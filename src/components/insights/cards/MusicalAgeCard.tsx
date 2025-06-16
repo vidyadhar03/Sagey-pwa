@@ -126,7 +126,7 @@ export default function MusicalAgeCard() {
                 <span className={`text-6xl font-bold ${isFallback ? 'text-zinc-500' : 'bg-gradient-to-r from-[#1DB954] via-[#1ED760] to-[#1AA34A] bg-clip-text text-transparent'}`}>
                   {displayAge}
                 </span>
-                <span className="text-white text-xl ml-2">years</span>
+                <span className="text-white text-xl ml-2" data-testid="age-years">years</span>
               </div>
               {!isFallback && (payload as any)?.era && (
                 <motion.span 
@@ -134,6 +134,7 @@ export default function MusicalAgeCard() {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.5, duration: 0.4 }}
                   className="rounded-full bg-zinc-800 px-2 py-0.5 text-xs text-green-400 border border-white/10"
+                  data-testid="era-badge"
                 >
                   {(payload as any).era} Era
                 </motion.span>
@@ -171,11 +172,11 @@ export default function MusicalAgeCard() {
               <p className="text-xs text-zinc-400 text-center">We&apos;re speechless 🤫</p>
             ) : (
               <div>
-                <p className="text-xs text-zinc-300 leading-relaxed">
+                <p className="text-xs text-zinc-300 leading-relaxed" data-testid="ai-copy">
                   {aiInsights.copy}
                 </p>
                 <div className="flex justify-between items-center mt-2">
-                  <span className="text-xs text-zinc-500 flex items-center space-x-1">
+                  <span className="text-xs text-zinc-500 flex items-center space-x-1" data-testid="ai-generated-label">
                     <span>✨</span>
                     <span>AI Generated</span>
                   </span>
