@@ -124,6 +124,36 @@ describe('calculateLast4WeeksStats', () => {
     expect(result.percentageChange).toBe('+25 %'); // (5-4)/4 * 100 = 25%
   });
 
+  it('calculates specific test case with 226 vs 180 minutes', () => {
+    // Create tracks that will result in 226 minutes this period, 180 minutes prev period
+    const thisWeekTracks = Array.from({ length: 4 }, (_, i) => ({
+      track: {
+        id: `this-${i}`,
+        duration_ms: 226 * 60000 / 4, // Split 226 minutes across 4 tracks
+        album: { name: 'Current Album' },
+        artist: 'Current Artist'
+      },
+      played_at: new Date(Date.now() - (7 + i) * 24 * 60 * 60 * 1000).toISOString() // Last 4 weeks
+    }));
+
+    const prevWeekTracks = Array.from({ length: 3 }, (_, i) => ({
+      track: {
+        id: `prev-${i}`,
+        duration_ms: 180 * 60000 / 3, // Split 180 minutes across 3 tracks
+        album: { name: 'Old Album' },
+        artist: 'Old Artist'
+      },
+      played_at: new Date(Date.now() - (35 + i) * 24 * 60 * 60 * 1000).toISOString() // Previous 4 weeks
+    }));
+
+    const allTracks = [...thisWeekTracks, ...prevWeekTracks];
+    const result = calculateLast4WeeksStats(allTracks);
+    
+    expect(Math.round(result.minutesThis)).toBe(226);
+    expect(Math.round(result.minutesPrev)).toBe(180);
+    expect(result.percentageChange).toBe('+26 %'); // ((226-180)/180)*100 = 25.56 -> rounds to 26
+  });
+
   it('handles empty tracks array', () => {
     const result = calculateLast4WeeksStats([]);
     

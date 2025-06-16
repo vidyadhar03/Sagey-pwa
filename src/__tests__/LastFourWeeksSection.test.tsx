@@ -80,6 +80,36 @@ describe('LastFourWeeksSection', () => {
     expect(screen.getByText('+20% vs previous 4 weeks')).toBeInTheDocument();
   });
 
+  it('shows correct delta with minsPrev=180 and minsThis=226', async () => {
+    // Mock the calculateLast4WeeksStats to return test values from user requirements
+    (calculateLast4WeeksStats as jest.Mock).mockReturnValue({
+      minutesThis: 226,
+      minutesPrev: 180,
+      topGenre: 'Hip-Hop',
+      topAlbum: {
+        name: '1989',
+        artist: 'Taylor Swift',
+        image: 'https://example.com/1989.jpg'
+      }
+    });
+
+    mockUseSpotify.mockReturnValue({
+      connected: true,
+      getRecentTracks: jest.fn().mockResolvedValue([]),
+      getTopTracks: jest.fn().mockResolvedValue([]),
+      getTopArtists: jest.fn().mockResolvedValue([])
+    } as any);
+
+    render(<LastFourWeeksSection />);
+    
+    await waitFor(() => {
+      expect(screen.getByText('Listening time')).toBeInTheDocument();
+    });
+
+    // Should show +26% calculation: ((226 - 180) / 180) * 100 = 25.56 -> rounds to 26
+    expect(screen.getByText('+26% vs previous 4 weeks')).toBeInTheDocument();
+  });
+
   it('displays listening time card with calculated data', async () => {
     mockUseSpotify.mockReturnValue({
       connected: true,

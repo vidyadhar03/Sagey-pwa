@@ -83,12 +83,12 @@ export default function RecentPlays({ limit }: RecentPlaysProps) {
   return (
     <div className="space-y-2">
       {tracks.slice(0, limit || 5).map(({ track, played_at }) => (
-        <div key={`${track.id}-${played_at}`} className="flex items-center gap-4 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
+        <div key={`${track.id}-${played_at}`} className="flex items-center gap-3 py-3 px-4 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
           {track.album?.images?.[0]?.url && (
             <img 
               src={track.album.images[0].url} 
               alt={track.album.name}
-              className="w-12 h-12 rounded-md"
+              className="h-12 w-12 rounded-lg"
             />
           )}
           <div className="flex-1 min-w-0">
