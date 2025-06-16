@@ -7,7 +7,6 @@ import { calculateLast4WeeksStats, formatMinutes } from '../utils';
 interface Last4WeeksData {
   minutesThis: number;
   minutesPrev: number;
-  percentageChange: string;
   topGenre: string | null;
   topAlbum: {
     name: string;
@@ -21,7 +20,6 @@ export default function LastFourWeeksSection() {
   const [data, setData] = useState<Last4WeeksData>({
     minutesThis: 0,
     minutesPrev: 0,
-    percentageChange: '–',
     topGenre: null,
     topAlbum: null
   });
@@ -95,7 +93,6 @@ export default function LastFourWeeksSection() {
         setData({
           minutesThis: minutesStats.minutesThis,
           minutesPrev: minutesStats.minutesPrev,
-          percentageChange: minutesStats.percentageChange,
           topGenre,
           topAlbum
         });
@@ -109,6 +106,15 @@ export default function LastFourWeeksSection() {
 
     fetchLast4WeeksData();
   }, [connected, getRecentTracks, getTopTracks, getTopArtists]);
+
+  // Calculate percentage change for display
+  const delta = data.minutesPrev === 0
+    ? null
+    : Math.round(((data.minutesThis - data.minutesPrev) / data.minutesPrev) * 100);
+
+  const subtitle = delta === null
+    ? "—"
+    : `${delta > 0 ? "+" : ""}${delta}% vs previous 4 weeks`;
 
   // Don't render if not connected
   if (!connected) {
@@ -146,29 +152,23 @@ export default function LastFourWeeksSection() {
                 {formatMinutes(data.minutesThis)}
               </div>
               <p className={`text-xs ${
-                data.percentageChange.startsWith('+') ? 'text-green-400' : 
-                data.percentageChange.startsWith('-') ? 'text-red-400' : 
-                'text-gray-400'
+                delta === null ? 'text-zinc-400' :
+                delta < 0 ? 'text-red-400' :
+                delta > 0 ? 'text-green-400' :
+                'text-zinc-400'
               }`}>
-                {data.percentageChange} vs previous 4 weeks
+                {subtitle}
               </p>
             </>
           )}
         </div>
 
         {/* Top Genre & Album Cards - Side by Side */}
-        <div className="flex flex-col xs:flex-row gap-4">
+        <div className="flex gap-4 sm:grid sm:grid-cols-2">
           {/* Top Genre Card */}
           <div className="flex-1 p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">
-            <div className="flex items-center mb-3">
-              <div className="w-10 h-10 rounded-full bg-[#1DB954]/20 flex items-center justify-center mr-3">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-[#1DB954]">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m9 9 10.5-3m0 6.553v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 11-.99-3.467l2.31-.66a2.25 2.25 0 001.632-2.163zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 01-.99-3.467l2.31-.66A2.25 2.25 0 009 15.553z" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-white font-semibold text-sm">Top Genre</p>
-              </div>
+            <div className="mb-3">
+              <p className="text-white font-semibold text-sm">Top Genre</p>
             </div>
             
             {loading ? (
@@ -184,15 +184,8 @@ export default function LastFourWeeksSection() {
 
           {/* Top Album Card */}
           <div className="flex-1 p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">
-            <div className="flex items-center mb-3">
-              <div className="w-10 h-10 rounded-full bg-[#1DB954]/20 flex items-center justify-center mr-3">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-[#1DB954]">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-white font-semibold text-sm">Top Album</p>
-              </div>
+            <div className="mb-3">
+              <p className="text-white font-semibold text-sm">Top Album</p>
             </div>
             
             {loading ? (
