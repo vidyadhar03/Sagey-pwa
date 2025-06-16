@@ -7,9 +7,11 @@ import SpotifyDebugPanel from '../SpotifyDebugPanel';
 import TopAppBar from '../TopAppBar';
 import HomeMusicRadar from '../../features/radar/HomeMusicRadar';
 import RecentPlays from '../RecentPlays';
+import HomeThisMonth from '../HomeThisMonth';
 import { useSpotify } from '../../hooks/useSpotify';
 import { useSpotifyDebug } from '../../hooks/useSpotifyDebug';
 import { useSpotifyInsights } from '../../hooks/useSpotifyInsights';
+import { getTrackImage } from '../../utils';
 
 interface HomeLayoutProps {
   onTabClick?: (tab: string, options?: { section?: string }) => void;
@@ -296,43 +298,34 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Today's Stats */}
                 <div className="lg:col-span-1 space-y-8">
-                  <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-white font-semibold text-lg">Today's Stats</h3>
-                      <button 
-                        onClick={() => onTabClick?.('stats')}
-                        className="text-[#1AA34A] text-sm font-medium hover:text-[#16803C] transition-colors"
-                      >
-                        View All
-                      </button>
-                    </div>
-
-                    <div className="p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">
-                      <div className="flex items-center mb-3">
-                        <div className="w-10 h-10 rounded-full bg-[#1DB954]/20 flex items-center justify-center mr-3">
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-[#1DB954]">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        </div>
-                        <div>
-                          <p className="text-white font-semibold text-sm">Today</p>
-                        </div>
+                  <div className="p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">
+                    <div className="flex items-center mb-3">
+                      <div className="w-10 h-10 rounded-full bg-[#1DB954]/20 flex items-center justify-center mr-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-[#1DB954]">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
                       </div>
-                      {insightsLoading ? (
-                        <>
-                          <div className="animate-pulse bg-[#1DB954]/20 h-8 w-20 rounded mb-1"></div>
-                          <div className="animate-pulse bg-gray-600/20 h-3 w-24 rounded"></div>
-                        </>
-                      ) : (
-                        <>
-                          <div className="text-[#1DB954] text-2xl font-bold mb-1">
-                            {todayMinutes > 0 ? `${Math.floor(todayMinutes / 60)}h ${todayMinutes % 60}m` : `${todayMinutes}m`}
-                          </div>
-                          <p className="text-gray-400 text-xs">{todayComparison} vs yesterday</p>
-                        </>
-                      )}
+                      <div>
+                        <p className="text-white font-semibold text-sm">Today</p>
+                      </div>
                     </div>
+                    {insightsLoading ? (
+                      <>
+                        <div className="animate-pulse bg-[#1DB954]/20 h-8 w-32 rounded mb-1"></div>
+                        <div className="animate-pulse bg-gray-600/20 h-3 w-24 rounded"></div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-[#1DB954] text-2xl font-bold mb-1">
+                          {todayMinutes > 0 ? `${todayMinutes} minutes streamed today` : `0 minutes streamed today`}
+                        </div>
+                        <p className="text-gray-400 text-xs">{todayComparison} vs yesterday</p>
+                      </>
+                    )}
                   </div>
+
+                  {/* This Month Section */}
+                  <HomeThisMonth />
 
                   {/* Recently Played Section (New Component) */}
                   <div>
@@ -381,14 +374,16 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                           return `${minutes}:${seconds.toString().padStart(2, '0')}`;
                         };
 
+                        const trackImage = getTrackImage(track);
+                        
                         return (
                           <div key={track.id} className="flex items-center gap-4 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
                             <span className="text-[#1DB954] font-bold text-lg mr-4 w-6">#{index + 1}</span>
-                            {track.image_url && (
+                            {trackImage && (
                               <img 
-                                src={track.image_url} 
+                                src={trackImage} 
                                 alt={typeof track.album === 'string' ? track.album : track.album?.name || 'Album'}
-                                className="w-12 h-12 mr-4 rounded-lg"
+                                className="w-14 h-14 mr-4 rounded-lg"
                               />
                             )}
                             <div className="flex-1 min-w-0">

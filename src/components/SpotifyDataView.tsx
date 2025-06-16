@@ -6,6 +6,7 @@ import { useSpotify, SpotifyTrack, SpotifyArtist, SpotifyAlbum, RecentlyPlayedTr
 import { useSpotifyDebug } from '../hooks/useSpotifyDebug';
 import ShareableCards from './ShareableCards';
 import TopAppBar from './TopAppBar';
+import { getTrackImage } from '../utils';
 
 // Data cache interface for better organization
 interface DataCache {
@@ -387,13 +388,16 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
       >
         <div className={`flex ${isGrid ? 'flex-col' : 'items-center'}`}>
           {!isGrid && <span className="text-[#1DB954] font-bold text-lg mr-4 w-6">#{index + 1}</span>}
-          {track.image_url && (
-            <img 
-              src={track.image_url} 
-              alt={typeof track.album === 'string' ? track.album : track.album?.name || 'Album'}
-              className={`${isGrid ? 'w-full aspect-square mb-3' : 'w-12 h-12 mr-4'} rounded-lg`}
-            />
-          )}
+          {(() => {
+            const trackImage = getTrackImage(track);
+            return trackImage ? (
+              <img 
+                src={trackImage} 
+                alt={typeof track.album === 'string' ? track.album : track.album?.name || 'Album'}
+                className={`${isGrid ? 'w-full aspect-square mb-3' : 'w-14 h-14 mr-4'} rounded-lg`}
+              />
+            ) : null;
+          })()}
           <div className={`${isGrid ? '' : 'flex-1 min-w-0'}`}>
             {isGrid && <span className="text-[#1DB954] font-bold text-sm mb-1 block">#{index + 1}</span>}
             <h4 className={`text-white font-medium ${isGrid ? 'text-sm mb-1' : ''} truncate`}>{track.name || 'Unknown Track'}</h4>
@@ -754,11 +758,24 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
                       const track = item.track;
                       if (!track) return null;
 
+                      const isListView = viewMode === 'list';
+                      const itemClasses = isListView 
+                        ? 'py-2 px-4 rounded-2xl bg-[#2A2A2D] border border-white/10 hover:border-[#1DB954]/30 transition-all flex items-center'
+                        : getItemClasses();
+
                       return (
-                        <div key={`${track.id}-${item.played_at}`} className={getItemClasses()}>
-                          {track.album?.images?.[0]?.url && (
-                            <img src={track.album.images[0].url} alt={track.album.name} className="w-12 h-12 mr-4 rounded-lg" />
-                          )}
+                        <div key={`${track.id}-${item.played_at}`} className={itemClasses}>
+                          {isListView && <span className="text-[#1DB954] font-bold text-lg mr-4 w-6">#{index + 1}</span>}
+                          {(() => {
+                            const trackImage = getTrackImage(track);
+                            return trackImage ? (
+                              <img 
+                                src={trackImage} 
+                                alt={track.album?.name || 'Album'} 
+                                className={isListView ? "w-12 h-12 mr-4 rounded-lg" : "w-12 h-12 mr-4 rounded-lg"}
+                              />
+                            ) : null;
+                          })()}
                           <div className="flex-1 min-w-0">
                             <h4 className="text-white font-medium truncate">{track.name}</h4>
                             <p className="text-gray-400 text-sm truncate">
