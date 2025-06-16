@@ -53,21 +53,49 @@ export function MusicRadarDetailSheet({ open, onClose, payload, aiSummary }: Mus
 
   const handleShare = async () => {
     const target = document.getElementById('shareable-radar');
-    if (target) {
-      try {
-        const canvas = await html2canvas(target, {
-          backgroundColor: '#18181b', // A zinc-900 color
-          useCORS: true,
-          logging: process.env.NODE_ENV === 'development',
-        });
-        const image = canvas.toDataURL('image/png');
-        const link = document.createElement('a');
-        link.href = image;
-        link.download = 'music-radar.png';
-        link.click();
-      } catch (error) {
-        console.error('Failed to share radar:', error);
+    if (!target) return;
+
+    try {
+      const canvas = await html2canvas(target, {
+        backgroundColor: '#18181b', // A zinc-900 color
+        useCORS: true,
+        logging: process.env.NODE_ENV === 'development',
+        scale: 2, // Higher resolution for better sharing quality
+      });
+
+      // Convert to blob
+      const blob = await new Promise<Blob>((resolve) => {
+        canvas.toBlob((blob) => resolve(blob!), 'image/png', 0.95);
+      });
+
+      // Try native sharing first if available
+      if (navigator.share && navigator.canShare) {
+        const file = new File([blob], 'music-radar.png', { type: 'image/png' });
+        
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: 'My Music Radar',
+            text: 'Check out my music persona from Sagey!',
+          });
+          return;
+        }
       }
+
+      // Fallback to download
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'music-radar.png';
+      link.click();
+      URL.revokeObjectURL(url);
+
+      // Show toast notification for fallback
+      console.log('📱 Radar saved to downloads!');
+      // You could add a proper toast notification here if you have a toast system
+
+    } catch (error) {
+      console.error('Failed to share radar:', error);
     }
   };
 

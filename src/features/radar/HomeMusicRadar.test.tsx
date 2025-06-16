@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import HomeMusicRadar from './HomeMusicRadar';
 import { useMusicRadar } from '../../hooks/useMusicRadar';
 import type { RadarPayload } from './types';
@@ -33,12 +33,23 @@ jest.mock('recharts', () => {
 
 describe('HomeMusicRadar', () => {
   const mockedUseMusicRadar = useMusicRadar as jest.Mock;
+  const mockMutate = jest.fn();
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockMutate.mockClear();
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
 
   it('renders skeleton when loading', () => {
     mockedUseMusicRadar.mockReturnValue({
       payload: {},
       isLoading: true,
-      ai: { isLoading: true },
+      ai: { isLoading: true, mutate: mockMutate },
       error: null,
     });
 
@@ -50,7 +61,7 @@ describe('HomeMusicRadar', () => {
     mockedUseMusicRadar.mockReturnValue({
       payload: { scores: { 'Positivity': 50, 'Energy': 50, 'Exploration': 50, 'Nostalgia': 50, 'Night-Owl': 50 }, suggestions: [] },
       isLoading: false,
-      ai: { copy: 'Your radar is perfectly balanced!', isLoading: false },
+      ai: { copy: 'Your radar is perfectly balanced!', isLoading: false, mutate: mockMutate },
       error: null,
     });
 
@@ -65,7 +76,7 @@ describe('HomeMusicRadar', () => {
     mockedUseMusicRadar.mockReturnValue({
       payload: { scores: { 'Positivity': 50, 'Energy': 50, 'Exploration': 50, 'Nostalgia': 50, 'Night-Owl': 50 }, suggestions: [] },
       isLoading: false,
-      ai: { copy: 'Balanced!', isLoading: false },
+      ai: { copy: 'Balanced!', isLoading: false, mutate: mockMutate },
       error: null,
     });
 
@@ -77,5 +88,54 @@ describe('HomeMusicRadar', () => {
     const dialog = await screen.findByRole('dialog');
     expect(dialog).toBeInTheDocument();
     expect(dialog).toHaveStyle({ display: 'block' });
+  });
+
+  it('shows refresh button and calls mutate when clicked', async () => {
+    mockedUseMusicRadar.mockReturnValue({
+      payload: { scores: { 'Positivity': 50, 'Energy': 50, 'Exploration': 50, 'Nostalgia': 50, 'Night-Owl': 50 }, suggestions: [] },
+      isLoading: false,
+      ai: { copy: 'Balanced!', isLoading: false, mutate: mockMutate },
+      error: null,
+    });
+
+    render(<HomeMusicRadar />);
+    
+    const refreshButton = screen.getByRole('button', { name: /refresh ai insights/i });
+    expect(refreshButton).toBeInTheDocument();
+    
+    fireEvent.click(refreshButton);
+    
+    await waitFor(() => {
+      expect(mockMutate).toHaveBeenCalledWith({ regenerate: true });
+    });
+  });
+
+  it('enforces refresh cooldown', async () => {
+    mockedUseMusicRadar.mockReturnValue({
+      payload: { scores: { 'Positivity': 50, 'Energy': 50, 'Exploration': 50, 'Nostalgia': 50, 'Night-Owl': 50 }, suggestions: [] },
+      isLoading: false,
+      ai: { copy: 'Balanced!', isLoading: false, mutate: mockMutate },
+      error: null,
+    });
+
+    render(<HomeMusicRadar />);
+    
+    const refreshButton = screen.getByRole('button', { name: /refresh ai insights/i });
+    
+    // First click should work
+    fireEvent.click(refreshButton);
+    expect(mockMutate).toHaveBeenCalledTimes(1);
+    
+    // Second immediate click should be blocked
+    fireEvent.click(refreshButton);
+    expect(mockMutate).toHaveBeenCalledTimes(1);
+    
+    // After cooldown, should work again - advance timers and re-render
+    jest.advanceTimersByTime(15001); // Advance past 15 second cooldown
+    
+    await waitFor(() => {
+      fireEvent.click(refreshButton);
+      expect(mockMutate).toHaveBeenCalledTimes(2);
+    });
   });
 }); 

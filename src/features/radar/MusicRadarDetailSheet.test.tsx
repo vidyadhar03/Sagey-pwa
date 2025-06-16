@@ -105,13 +105,87 @@ describe('MusicRadarDetailSheet', () => {
         });
     });
 
+    it('uses native share when available and supported', async () => {
+        const user = userEvent.setup();
+        const mockShare = jest.fn().mockResolvedValue(undefined);
+        const mockCanShare = jest.fn().mockReturnValue(true);
+        
+        // Mock navigator.share and canShare
+        Object.defineProperty(navigator, 'share', {
+            value: mockShare,
+            writable: true,
+        });
+        Object.defineProperty(navigator, 'canShare', {
+            value: mockCanShare,
+            writable: true,
+        });
+
+        const html2canvas = require('html2canvas');
+        
+        await act(async () => {
+            render(<MusicRadarDetailSheet open={true} onClose={() => {}} payload={testPayload} aiSummary={null} />);
+        });
+
+        const shareButton = screen.getByTestId('share-button');
+        await user.click(shareButton);
+        
+        await waitFor(() => {
+            expect(html2canvas).toHaveBeenCalled();
+            expect(mockCanShare).toHaveBeenCalled();
+            expect(mockShare).toHaveBeenCalledWith({
+                files: expect.any(Array),
+                title: 'My Music Radar',
+                text: 'Check out my music persona from Sagey!',
+            });
+        });
+    });
+
+    it('falls back to download when native share is not available', async () => {
+        const user = userEvent.setup();
+        
+        // Mock no native share support
+        Object.defineProperty(navigator, 'share', {
+            value: undefined,
+            writable: true,
+        });
+        Object.defineProperty(navigator, 'canShare', {
+            value: undefined,
+            writable: true,
+        });
+
+        // Mock URL and link behavior
+        const mockCreateObjectURL = jest.fn().mockReturnValue('blob:mock-url');
+        const mockRevokeObjectURL = jest.fn();
+        const mockClick = jest.fn();
+        
+        global.URL.createObjectURL = mockCreateObjectURL;
+        global.URL.revokeObjectURL = mockRevokeObjectURL;
+        
+        // Create proper mock link element
+        const mockLink = document.createElement('a');
+        mockLink.click = mockClick;
+        jest.spyOn(document, 'createElement').mockReturnValue(mockLink);
+
+        const html2canvas = require('html2canvas');
+        
+        render(<MusicRadarDetailSheet open={true} onClose={() => {}} payload={testPayload} aiSummary={null} />);
+
+        const shareButton = screen.getByTestId('share-button');
+        await user.click(shareButton);
+        
+        await waitFor(() => {
+            expect(html2canvas).toHaveBeenCalled();
+            expect(mockCreateObjectURL).toHaveBeenCalled();
+            expect(mockClick).toHaveBeenCalled();
+            expect(mockRevokeObjectURL).toHaveBeenCalled();
+        });
+    });
+
     it('calls onClose when close button is clicked', async () => {
         const user = userEvent.setup();
         const handleClose = jest.fn();
         
-        await act(async () => {
-            render(<MusicRadarDetailSheet open={true} onClose={handleClose} payload={testPayload} aiSummary={null} />);
-        });
+        render(<MusicRadarDetailSheet open={true} onClose={handleClose} payload={testPayload} aiSummary={null} />);
 
         const closeButton = screen.getByTestId('close-button');
         await user.click(closeButton);

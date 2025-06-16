@@ -84,7 +84,13 @@ jest.mock("@headlessui/react", () => {
 
 /* 6️⃣  Mock html2canvas - lightweight promise mock */
 jest.mock("html2canvas", () =>
-  jest.fn(() => Promise.resolve({ toDataURL: () => "data:image/png;base64,AAA" }))
+  jest.fn(() => Promise.resolve({ 
+    toDataURL: () => "data:image/png;base64,AAA",
+    toBlob: (callback: (blob: Blob) => void) => {
+      const blob = new Blob(['mock-image'], { type: 'image/png' });
+      callback(blob);
+    }
+  }))
 );
 
 /* 7️⃣  Mock lucide-react icons to lightweight <svg> */
