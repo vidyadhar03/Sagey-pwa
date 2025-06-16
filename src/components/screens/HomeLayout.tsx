@@ -7,7 +7,7 @@ import SpotifyDebugPanel from '../SpotifyDebugPanel';
 import TopAppBar from '../TopAppBar';
 import HomeMusicRadar from '../../features/radar/HomeMusicRadar';
 import RecentPlays from '../RecentPlays';
-import HomeThisMonth from '../HomeThisMonth';
+import LastFourWeeksSection from '../LastFourWeeksSection';
 import { useSpotify } from '../../hooks/useSpotify';
 import { useSpotifyDebug } from '../../hooks/useSpotifyDebug';
 import { useSpotifyInsights } from '../../hooks/useSpotifyInsights';
@@ -26,8 +26,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
   } = useSpotifyInsights();
   
   // Extract values from insights for backwards compatibility
-  const todayMinutes = 0; // This was for daily stats, not available in comprehensive insights
-  const todayComparison = '+0%'; // This was for daily stats comparison
+  // Removed today stats variables - now using Last 4 Weeks section
   const topGenre = insights.genrePassport.topGenres[0] || 'Mixed';
   
   // State for this component is now much simpler
@@ -52,7 +51,6 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
     spotifyError,
     spotifyHookError,
     displayError,
-    todayMinutes,
     topGenre,
     insightsLoading
   });
@@ -296,38 +294,11 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
             {/* Main Content: Stats, Top Tracks/Artists, Recent Plays */}
             {connected && (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Today's Stats */}
+                {/* Last 4 Weeks Stats */}
                 <div className="lg:col-span-1 space-y-8">
-                  <div className="p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">
-                    <div className="flex items-center mb-3">
-                      <div className="w-10 h-10 rounded-full bg-[#1DB954]/20 flex items-center justify-center mr-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-[#1DB954]">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="text-white font-semibold text-sm">Today</p>
-                      </div>
-                    </div>
-                    {insightsLoading ? (
-                      <>
-                        <div className="animate-pulse bg-[#1DB954]/20 h-8 w-32 rounded mb-1"></div>
-                        <div className="animate-pulse bg-gray-600/20 h-3 w-24 rounded"></div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="text-[#1DB954] text-2xl font-bold mb-1">
-                          {todayMinutes > 0 ? `${todayMinutes} minutes streamed today` : `0 minutes streamed today`}
-                        </div>
-                        <p className="text-gray-400 text-xs">{todayComparison} vs yesterday</p>
-                      </>
-                    )}
-                  </div>
+                  <LastFourWeeksSection />
 
-                  {/* This Month Section */}
-                  <HomeThisMonth />
-
-                  {/* Recently Played Section (New Component) */}
+                  {/* Recently Played Section - Single Track */}
                   <div>
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-white font-semibold text-lg">Recently Played</h3>
@@ -338,7 +309,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                         View All
                       </button>
                     </div>
-                    <RecentPlays />
+                    <RecentPlays limit={1} />
                   </div>
                 </div>
 

@@ -3,7 +3,11 @@
 import { useEffect, useState } from 'react';
 import { useSpotify, RecentlyPlayedTrack, SpotifyArtistSummary } from '../hooks/useSpotify';
 
-export default function RecentPlays() {
+interface RecentPlaysProps {
+  limit?: number;
+}
+
+export default function RecentPlays({ limit }: RecentPlaysProps) {
   const { connected, getRecentTracks } = useSpotify();
   const [tracks, setTracks] = useState<RecentlyPlayedTrack[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,7 +82,7 @@ export default function RecentPlays() {
 
   return (
     <div className="space-y-2">
-      {tracks.slice(0, 5).map(({ track, played_at }) => (
+      {tracks.slice(0, limit || 5).map(({ track, played_at }) => (
         <div key={`${track.id}-${played_at}`} className="flex items-center gap-4 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
           {track.album?.images?.[0]?.url && (
             <img 

@@ -22,19 +22,19 @@ jest.mock('../features/radar/HomeMusicRadar', () => {
   };
 });
 
-jest.mock('../RecentPlays', () => {
+jest.mock('../components/RecentPlays', () => {
   return function MockRecentPlays() {
     return <div data-testid="recent-plays">Recent Plays</div>;
   };
 });
 
-jest.mock('../HomeThisMonth', () => {
-  return function MockHomeThisMonth() {
-    return <div data-testid="this-month">This Month</div>;
+jest.mock('../components/LastFourWeeksSection', () => {
+  return function MockLastFourWeeksSection() {
+    return <div data-testid="last-four-weeks">Last 4 weeks</div>;
   };
 });
 
-describe('TodayStatsCard', () => {
+describe('LastFourWeeksSection', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     
@@ -43,7 +43,7 @@ describe('TodayStatsCard', () => {
     } as any);
   });
 
-  it('renders "0 minutes streamed today" when todayMinutes is 0', () => {
+  it('renders Last 4 weeks section in HomeLayout', () => {
     mockUseSpotify.mockReturnValue({
       connected: true,
       user: { display_name: 'Test User' },
@@ -63,46 +63,10 @@ describe('TodayStatsCard', () => {
 
     render(<HomeLayout />);
     
-    expect(screen.getByText('0 minutes streamed today')).toBeInTheDocument();
+    expect(screen.getByTestId('last-four-weeks')).toBeInTheDocument();
   });
 
-  it('renders correct minutes when todayMinutes has a value', () => {
-    // Mock the insights to return specific today minutes
-    const mockInsights = {
-      insights: {
-        genrePassport: { topGenres: ['pop'] }
-      },
-      isLoading: false,
-    };
-
-    mockUseSpotify.mockReturnValue({
-      connected: true,
-      user: { display_name: 'Test User' },
-      loading: false,
-      error: null,
-      getTopTracks: jest.fn().mockResolvedValue([]),
-      getTopArtists: jest.fn().mockResolvedValue([]),
-      connect: jest.fn(),
-    } as any);
-
-    mockUseSpotifyInsights.mockReturnValue(mockInsights as any);
-
-    // Create a mock where todayMinutes is set to 45
-    const originalComponent = HomeLayout;
-    const TestComponent = (props: any) => {
-      // Override the component to simulate 45 minutes
-      const component = originalComponent(props);
-      return component;
-    };
-
-    render(<TestComponent />);
-    
-    // Since todayMinutes is hardcoded to 0 in the current implementation,
-    // this test verifies the display format
-    expect(screen.getByText('0 minutes streamed today')).toBeInTheDocument();
-  });
-
-  it('shows loading state in Today stats card', () => {
+  it('renders recently played section with only one track', () => {
     mockUseSpotify.mockReturnValue({
       connected: true,
       user: { display_name: 'Test User' },
@@ -117,13 +81,38 @@ describe('TodayStatsCard', () => {
       insights: {
         genrePassport: { topGenres: ['pop'] }
       },
-      isLoading: true, // Loading state
+      isLoading: false,
     } as any);
 
     render(<HomeLayout />);
     
-    // Check for loading skeletons
-    const loadingElements = screen.getAllByTestId(/^(music-radar|recent-plays|this-month)$/);
-    expect(loadingElements.length).toBeGreaterThan(0);
+    expect(screen.getByTestId('recent-plays')).toBeInTheDocument();
+    expect(screen.getByText('Recently Played')).toBeInTheDocument();
+  });
+
+  it('renders component sections when connected', () => {
+    mockUseSpotify.mockReturnValue({
+      connected: true,
+      user: { display_name: 'Test User' },
+      loading: false,
+      error: null,
+      getTopTracks: jest.fn().mockResolvedValue([]),
+      getTopArtists: jest.fn().mockResolvedValue([]),
+      connect: jest.fn(),
+    } as any);
+
+    mockUseSpotifyInsights.mockReturnValue({
+      insights: {
+        genrePassport: { topGenres: ['pop'] }
+      },
+      isLoading: false,
+    } as any);
+
+    render(<HomeLayout />);
+    
+    // Check for the main component sections
+    expect(screen.getByTestId('music-radar')).toBeInTheDocument();
+    expect(screen.getByTestId('last-four-weeks')).toBeInTheDocument();
+    expect(screen.getByTestId('recent-plays')).toBeInTheDocument();
   });
 }); 

@@ -1,4 +1,4 @@
-import { getTrackImage } from '../utils';
+import { getTrackImage, formatMinutes, calculateLast4WeeksStats } from '../utils';
 
 describe('getTrackImage', () => {
   it('returns image_url when available', () => {
@@ -43,5 +43,104 @@ describe('getTrackImage', () => {
     };
     
     expect(getTrackImage(track)).toBeNull();
+  });
+});
+
+describe('formatMinutes', () => {
+  it('formats zero minutes correctly', () => {
+    expect(formatMinutes(0)).toBe('0 minutes');
+  });
+
+  it('formats single minute correctly', () => {
+    expect(formatMinutes(1)).toBe('1 minute');
+  });
+
+  it('formats multiple minutes correctly', () => {
+    expect(formatMinutes(45)).toBe('45 minutes');
+    expect(formatMinutes(142)).toBe('142 minutes');
+  });
+
+  it('rounds decimal minutes', () => {
+    expect(formatMinutes(45.7)).toBe('46 minutes');
+    expect(formatMinutes(45.3)).toBe('45 minutes');
+  });
+});
+
+describe('calculateLast4WeeksStats', () => {
+  const mockTrack1 = {
+    track: {
+      id: '1',
+      duration_ms: 240000, // 4 minutes
+      album: { name: 'Album 1' },
+      artist: 'Artist 1',
+      genres: ['pop']
+    },
+    played_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString() // 1 week ago
+  };
+
+  const mockTrack2 = {
+    track: {
+      id: '2',
+      duration_ms: 180000, // 3 minutes
+      album: { name: 'Album 2' },
+      artist: 'Artist 2'
+    },
+    played_at: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000).toISOString() // 5 weeks ago
+  };
+
+  it('calculates minutes correctly for recent tracks', () => {
+    const result = calculateLast4WeeksStats([mockTrack1]);
+    
+    expect(result.minutesThis).toBe(4); // 240000ms = 4 minutes
+    expect(result.minutesPrev).toBe(0);
+    expect(result.percentageChange).toBe('–');
+  });
+
+  it('calculates percentage change correctly', () => {
+    const recentTrack = {
+      track: {
+        id: '1',
+        duration_ms: 300000, // 5 minutes
+        album: { name: 'Album 1' },
+        artist: 'Artist 1'
+      },
+      played_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString() // 1 week ago
+    };
+
+    const oldTrack = {
+      track: {
+        id: '2',
+        duration_ms: 240000, // 4 minutes
+        album: { name: 'Album 2' },
+        artist: 'Artist 2'
+      },
+      played_at: new Date(Date.now() - 42 * 24 * 60 * 60 * 1000).toISOString() // 6 weeks ago
+    };
+
+    const result = calculateLast4WeeksStats([recentTrack, oldTrack]);
+    
+    expect(result.minutesThis).toBe(5);
+    expect(result.minutesPrev).toBe(4);
+    expect(result.percentageChange).toBe('+25 %'); // (5-4)/4 * 100 = 25%
+  });
+
+  it('handles empty tracks array', () => {
+    const result = calculateLast4WeeksStats([]);
+    
+    expect(result.minutesThis).toBe(0);
+    expect(result.minutesPrev).toBe(0);
+    expect(result.percentageChange).toBe('–');
+    expect(result.topGenre).toBeNull();
+    expect(result.topAlbum).toBeNull();
+  });
+
+  it('handles null/undefined tracks', () => {
+    const result = calculateLast4WeeksStats(null as any);
+    
+    expect(result.minutesThis).toBe(0);
+    expect(result.minutesPrev).toBe(0);
+    expect(result.percentageChange).toBe('–');
+    expect(result.topGenre).toBeNull();
+    expect(result.topAlbum).toBeNull();
   });
 }); 
