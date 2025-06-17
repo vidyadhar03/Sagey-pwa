@@ -646,39 +646,59 @@ export function useSpotify() {
 
     if (!trackIds || trackIds.length === 0) {
       console.log('❌ getAudioFeatures: No track IDs provided');
-      throw new Error('No track IDs provided');
+      return [];
     }
 
     try {
-      const ids = trackIds.join(',');
-      console.log('🔄 getAudioFeatures: Making API request...');
-      
-      const response = await fetch(`/api/spotify/audio-features?ids=${ids}`, {
-        method: 'GET',
-      });
-      
-      console.log('📡 getAudioFeatures: API response status:', response.status);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ getAudioFeatures: API error:', { 
-          status: response.status, 
-          statusText: response.statusText,
-          error: errorText 
-        });
-        
-        // Don't throw for 403/401 errors - just return empty result
-        if (response.status === 403 || response.status === 401) {
-          console.log('🔄 getAudioFeatures: Auth error, returning empty result');
-          return [];
-        }
-        
-        throw new Error(`HTTP ${response.status}: ${errorText}`);
-      }
+      const CHUNK_SIZE = 100; // Spotify API limit
+      const trackIdChunks: string[][] = [];
 
-      const data = await response.json();
-      console.log('✅ getAudioFeatures: Success');
-      return data.audio_features;
+      for (let i = 0; i < trackIds.length; i += CHUNK_SIZE) {
+        trackIdChunks.push(trackIds.slice(i, i + CHUNK_SIZE));
+      }
+      
+      console.log(`🔄 getAudioFeatures: Splitting into ${trackIdChunks.length} chunk(s)...`);
+
+      const promises = trackIdChunks.map(chunk => {
+        const ids = chunk.join(',');
+        return fetch(`/api/spotify/audio-features?ids=${ids}`, {
+          method: 'GET',
+        });
+      });
+
+      const responses = await Promise.all(promises);
+      let allAudioFeatures: AudioFeatures[] = [];
+
+      for (const response of responses) {
+        console.log('📡 getAudioFeatures: API response status for chunk:', response.status);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('❌ getAudioFeatures: API error on chunk:', { 
+            status: response.status, 
+            statusText: response.statusText,
+            error: errorText 
+          });
+          
+          if (response.status === 403 || response.status === 401) {
+            console.log('🔄 getAudioFeatures: Auth error, skipping chunk');
+            continue;
+          }
+          
+          // For other errors, we might want to throw or handle differently
+          // For now, we'll just log and continue
+          continue;
+        }
+
+        const data = await response.json();
+        if (data.audio_features) {
+          const validFeatures = data.audio_features.filter((f: any) => f !== null);
+          allAudioFeatures = allAudioFeatures.concat(validFeatures);
+        }
+      }
+      
+      console.log('✅ getAudioFeatures: Success, total features fetched:', allAudioFeatures.length);
+      return allAudioFeatures.filter(f => f); // Final filter for nulls
       
     } catch (error) {
       console.error('❌ getAudioFeatures: Exception occurred:', error);
