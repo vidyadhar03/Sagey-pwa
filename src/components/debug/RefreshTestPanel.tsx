@@ -152,7 +152,7 @@ export default function RefreshTestPanel({ enabled = false }: RefreshTestPanelPr
                             ✅ Cached: {resp.response.cached ? 'Yes' : 'No'}
                           </div>
                           <div className="text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900 p-2 rounded">
-                            "{resp.response.copy?.substring(0, 80)}..."
+                            &quot;{resp.response.copy?.substring(0, 80)}...&quot;
                           </div>
                           {resp.response.debug && (
                             <div className="text-blue-600 dark:text-blue-400 text-xs">

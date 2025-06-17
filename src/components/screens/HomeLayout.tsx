@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import UserProfile from '../UserProfile';
 import SpotifyDebugPanel from '../SpotifyDebugPanel';
 import TopAppBar from '../TopAppBar';
@@ -279,7 +279,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
                 <h1 className="text-3xl font-bold text-white">
                   Welcome, <span className="text-green-400">{user.display_name}</span>
                 </h1>
-                <p className="text-zinc-400 mt-1">Here's what your music says about you today.</p>
+                <p className="text-zinc-400 mt-1">Here&apos;s what your music says about you today.</p>
               </div>
             )}
 

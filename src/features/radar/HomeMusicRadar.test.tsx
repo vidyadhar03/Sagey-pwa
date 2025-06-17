@@ -67,6 +67,8 @@ describe('HomeMusicRadar', () => {
 
     render(<HomeMusicRadar />);
     
+    screen.debug();
+
     expect(screen.getByText('Your radar is perfectly balanced!')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /view details/i })).toBeInTheDocument();
     expect(screen.getByTestId('radar-chart')).toBeInTheDocument();

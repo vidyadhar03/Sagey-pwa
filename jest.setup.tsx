@@ -19,19 +19,27 @@ class ResizeObserver {
 
 /* 3️⃣  Polyfill Element.getAnimations() (Headless-UI warning) */
 if (!Element.prototype.getAnimations) {
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
+   
   Element.prototype.getAnimations = () => [] as unknown as Animation[];
 }
 
-/* 4️⃣  Mock Recharts completely for unit tests - simple SVG stubs */
+/* 4️⃣ Mock URL.createObjectURL (used in sharing fallback) */
+if (typeof window.URL.createObjectURL === 'undefined') {
+  Object.defineProperty(window.URL, 'createObjectURL', { value: jest.fn() });
+  Object.defineProperty(window.URL, 'revokeObjectURL', { value: jest.fn() });
+}
+
+/* 5️⃣  Mock Recharts completely for unit tests - simple SVG stubs */
 jest.mock("recharts", () => {
   const React = require("react");
+  const RechartsComponent = (props: any) => <svg data-testid="RechartsMock" {...props} />;
+  RechartsComponent.displayName = 'RechartsComponent';
   return new Proxy({}, { 
-    get: () => (props: any) => <svg data-testid="RechartsMock" {...props} /> 
+    get: () => RechartsComponent
   });
 });
 
-/* 5️⃣  Mock Headless-UI - force synchronous transitions */
+/* 6️⃣  Mock Headless-UI - force synchronous transitions */
 jest.mock("@headlessui/react", () => {
   const React = require("react");
   
@@ -82,7 +90,7 @@ jest.mock("@headlessui/react", () => {
   };
 });
 
-/* 6️⃣  Mock html2canvas - lightweight promise mock */
+/* 7️⃣  Mock html2canvas - lightweight promise mock */
 jest.mock("html2canvas", () =>
   jest.fn(() => Promise.resolve({ 
     toDataURL: () => "data:image/png;base64,AAA",
@@ -93,7 +101,7 @@ jest.mock("html2canvas", () =>
   }))
 );
 
-/* 7️⃣  Mock lucide-react icons to lightweight <svg> */
+/* 8️⃣  Mock lucide-react icons to lightweight <svg> */
 jest.mock("lucide-react", () => {
   const React = require("react");
   const icons = {
@@ -109,7 +117,7 @@ jest.mock("lucide-react", () => {
       }
       
       // Otherwise, return a generic icon
-      return ({ className, ...rest }: { className?: string }) => (
+      const GenericIcon = ({ className, ...rest }: { className?: string }) => (
         <svg
           role="img"
           data-testid="lucide-icon"
@@ -119,6 +127,8 @@ jest.mock("lucide-react", () => {
           {...rest}
         />
       );
+      GenericIcon.displayName = String(prop);
+      return GenericIcon;
     },
   });
 }); 

@@ -162,29 +162,23 @@ export function MusicRadarDetailSheet({ open, onClose, payload, aiSummary }: Mus
                     <div className="flex-grow w-full mt-4">
                       <ResponsiveContainer width="100%" height="100%">
                         <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chartData}>
-                          <defs>
-                            <radialGradient id="radar-fill">
-                              <stop offset="0%" stopColor="rgba(167, 139, 250, 0.4)" />
-                              <stop offset="100%" stopColor="rgba(124, 58, 237, 0.2)" />
-                            </radialGradient>
-                          </defs>
-                          <PolarGrid stroke="rgba(255, 255, 255, 0.2)" />
+                          <PolarGrid gridType="polygon" stroke="transparent" />
                           <PolarAngleAxis
                             dataKey="axis"
                             tick={({ payload, x, y, cx, cy, ...rest }) => {
                               const trendValue = trendsMap.get(payload.value);
                               return (
                                 <g>
-                                  <text
+                                  {/* <text
                                     {...rest}
                                     y={y + (y - cy) / 10}
                                     x={x + (x - cx) / 10}
-                                    fill="#a1a1aa"
-                                    fontSize="14"
+                                    fill="#ccc"
+                                    fontSize="11"
                                     textAnchor="middle"
                                   >
                                     {payload.value}
-                                  </text>
+                                  </text> */}
                                   {showTrends && trendValue !== undefined && (
                                     <g transform={`translate(${x + (x - cx) / 8}, ${y + (y - cy) / 14})`}>
                                       {trendValue > 0 ? (
@@ -198,7 +192,7 @@ export function MusicRadarDetailSheet({ open, onClose, payload, aiSummary }: Mus
                               );
                             }}
                           />
-                          <PolarRadiusAxis angle={30} domain={[0, 100]} stroke="transparent" />
+                          <PolarRadiusAxis tick={false} axisLine={false} />
                           <Tooltip
                             contentStyle={{
                               backgroundColor: '#1f2937',
@@ -207,7 +201,15 @@ export function MusicRadarDetailSheet({ open, onClose, payload, aiSummary }: Mus
                             }}
                             labelStyle={{ color: '#f9fafb' }}
                           />
-                          <Radar name="You" dataKey="value" stroke="#a78bfa" fill="url(#radar-fill)" fillOpacity={0.8} />
+                          <Radar 
+                            name="You" 
+                            dataKey="value" 
+                            stroke="hsl(var(--primary))"
+                            strokeWidth={2}
+                            fill="hsl(var(--primary))"
+                            fillOpacity={0.2}
+                            data-testid="radar-fill"
+                          />
                         </RadarChart>
                       </ResponsiveContainer>
                     </div>

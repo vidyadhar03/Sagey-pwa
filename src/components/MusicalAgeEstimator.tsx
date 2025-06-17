@@ -207,12 +207,12 @@ export default function MusicalAgeEstimator() {
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
             <p className="text-white/60 mb-1">Oldest Track</p>
-            <p className="text-white font-medium truncate">"{data.oldestTrack.name}"</p>
+            <p className="text-white font-medium truncate">&quot;{data.oldestTrack.name}&quot;</p>
             <p className="text-purple-300 text-xs">{data.oldestTrack.artist} • {data.oldestTrack.year}</p>
           </div>
           <div>
             <p className="text-white/60 mb-1">Newest Track</p>
-            <p className="text-white font-medium truncate">"{data.newestTrack.name}"</p>
+            <p className="text-white font-medium truncate">&quot;{data.newestTrack.name}&quot;</p>
             <p className="text-orange-300 text-xs">{data.newestTrack.artist} • {data.newestTrack.year}</p>
           </div>
         </div>

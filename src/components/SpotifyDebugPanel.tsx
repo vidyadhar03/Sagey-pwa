@@ -7,17 +7,13 @@ export default function SpotifyDebugPanel() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'logs' | 'cookies' | 'network'>('overview');
   
-  // Add error handling for the debug hook
-  let debugData;
-  try {
-    debugData = useSpotifyDebug();
-  } catch (error) {
-    console.error('SpotifyDebugPanel: Error using debug hook:', error);
-    // Return a simple debug button if hook fails
+  const debugData = useSpotifyDebug();
+
+  if (!debugData) {
     return (
       <div className="fixed bottom-4 right-4 z-50">
         <button
-          onClick={() => console.log('Debug hook failed to load')}
+          onClick={() => console.log('Debug hook not available')}
           className="bg-red-500 hover:bg-red-600 text-white p-3 rounded-full shadow-lg transition-all"
           title="Debug panel error"
         >
