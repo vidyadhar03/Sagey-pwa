@@ -1,4 +1,4 @@
-import type { SpotifyArtist, AudioFeatures } from '../hooks/useSpotify';
+import type { SpotifyArtist } from '../hooks/useSpotify';
 
 // Helper to generate a date string for X days ago
 const daysAgo = (days: number): string => {
@@ -54,18 +54,6 @@ export const mockTopArtists: SpotifyArtist[] = [
   },
   { // Electronic artist - high diversity
     id: 'artist3', name: 'Artist C', genres: ['electronica', 'techno', 'house'], popularity: 70, followers: 250000, external_urls: { spotify: '' }, image_url: '', track_count: 70
-  },
-];
-
-export const mockAudioFeatures: AudioFeatures[] = [
-  { // For track1: Happy Song - high valence, high energy
-    id: 'track1', valence: 0.9, energy: 0.8, tempo: 120, danceability: 0.7, acousticness: 0.1, instrumentalness: 0, mood_score: 0.85
-  },
-  { // For track2: Nostalgic Tune - low valence, low energy
-    id: 'track2', valence: 0.2, energy: 0.3, tempo: 90, danceability: 0.4, acousticness: 0.8, instrumentalness: 0.1, mood_score: 0.25
-  },
-  { // For track3: Night Drive - mid valence, high energy
-    id: 'track3', valence: 0.5, energy: 0.9, tempo: 140, danceability: 0.6, acousticness: 0.2, instrumentalness: 0.5, mood_score: 0.7
   },
 ];
 

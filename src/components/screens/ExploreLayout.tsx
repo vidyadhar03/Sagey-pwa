@@ -13,8 +13,7 @@ export default function ExploreLayout() {
     error,
     getTopTracks,
     getTopArtists,
-    getRecentTracks,
-    getAudioFeatures
+    getRecentTracks
   } = useSpotify();
 
   const [selectedTimeRange, setSelectedTimeRange] = useState<'short_term' | 'medium_term' | 'long_term'>('medium_term');

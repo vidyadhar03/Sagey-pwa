@@ -74,7 +74,7 @@ interface GenreCount {
 }
 
 export function useSpotifyInsights() {
-  const { connected, getRecentTracks, getTopTracks, getTopArtists, getAudioFeatures } = useSpotify();
+  const { connected, getRecentTracks, getTopTracks, getTopArtists } = useSpotify();
   const [insights, setInsights] = useState<SpotifyInsightsData>(DEFAULT_INSIGHTS);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

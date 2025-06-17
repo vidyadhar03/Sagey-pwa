@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
-import { RotateCw } from 'lucide-react';
+import { RotateCw, Info } from 'lucide-react';
 import { useMusicRadar } from '../../hooks/useMusicRadar';
 import RadarSkeleton from './RadarSkeleton';
 import { MusicRadarDetailSheet } from './MusicRadarDetailSheet';
@@ -56,7 +56,37 @@ export default function HomeMusicRadar() {
         <ResponsiveContainer width="100%" height="100%">
           <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chartData}>
             <PolarGrid gridType="polygon" stroke="transparent" />
-            <PolarAngleAxis dataKey="axis" tick={false} />
+            <PolarAngleAxis
+              dataKey="axis"
+              tick={({ payload, x, y, cx, cy, ...rest }) => {
+                let label = payload.value;
+                let showTooltip = false;
+                if (label === 'Positivity') {
+                  label = 'Positivity (estimated)';
+                  showTooltip = true;
+                } else if (label === 'Energy') {
+                  label = 'Energy (estimated)';
+                  showTooltip = true;
+                }
+                return (
+                  <g>
+                    <text
+                      {...rest}
+                      y={y + (y - cy) / 10}
+                      x={x + (x - cx) / 10}
+                      fill="#ccc"
+                      fontSize="11"
+                      textAnchor="middle"
+                    >
+                      {label}
+                    </text>
+                    {showTooltip && (
+                      <title>(estimated from genres)</title>
+                    )}
+                  </g>
+                );
+              }}
+            />
             <Radar
               name="Features"
               dataKey="value"

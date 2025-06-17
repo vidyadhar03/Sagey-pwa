@@ -19,7 +19,7 @@ jest.mock('./useSpotify', () => ({
       } 
     }]),
     getTopArtists: jest.fn().mockResolvedValue([{ id: 'test', genres: ['test'], track_count: 1 }]),
-    getAudioFeatures: jest.fn().mockResolvedValue([{ id: 'test', valence: 0.5, energy: 0.5, tempo: 120 }]),
+    // getAudioFeatures removed - using genre-based proxy now
   }),
 }));
 

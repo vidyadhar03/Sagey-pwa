@@ -1,5 +1,6 @@
 import { RadarPayload, RadarDataPoint } from './types';
-import type { SpotifyTrack, SpotifyArtist, AudioFeatures, RecentlyPlayedTrack } from '../../hooks/useSpotify';
+import type { SpotifyTrack, SpotifyArtist, RecentlyPlayedTrack } from '../../hooks/useSpotify';
+import { genreValence, genreEnergy, genreTempo, normalizeGenre } from './genreMaps';
 
 // --- UTILITY FUNCTIONS ---
 
@@ -125,16 +126,31 @@ const calculateMedianTrackAge = (tracks: (SpotifyTrack | RecentlyPlayedTrack['tr
 interface RadarDataInput {
   recentTracks: RecentlyPlayedTrack[];
   topArtists: SpotifyArtist[];
-  audioFeatures: AudioFeatures[];
+}
+
+// Helper to estimate valence and energy from genre, popularity, explicit, and tempo
+export function getProxyFeatures(track: SpotifyTrack, genres: string[]) {
+  const genre = (genres && genres.length > 0)
+    ? normalizeGenre(genres[0])
+    : 'pop';
+  const genreVal = genreValence[genre] ?? 0.6;
+  const genreEng = genreEnergy[genre] ?? 0.6;
+  const genreTmp = genreTempo[genre] ?? 120;
+  let valence = genreVal;
+  if (track.popularity > 70) valence += 0.05;
+  if (track.explicit) valence -= 0.05;
+  valence = clamp(valence, 0, 1);
+  const energy = clamp(0.7 * genreEng + 0.3 * normalizeTempo(genreTmp), 0, 1);
+  return { valence, energy, tempo: genreTmp };
 }
 
 /**
  * Computes the complete Music Radar payload from raw Spotify data.
  */
 export const getRadarPayload = (data: RadarDataInput): RadarPayload => {
-  const { recentTracks, topArtists, audioFeatures } = data;
+  const { recentTracks, topArtists } = data;
 
-  if (recentTracks.length === 0 || topArtists.length === 0 || audioFeatures.length === 0) {
+  if (recentTracks.length === 0 || topArtists.length === 0) {
     // Return a default/fallback state if there's no data
     return {
       scores: { 'Positivity': 0, 'Energy': 0, 'Exploration': 0, 'Nostalgia': 0, 'Night-Owl': 0 },
@@ -152,13 +168,15 @@ export const getRadarPayload = (data: RadarDataInput): RadarPayload => {
     };
   }
 
-  // Create a map for quick audio feature lookups
-  const featuresMap = new Map(audioFeatures.map(f => [f.id, f]));
-  
   // --- Positivity (Valence) ---
   const weightedMeanValence = getWeightedMean(
     recentTracks,
-    (item: RecentlyPlayedTrack) => featuresMap.get(item.track.id)?.valence ?? 0.5,
+    (item: RecentlyPlayedTrack) => {
+      const artistKey = (item.track as any).artist || item.track.artists?.[0]?.name || item.track.artists?.[0]?.id;
+      const artist = topArtists.find(a => a.name === artistKey || a.id === artistKey);
+      const genres = artist ? artist.genres : ['pop'];
+      return getProxyFeatures(item.track, genres).valence;
+    },
     (item: RecentlyPlayedTrack) => getRecencyWeight(item.played_at)
   );
   const positivityScore = clamp(weightedMeanValence * 100, 0, 100);
@@ -166,12 +184,22 @@ export const getRadarPayload = (data: RadarDataInput): RadarPayload => {
   // --- Energy (Energy + Tempo) ---
   const weightedMeanEnergy = getWeightedMean(
     recentTracks,
-    (item: RecentlyPlayedTrack) => featuresMap.get(item.track.id)?.energy ?? 0.5,
+    (item: RecentlyPlayedTrack) => {
+      const artistKey = (item.track as any).artist || item.track.artists?.[0]?.name || item.track.artists?.[0]?.id;
+      const artist = topArtists.find(a => a.name === artistKey || a.id === artistKey);
+      const genres = artist ? artist.genres : ['pop'];
+      return getProxyFeatures(item.track, genres).energy;
+    },
     (item: RecentlyPlayedTrack) => getRecencyWeight(item.played_at)
   );
   const weightedMeanTempo = getWeightedMean(
     recentTracks,
-    (item: RecentlyPlayedTrack) => normalizeTempo(featuresMap.get(item.track.id)?.tempo ?? 120),
+    (item: RecentlyPlayedTrack) => {
+      const artistKey = (item.track as any).artist || item.track.artists?.[0]?.name || item.track.artists?.[0]?.id;
+      const artist = topArtists.find(a => a.name === artistKey || a.id === artistKey);
+      const genres = artist ? artist.genres : ['pop'];
+      return normalizeTempo(getProxyFeatures(item.track, genres).tempo);
+    },
     (item: RecentlyPlayedTrack) => getRecencyWeight(item.played_at)
   );
   const energyScore = clamp(((weightedMeanEnergy + weightedMeanTempo) / 2) * 100, 0, 100);

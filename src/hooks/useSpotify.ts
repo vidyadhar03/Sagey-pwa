@@ -87,17 +87,6 @@ export interface SpotifyAlbum {
   track_count: number;
 }
 
-export interface AudioFeatures {
-  id: string;
-  energy: number;
-  valence: number;
-  danceability: number;
-  acousticness: number;
-  instrumentalness: number;
-  tempo: number;
-  mood_score: number;
-}
-
 // Global data cache to prevent duplicate API calls across components
 const globalDataCache = {
   recentTracks: null as any[] | null,
@@ -677,79 +666,7 @@ export function useSpotify() {
     return data.albums;
   }, [status.connected]);
 
-  // Fetch audio features for tracks
-  const getAudioFeatures = useCallback(async (trackIds: string[]): Promise<AudioFeatures[]> => {
-    console.log('🎵 getAudioFeatures called with:', { connected: status.connected, trackCount: trackIds.length });
-    
-    if (!status.connected) {
-      console.log('❌ getAudioFeatures: Not connected to Spotify');
-      throw new Error('Spotify not connected');
-    }
-
-    if (!trackIds || trackIds.length === 0) {
-      console.log('❌ getAudioFeatures: No track IDs provided');
-      return [];
-    }
-
-    try {
-      const CHUNK_SIZE = 100; // Spotify API limit
-      const trackIdChunks: string[][] = [];
-
-      for (let i = 0; i < trackIds.length; i += CHUNK_SIZE) {
-        trackIdChunks.push(trackIds.slice(i, i + CHUNK_SIZE));
-      }
-      
-      console.log(`🔄 getAudioFeatures: Splitting into ${trackIdChunks.length} chunk(s)...`);
-
-      const promises = trackIdChunks.map(chunk => {
-        const ids = chunk.join(',');
-        // Use the new fetchWithRefresh wrapper
-        return fetchWithRefresh(`/api/spotify/audio-features?ids=${ids}`, {
-          method: 'GET',
-        });
-      });
-
-      const responses = await Promise.all(promises);
-      let allAudioFeatures: AudioFeatures[] = [];
-
-      for (const response of responses) {
-        console.log('📡 getAudioFeatures: API response status for chunk:', response.status);
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('❌ getAudioFeatures: API error on chunk:', { 
-            status: response.status, 
-            statusText: response.statusText,
-            error: errorText 
-          });
-          
-          if (response.status === 403 || response.status === 401) {
-            console.log('🔄 getAudioFeatures: Auth error, skipping chunk');
-            continue;
-          }
-          
-          // For other errors, we might want to throw or handle differently
-          // For now, we'll just log and continue
-          continue;
-        }
-
-        const data = await response.json();
-        if (data.audio_features) {
-          const validFeatures = data.audio_features.filter((f: any) => f !== null);
-          allAudioFeatures = allAudioFeatures.concat(validFeatures);
-        }
-      }
-      
-      console.log('✅ getAudioFeatures: Success, total features fetched:', allAudioFeatures.length);
-      return allAudioFeatures.filter(f => f); // Final filter for nulls
-      
-    } catch (error) {
-      console.error('❌ getAudioFeatures: Exception occurred:', error);
-      throw error;
-    }
-  }, [status.connected]);
-
-  // Get music insights (combines multiple API calls)
+   // Get music insights (combines multiple API calls)
   const getMusicInsights = useCallback(async () => {
     if (!status.connected) {
       throw new Error('Spotify not connected');
@@ -760,46 +677,27 @@ export function useSpotify() {
       const recentTracks: RecentlyPlayedTrack[] = await getRecentTracks();
       const topTracks: SpotifyTrack[] = await getTopTracks('medium_term');
 
-      // Get audio features for top tracks
-      const trackIds = [...new Set([
-        ...recentTracks.map(t => t.track.id),
-        ...topTracks.map(t => t.id)
-      ])];
-      const audioFeatures: AudioFeatures[] = await getAudioFeatures(trackIds);
-
       // Calculate listening stats
       const totalTracks = recentTracks.length;
       const uniqueArtists = new Set(recentTracks.map(item => item.track.artists.map(a => a.name).join(',')));
       const totalDurationMs = recentTracks.reduce((sum, item) => sum + item.track.duration_ms, 0);
       const estimatedDailyMinutes = Math.round(totalDurationMs / 1000 / 60 / 30); // Assuming 30-day window
 
-      const featuresMap = new Map(audioFeatures.map(f => [f.id, f]));
-
       return {
         recentTracks,
         topTracks,
-        audioFeatures: audioFeatures.map(feature => ({
-          id: feature.id,
-          energy: feature.energy,
-          valence: feature.valence,
-          danceability: feature.danceability,
-          acousticness: feature.acousticness,
-          instrumentalness: feature.instrumentalness,
-          tempo: feature.tempo,
-          mood_score: feature.mood_score
-        })),
         stats: {
           totalTracks,
           uniqueArtists: uniqueArtists.size,
           estimatedDailyMinutes,
-          moodScore: audioFeatures.reduce((sum, feature) => sum + feature.mood_score, 0) / audioFeatures.length
+          moodScore: 0 // Placeholder for mood score
         }
       };
     } catch (error) {
       console.error('Failed to get music insights:', error);
       throw error;
     }
-  }, [status.connected, getRecentTracks, getTopTracks, getAudioFeatures]);
+  }, [status.connected, getRecentTracks, getTopTracks]);
 
   // Logout/Disconnect from Spotify
   const logout = useCallback(async () => {
@@ -887,7 +785,6 @@ export function useSpotify() {
     getTopTracks,
     getTopArtists,
     getTopAlbums,
-    getAudioFeatures,
     getMusicInsights,
     clearCache,
     getCacheStatus

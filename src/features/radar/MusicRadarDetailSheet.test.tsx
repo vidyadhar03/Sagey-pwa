@@ -24,7 +24,6 @@ Object.assign(global, {
 const testPayload = getRadarPayload({
     recentTracks: mockRecentTracks,
     topArtists: mockTopArtists,
-    audioFeatures: mockAudioFeatures,
 });
 
 describe('MusicRadarDetailSheet', () => {

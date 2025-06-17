@@ -2,7 +2,7 @@
 
 import { Fragment, useState, useMemo, useRef } from 'react';
 import { Dialog, Transition, Switch } from '@headlessui/react';
-import { X, Share2, TrendingUp, TrendingDown, Music, Sparkles } from 'lucide-react';
+import { X, Share2, TrendingUp, TrendingDown, Music, Sparkles, Info } from 'lucide-react';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import html2canvas from 'html2canvas';
 
@@ -166,10 +166,18 @@ export function MusicRadarDetailSheet({ open, onClose, payload, aiSummary }: Mus
                           <PolarAngleAxis
                             dataKey="axis"
                             tick={({ payload, x, y, cx, cy, ...rest }) => {
-                              const trendValue = trendsMap.get(payload.value);
+                              let label = payload.value;
+                              let showTooltip = false;
+                              if (label === 'Positivity') {
+                                label = 'Positivity (estimated)';
+                                showTooltip = true;
+                              } else if (label === 'Energy') {
+                                label = 'Energy (estimated)';
+                                showTooltip = true;
+                              }
                               return (
                                 <g>
-                                  {/* <text
+                                  <text
                                     {...rest}
                                     y={y + (y - cy) / 10}
                                     x={x + (x - cx) / 10}
@@ -177,16 +185,10 @@ export function MusicRadarDetailSheet({ open, onClose, payload, aiSummary }: Mus
                                     fontSize="11"
                                     textAnchor="middle"
                                   >
-                                    {payload.value}
-                                  </text> */}
-                                  {showTrends && trendValue !== undefined && (
-                                    <g transform={`translate(${x + (x - cx) / 8}, ${y + (y - cy) / 14})`}>
-                                      {trendValue > 0 ? (
-                                        <TrendingUp size={14} className="text-green-400" />
-                                      ) : (
-                                        <TrendingDown size={14} className="text-red-400" />
-                                      )}
-                                    </g>
+                                    {label}
+                                  </text>
+                                  {showTooltip && (
+                                    <title>(estimated from genres)</title>
                                   )}
                                 </g>
                               );

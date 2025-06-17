@@ -7,11 +7,10 @@ describe('getRadarPayload', () => {
   const mockData = {
     recentTracks: mockRecentTracks,
     topArtists: mockTopArtists,
-    audioFeatures: mockAudioFeatures,
   };
 
   it('should return a default payload if input data is empty', () => {
-    const payload = getRadarPayload({ recentTracks: [], topArtists: [], audioFeatures: [] });
+    const payload = getRadarPayload({ recentTracks: [], topArtists: [] });
     expect(payload.isDefault).toBe(true);
     expect(payload.trackCount).toBe(0);
     expect(Object.values(payload.scores).every(score => score === 0)).toBe(true);
@@ -40,8 +39,9 @@ describe('getRadarPayload', () => {
   
   it('should calculate Energy score based on weighted energy and normalized tempo', () => {
     const payload = getRadarPayload(mockData);
-    // Expecting a high-ish energy score due to recent high-energy tracks
-    expect(payload.scores.Energy).toBeGreaterThan(60);
+    // With the genre proxy, the expected value is around 53
+    expect(payload.scores.Energy).toBeGreaterThan(50);
+    expect(payload.scores.Energy).toBeLessThan(60);
   });
 
   it('should calculate Exploration score based on genre entropy', () => {

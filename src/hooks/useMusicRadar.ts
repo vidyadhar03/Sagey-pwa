@@ -5,7 +5,7 @@ import { useSpotify } from './useSpotify';
 import { getRadarPayload } from '../features/radar/getRadarPayload';
 import type { RadarPayload } from '../features/radar/types';
 import { useAIInsights } from './useAIInsights';
-import type { RecentlyPlayedTrack, SpotifyArtist, AudioFeatures } from './useSpotify';
+import type { RecentlyPlayedTrack, SpotifyArtist } from './useSpotify';
 
 type SpotifyTimeRange = 'short_term' | 'medium_term' | 'long_term';
 
@@ -34,8 +34,7 @@ const DEFAULT_PAYLOAD: RadarPayload = {
  */
 const radarFetcher = async (
   getRecentTracks: () => Promise<RecentlyPlayedTrack[]>,
-  getTopArtists: (term: SpotifyTimeRange) => Promise<SpotifyArtist[]>,
-  getAudioFeatures: (ids: string[]) => Promise<AudioFeatures[]>
+  getTopArtists: (term: SpotifyTimeRange) => Promise<SpotifyArtist[]>
 ): Promise<RadarPayload> => {
   console.log('📡 Fetching data for Music Radar...');
 
@@ -49,19 +48,9 @@ const radarFetcher = async (
     return { ...DEFAULT_PAYLOAD };
   }
 
-  const trackIds = [...new Set(recentTracks.map(t => t.track.id))];
-  
-  if (trackIds.length === 0) {
-    console.warn('⚠️ No track IDs found for audio features, returning default.');
-    return { ...DEFAULT_PAYLOAD };
-  }
-
-  const audioFeatures = await getAudioFeatures(trackIds);
-  
   const payload = getRadarPayload({
     recentTracks,
     topArtists,
-    audioFeatures,
   });
 
   console.log('✅ Music Radar payload calculated.', payload);
@@ -72,7 +61,7 @@ const radarFetcher = async (
  * Custom hook to get Music Radar insights using a simple, dependency-free fetch/cache mechanism.
  */
 export function useMusicRadar() {
-  const { connected, getRecentTracks, getTopArtists, getAudioFeatures } = useSpotify();
+  const { connected, getRecentTracks, getTopArtists } = useSpotify();
   const [payload, setPayload] = useState<RadarPayload>({ ...DEFAULT_PAYLOAD });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -100,7 +89,7 @@ export function useMusicRadar() {
     setError(null);
 
     try {
-      const data = await radarFetcher(getRecentTracks, getTopArtists, getAudioFeatures);
+      const data = await radarFetcher(getRecentTracks, getTopArtists);
       setPayload(data);
       cache.set(cacheKey, { payload: data, timestamp: Date.now() });
     } catch (err) {
@@ -113,7 +102,7 @@ export function useMusicRadar() {
     } finally {
       setIsLoading(false);
     }
-  }, [connected, getRecentTracks, getTopArtists, getAudioFeatures]);
+  }, [connected, getRecentTracks, getTopArtists]);
 
   useEffect(() => {
     fetchAndSetData();
