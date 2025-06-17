@@ -653,10 +653,8 @@ export function useSpotify() {
       const ids = trackIds.join(',');
       console.log('🔄 getAudioFeatures: Making API request...');
       
-      const response = await fetch('/api/spotify/audio-features', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ trackIds }),
+      const response = await fetch(`/api/spotify/audio-features?ids=${ids}`, {
+        method: 'GET',
       });
       
       console.log('📡 getAudioFeatures: API response status:', response.status);
