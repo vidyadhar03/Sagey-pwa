@@ -162,6 +162,48 @@ const getCacheData = (key: string): any => {
   return null;
 };
 
+// Function to refresh the Spotify access token
+const refreshToken = async (): Promise<boolean> => {
+  console.log('🔄 Attempting to refresh Spotify token...');
+  try {
+    const response = await fetch('/api/spotify/refresh', {
+      method: 'POST',
+    });
+
+    if (response.ok) {
+      console.log('✅ Token refreshed successfully');
+      return true;
+    } else {
+      console.error('❌ Failed to refresh token:', response.status);
+      return false;
+    }
+  } catch (error) {
+    console.error('💥 Error refreshing token:', error);
+    return false;
+  }
+};
+
+// A wrapper for fetch that includes token refresh logic
+const fetchWithRefresh = async (
+  url: string,
+  options: RequestInit,
+  retryCount = 1
+): Promise<Response> => {
+  let response = await fetch(url, options);
+
+  if ((response.status === 401 || response.status === 403) && retryCount > 0) {
+    console.log(`Auth error (${response.status}), attempting token refresh...`);
+    const refreshed = await refreshToken();
+    
+    if (refreshed) {
+      console.log('Retrying original request after token refresh...');
+      response = await fetchWithRefresh(url, options, retryCount - 1);
+    }
+  }
+
+  return response;
+};
+
 export function useSpotify() {
   const [status, setStatus] = useState<SpotifyStatus>({
     connected: false,
@@ -661,7 +703,8 @@ export function useSpotify() {
 
       const promises = trackIdChunks.map(chunk => {
         const ids = chunk.join(',');
-        return fetch(`/api/spotify/audio-features?ids=${ids}`, {
+        // Use the new fetchWithRefresh wrapper
+        return fetchWithRefresh(`/api/spotify/audio-features?ids=${ids}`, {
           method: 'GET',
         });
       });

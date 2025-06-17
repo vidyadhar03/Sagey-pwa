@@ -292,19 +292,19 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Set refresh token cookie
+    // Store refresh token in a secure, http-only cookie
+    // This is critical for long-term sessions
     if (tokenData.refresh_token) {
-      try {
-        const refreshTokenOptions = {
-          ...cookieOptions,
-          maxAge: 60 * 60 * 24 * 30 // 30 days
-        };
-        
-        response.cookies.set('spotify_refresh_token', tokenData.refresh_token, refreshTokenOptions);
-        console.log('✅ Refresh token cookie set');
-      } catch (cookieError) {
-        console.error('❌ Failed to set refresh token cookie:', cookieError);
-      }
+      console.log('🔐 Storing refresh token...');
+      response.cookies.set('spotify_refresh_token', tokenData.refresh_token, {
+        ...cookieOptions,
+        httpOnly: true,
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+        path: '/api/spotify/', // Restrict to API routes for security
+      });
+      console.log('✅ Refresh token stored securely');
+    } else {
+      console.warn('⚠️ No refresh token received. User will need to re-authenticate sooner.');
     }
 
     // Set user info cookie (client-accessible)
@@ -345,6 +345,7 @@ export async function GET(request: NextRequest) {
 
     console.log('🎉 Spotify authentication successful for user:', profileData.display_name);
     console.log('📱 Mobile token fallback system active - deployment timestamp:', Date.now());
+    console.log('🚀 Redirecting user back to the application...');
     console.log('=== SPOTIFY CALLBACK SUCCESS ===');
     return response;
 
