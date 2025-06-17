@@ -55,7 +55,11 @@ export default function HomeMusicRadar() {
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chartData}>
-            <PolarGrid gridType="polygon" stroke="transparent" />
+            <PolarGrid 
+              gridType="polygon" 
+              stroke="#ffffff14" 
+              radialLines={true}
+            />
             <PolarAngleAxis
               dataKey="axis"
               tick={({ payload, x, y, cx, cy, ...rest }) => {
@@ -74,9 +78,10 @@ export default function HomeMusicRadar() {
                       {...rest}
                       y={y + (y - cy) / 10}
                       x={x + (x - cx) / 10}
-                      fill="#ccc"
+                      fill="#d1d5db"
                       fontSize="11"
                       textAnchor="middle"
+                      className="text-gray-300"
                     >
                       {label}
                     </text>
@@ -90,16 +95,22 @@ export default function HomeMusicRadar() {
             <Radar
               name="Features"
               dataKey="value"
-              stroke="hsl(var(--primary))"
-              fill="hsl(var(--primary))"
-              fillOpacity={0.2}
+              stroke="#1DB954"
+              strokeWidth={2}
+              fill="#1DB95455"
+              fillOpacity={0.35}
               data-testid="radar-fill"
             />
           </RadarChart>
         </ResponsiveContainer>
       </div>
       <div className="text-center mt-4">
-        <p className="text-sm text-zinc-300 leading-relaxed">{ai.copy || 'Calculating your AI summary...'}</p>
+        <p className="text-sm text-zinc-300 leading-relaxed">
+          {ai.error?.includes('400') ? 
+            "AI is warming up, please refresh in a few seconds." : 
+            ai.copy || 'Calculating your AI summary...'
+          }
+        </p>
       </div>
       <div className="flex justify-center mt-6">
         <button

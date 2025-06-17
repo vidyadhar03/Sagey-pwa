@@ -34,13 +34,52 @@ const NightOwlPatternPayloadSchema = z.object({
   score: z.number(),
 });
 
+const RadarSummaryPayloadSchema = z.object({
+  scores: z.record(z.string(), z.number()),
+  stats: z.object({
+    positivity: z.object({
+      weightedMeanValence: z.number(),
+      percentage: z.number(),
+    }),
+    energy: z.object({
+      weightedMeanEnergy: z.number(),
+      weightedMeanTempo: z.number(),
+    }),
+    exploration: z.object({
+      genreCount: z.number(),
+      entropy: z.number(),
+      normalizedEntropy: z.number(),
+    }),
+    nostalgia: z.object({
+      medianTrackAge: z.number(),
+      userDOB: z.string().optional(),
+    }),
+    nightOwl: z.object({
+      nightPlayCount: z.number(),
+      totalPlayCount: z.number(),
+      percentage: z.number(),
+    }),
+  }),
+  suggestions: z.array(z.object({
+    label: z.string(),
+    url: z.string(),
+  })),
+  trackCount: z.number(),
+  isDefault: z.boolean().optional(),
+  trends: z.array(z.object({
+    axis: z.enum(['Positivity', 'Energy', 'Exploration', 'Nostalgia', 'Night-Owl']),
+    value: z.number(),
+  })),
+});
+
 const RequestSchema = z.object({
-  type: z.enum(['musical_age', 'mood_ring', 'genre_passport', 'night_owl_pattern']),
+  type: z.enum(['musical_age', 'mood_ring', 'genre_passport', 'night_owl_pattern', 'radar_summary']),
   payload: z.union([
     MusicalAgePayloadSchema,
     MoodRingPayloadSchema,
     GenrePassportPayloadSchema,
     NightOwlPatternPayloadSchema,
+    RadarSummaryPayloadSchema,
   ]),
 });
 

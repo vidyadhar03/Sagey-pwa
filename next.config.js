@@ -4,14 +4,10 @@ const path = require('path')
 const nextConfig = {
   reactStrictMode: false,
   
-  // Experimental features optimized for Next.js 15
+  // Experimental features for Next.js 14
   experimental: {
     optimizePackageImports: ['framer-motion'],
-    // Only include valid experimental options for Next.js 15
   },
-  
-  // Server external packages (moved from experimental)
-  serverExternalPackages: ['ioredis'],
   
   // Explicitly set TypeScript config path
   typescript: {

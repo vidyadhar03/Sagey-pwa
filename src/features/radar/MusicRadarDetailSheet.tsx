@@ -162,7 +162,11 @@ export function MusicRadarDetailSheet({ open, onClose, payload, aiSummary }: Mus
                     <div className="flex-grow w-full mt-4">
                       <ResponsiveContainer width="100%" height="100%">
                         <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chartData}>
-                          <PolarGrid gridType="polygon" stroke="transparent" />
+                          <PolarGrid 
+                            gridType="polygon" 
+                            stroke="#ffffff14" 
+                            radialLines={true}
+                          />
                           <PolarAngleAxis
                             dataKey="axis"
                             tick={({ payload, x, y, cx, cy, ...rest }) => {
@@ -181,9 +185,10 @@ export function MusicRadarDetailSheet({ open, onClose, payload, aiSummary }: Mus
                                     {...rest}
                                     y={y + (y - cy) / 10}
                                     x={x + (x - cx) / 10}
-                                    fill="#ccc"
+                                    fill="#d1d5db"
                                     fontSize="11"
                                     textAnchor="middle"
+                                    className="text-gray-300"
                                   >
                                     {label}
                                   </text>
@@ -206,10 +211,10 @@ export function MusicRadarDetailSheet({ open, onClose, payload, aiSummary }: Mus
                           <Radar 
                             name="You" 
                             dataKey="value" 
-                            stroke="hsl(var(--primary))"
+                            stroke="#1DB954"
                             strokeWidth={2}
-                            fill="hsl(var(--primary))"
-                            fillOpacity={0.2}
+                            fill="#1DB95455"
+                            fillOpacity={0.35}
                             data-testid="radar-fill"
                           />
                         </RadarChart>
