@@ -102,11 +102,11 @@ export default function HomeMusicRadar() {
           {[...Array(2)].map((_, i) => (
             <motion.div
               key={`wave-${i}`}
-              className="absolute rounded-full border border-green-400/5"
+              className="absolute rounded-full border border-green-400/20"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ 
                 scale: [0.8, 1.8, 2.2],
-                opacity: [0, 0.08, 0]
+                opacity: [0, 0.4, 0]
               }}
               transition={{
                 duration: 6,
@@ -124,7 +124,7 @@ export default function HomeMusicRadar() {
           
           {/* Very subtle rotating gradient */}
           <motion.div
-            className="absolute w-48 h-48 rounded-full opacity-[0.02]"
+            className="absolute w-48 h-48 rounded-full opacity-[0.1]"
             style={{
               background: 'conic-gradient(from 0deg, transparent, #1DB954, transparent)'
             }}
@@ -140,7 +140,7 @@ export default function HomeMusicRadar() {
           {[...Array(4)].map((_, i) => (
             <motion.div
               key={`particle-${i}`}
-              className="absolute w-0.5 h-0.5 bg-green-400/8 rounded-full"
+              className="absolute w-1 h-1 bg-green-400/30 rounded-full"
               initial={{ 
                 x: Math.cos((i * 90) * Math.PI / 180) * 70,
                 y: Math.sin((i * 90) * Math.PI / 180) * 70,
@@ -149,7 +149,7 @@ export default function HomeMusicRadar() {
               animate={{
                 x: Math.cos((i * 90) * Math.PI / 180) * 100,
                 y: Math.sin((i * 90) * Math.PI / 180) * 100,
-                opacity: [0, 0.15, 0],
+                opacity: [0, 0.6, 0],
                 scale: [0.8, 1.2, 0.8]
               }}
               transition={{
@@ -163,10 +163,10 @@ export default function HomeMusicRadar() {
           
           {/* Very subtle central pulse */}
           <motion.div
-            className="absolute w-2 h-2 bg-green-400/10 rounded-full"
+            className="absolute w-3 h-3 bg-green-400/40 rounded-full"
             animate={{
               scale: [1, 1.3, 1],
-              opacity: [0.1, 0.2, 0.1]
+              opacity: [0.4, 0.8, 0.4]
             }}
             transition={{
               duration: 4,
