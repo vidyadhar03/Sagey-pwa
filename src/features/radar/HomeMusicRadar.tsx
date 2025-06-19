@@ -220,10 +220,10 @@ export default function HomeMusicRadar() {
               <Radar
                 name="Features"
                 dataKey="value"
-                stroke="#1DB954"
+                stroke="#22c55e"
                 strokeWidth={2}
-                fill="#1DB95455"
-                fillOpacity={0.35}
+                fill="#22c55e"
+                fillOpacity={0.20}
                 data-testid="radar-fill"
               />
             </RadarChart>
@@ -231,14 +231,28 @@ export default function HomeMusicRadar() {
         </div>
       </div>
       
-      {/* AI Summary */}
-      <div className="text-center mt-4">
-        <p className="text-sm text-zinc-300 leading-relaxed">
-          {ai.error?.includes('400') ? 
-            "AI is warming up, please refresh in a few seconds." : 
-            ai.copy || 'Calculating your AI summary...'
-          }
-        </p>
+      {/* AI Hype Copy */}
+      <div className="text-center mt-4 space-y-2">
+        {ai.isLoading ? (
+          <div className="animate-pulse space-y-2">
+            <div className="h-6 bg-zinc-800 rounded w-3/4 mx-auto"></div>
+            <div className="h-4 bg-zinc-800 rounded w-2/3 mx-auto"></div>
+            <div className="h-3 bg-zinc-800 rounded w-1/2 mx-auto"></div>
+          </div>
+        ) : ai.headline && ai.context ? (
+          <>
+            <h3 className="text-lg font-bold text-white">{ai.headline}</h3>
+            <p className="text-sm text-zinc-300 mb-1">{ai.context}</p>
+            {ai.tip && (
+              <p className="text-xs text-purple-400 italic">{ai.tip}</p>
+            )}
+          </>
+        ) : (
+          <>
+            <h3 className="text-lg font-semibold text-white">🎵 Your music radar is amazing!</h3>
+            <p className="text-sm text-zinc-300 mb-1">Based on your recent listening patterns.</p>
+          </>
+        )}
       </div>
       
       {/* View Details Button */}
@@ -255,7 +269,7 @@ export default function HomeMusicRadar() {
         open={isDetailSheetOpen} 
         onClose={() => setDetailSheetOpen(false)}
         payload={payload}
-        aiSummary={ai.copy}
+        aiSummary={`${ai.headline} ${ai.context}${ai.tip ? ` ${ai.tip}` : ''}`}
       />
     </div>
   );

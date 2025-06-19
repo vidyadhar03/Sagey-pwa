@@ -8,6 +8,7 @@ import {
 
 import { MusicalAgePayload } from '../utils/insightSelectors';
 import { RadarPayload } from '../features/radar/types';
+import { radarAxisConfig, coachTipConfig, excludedCoachAxes } from '../features/radar/radarNarrativeConfig';
 
 /**
  * Builds AI prompts for generating fun, quirky copy for insight cards
@@ -186,6 +187,63 @@ IMPORTANT: Generate a completely unique and fresh summary that differs from prev
 Generate ONE unique summary only, no quotes or additional text:`;
 }
 
+function buildRadarHypePrompt(data: RadarPayload): string {
+  const { scores, topGenre, sampleTrack, weeks, trackCount } = data;
+  
+  // Find strongest and weakest axes
+  const scoreEntries = Object.entries(scores);
+  const strongest = scoreEntries.reduce((a, b) => a[1] > b[1] ? a : b);
+  const weakest = scoreEntries.reduce((a, b) => a[1] < b[1] ? a : b);
+  
+  const topAxis = strongest[0];
+  const topScore = strongest[1];
+  const lowAxis = weakest[0];
+  const lowScore = weakest[1];
+  
+  // Get config for top axis
+  const axisConfig = radarAxisConfig[topAxis];
+  const emoji = axisConfig?.emoji || '🎵';
+  const hypeWord = axisConfig?.hypeWords?.[Math.floor(Math.random() * axisConfig.hypeWords.length)] || 'vibing with';
+  
+  // Determine if we need a coach tip
+  const needsCoachTip = !excludedCoachAxes.includes(lowAxis) && lowScore < 35;
+  const coachTip = needsCoachTip ? coachTipConfig[lowAxis]?.tip : undefined;
+  
+  // Format sample track for prompt
+  const trackReference = `"${sampleTrack.title}" by ${sampleTrack.artist}`;
+  
+  return `SYSTEM: You are a Gen-Z hype coach for music insights.
+
+CRITICAL: Output ONLY valid JSON, no markdown, no code-block, no explanation.
+
+Required JSON Keys:
+- "headline": string (≤ 12 words, starts with exactly one emoji)
+- "context": string (≤ 25 words, must mention either genre OR track)
+- "tip": string (optional, ≤ 18 words, starts with "Coach tip:")
+
+Data:
+- Top Axis: ${topAxis} (${topScore.toFixed(0)}%)
+- Low Axis: ${lowAxis} (${lowScore.toFixed(0)}%)
+- Top Genre: ${topGenre}
+- Sample Track: ${trackReference}
+- Track Count: ${trackCount}
+- Weeks: ${weeks}
+
+Rules:
+• headline starts with "${emoji}"
+• context must mention "${topGenre}" OR ${trackReference}
+• ${needsCoachTip ? `include tip starting with "Coach tip:"` : 'omit tip key entirely'}
+• Use Gen-Z language: "our friend", "this listener", never real names
+
+Example format:
+{
+  "headline": "${emoji} You're absolutely ${hypeWord} ${topAxis.toLowerCase()}!",
+  "context": "Powered by ${topGenre} tracks over ${weeks} weeks, our friend is crushing it."${needsCoachTip ? ',\n  "tip": "Coach tip: ' + coachTip + '"' : ''}
+}
+
+Generate JSON now:`;
+}
+
 export function buildPrompt(type: InsightType, data: InsightPayload): string {
   switch (type) {
     case 'musical_age':
@@ -198,6 +256,8 @@ export function buildPrompt(type: InsightType, data: InsightPayload): string {
       return buildNightOwlPatternPrompt(data as NightOwlPatternPayload);
     case 'radar_summary':
       return buildRadarSummaryPrompt(data as RadarPayload);
+    case 'radar_hype':
+      return buildRadarHypePrompt(data as RadarPayload);
     default:
       throw new Error(`Unknown insight type: ${type}`);
   }

@@ -165,6 +165,9 @@ export const getRadarPayload = (data: RadarDataInput): RadarPayload => {
       trackCount: 0,
       isDefault: true,
       trends: [], // No trend data for default
+      topGenre: 'Pop',
+      sampleTrack: { title: 'Unknown Track', artist: 'Unknown Artist' },
+      weeks: 4,
     };
   }
 
@@ -239,6 +242,32 @@ export const getRadarPayload = (data: RadarDataInput): RadarPayload => {
     { axis: 'Night-Owl', value: -8.0 },
   ];
 
+  // --- Calculate top genre from artists ---
+  const genreCounts: { [genre: string]: number } = {};
+  topArtists.forEach(artist => {
+    artist.genres.forEach(genre => {
+      genreCounts[genre] = (genreCounts[genre] || 0) + 1;
+    });
+  });
+  
+  const topGenre = Object.keys(genreCounts).length > 0 
+    ? Object.keys(genreCounts).reduce((a, b) => genreCounts[a] > genreCounts[b] ? a : b)
+    : 'Pop';
+
+  // --- Get sample track (first non-explicit track with clean name) ---
+  const cleanTrack = recentTracks.find(t => 
+    !t.track.explicit && 
+    t.track.name && 
+    t.track.artists?.[0]?.name &&
+    t.track.name.length > 0 &&
+    t.track.artists[0].name.length > 0
+  ) || recentTracks[0];
+
+  const sampleTrack = cleanTrack ? {
+    title: cleanTrack.track.name || 'Unknown Track',
+    artist: cleanTrack.track.artists?.[0]?.name || 'Unknown Artist'
+  } : { title: 'Unknown Track', artist: 'Unknown Artist' };
+
   return {
     scores: {
       'Positivity': positivityScore,
@@ -262,5 +291,8 @@ export const getRadarPayload = (data: RadarDataInput): RadarPayload => {
     trackCount: recentTracks.length,
     isDefault: false,
     trends: placeholderTrends,
+    topGenre,
+    sampleTrack,
+    weeks: 4,
   };
 }; 

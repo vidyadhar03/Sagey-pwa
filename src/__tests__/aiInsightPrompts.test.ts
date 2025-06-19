@@ -151,6 +151,10 @@ describe('AI Insight Prompts', () => {
       suggestions: [],
       trackCount: 100,
       isDefault: false,
+      trends: [],
+      topGenre: 'Rock',
+      sampleTrack: { title: 'Test Track', artist: 'Test Artist' },
+      weeks: 4,
     };
 
     it('should create a prompt with all five axis scores', () => {
@@ -173,6 +177,69 @@ describe('AI Insight Prompts', () => {
       expect(prompt).toContain("You are Sagey's fun music coach.");
       expect(prompt).toContain("First sentence should highlight the strongest trait");
       expect(prompt).toContain("Second sentence should playfully mention the weakest trait");
+    });
+  });
+
+  describe('buildPrompt for radar_hype', () => {
+    const mockRadarData: RadarPayload = {
+      scores: {
+        'Positivity': 85,
+        'Energy': 72,
+        'Exploration': 43,
+        'Nostalgia': 28,
+        'Night-Owl': 67,
+      },
+      stats: {
+        positivity: { weightedMeanValence: 0.85, percentage: 85 },
+        energy: { weightedMeanEnergy: 0.72, weightedMeanTempo: 0.68 },
+        exploration: { genreCount: 8, entropy: 2.1, normalizedEntropy: 43 },
+        nostalgia: { medianTrackAge: 7 },
+        nightOwl: { nightPlayCount: 15, totalPlayCount: 50, percentage: 30 },
+      },
+      suggestions: [],
+      trackCount: 25,
+      isDefault: false,
+      trends: [],
+      topGenre: 'Tamil Pop',
+      sampleTrack: { title: 'Solo Dolo, Pt III', artist: 'Kid Cudi' },
+      weeks: 4,
+    };
+
+    it('includes personalized data fields in the prompt', () => {
+      const prompt = buildPrompt('radar_hype', mockRadarData);
+
+      // Should include personalized data
+      expect(prompt).toContain('Tamil Pop');
+      expect(prompt).toContain('Solo Dolo, Pt III');
+      expect(prompt).toContain('Kid Cudi');
+      expect(prompt).toContain('Weeks: 4');
+      expect(prompt).toContain('Track Count: 25');
+    });
+
+    it('includes top and low axis information', () => {
+      const prompt = buildPrompt('radar_hype', mockRadarData);
+      
+      // Should include top axis (Positivity - 85%)
+      expect(prompt).toContain('Top Axis: Positivity (85%)');
+      
+      // Should include low axis (Nostalgia - 28%)
+      expect(prompt).toContain('Low Axis: Nostalgia (28%)');
+    });
+
+    it('includes structured JSON requirements', () => {
+      const prompt = buildPrompt('radar_hype', mockRadarData);
+      
+      expect(prompt).toContain('Required JSON Keys');
+      expect(prompt).toContain('Gen-Z hype coach');
+      expect(prompt).toContain('≤ 12 words');
+      expect(prompt).toContain('≤ 25 words');
+    });
+
+    it('mentions coach tip logic for low scoring axes', () => {
+      const prompt = buildPrompt('radar_hype', mockRadarData);
+      
+      // Nostalgia is 28% which is < 35%, but it's excluded from coach tips
+      expect(prompt).toContain('omit tip key entirely');
     });
   });
 }); 

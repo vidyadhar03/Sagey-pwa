@@ -211,15 +211,22 @@ export function MusicRadarDetailSheet({ open, onClose, payload, aiSummary }: Mus
                           <Radar 
                             name="You" 
                             dataKey="value" 
-                            stroke="#1DB954"
+                            stroke="#22c55e"
                             strokeWidth={2}
-                            fill="#1DB95455"
-                            fillOpacity={0.35}
+                            fill="#22c55e"
+                            fillOpacity={0.20}
                             data-testid="radar-fill"
                           />
                         </RadarChart>
                       </ResponsiveContainer>
                     </div>
+
+                    {/* AI Hype Copy for Share Card */}
+                    {aiSummary && (
+                      <div className="text-center mt-4 mb-2 space-y-1 px-4">
+                        <p className="text-sm text-zinc-300 font-medium">{aiSummary}</p>
+                      </div>
+                    )}
 
                     <div className="flex justify-center items-center gap-3 p-4">
                         <Switch

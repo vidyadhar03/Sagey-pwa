@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useSpotify } from './useSpotify';
 import { getRadarPayload } from '../features/radar/getRadarPayload';
 import type { RadarPayload } from '../features/radar/types';
-import { useAIInsights } from './useAIInsights';
+import { useRadarHype } from './useRadarHype';
 import type { RecentlyPlayedTrack, SpotifyArtist } from './useSpotify';
 
 type SpotifyTimeRange = 'short_term' | 'medium_term' | 'long_term';
@@ -27,6 +27,9 @@ const DEFAULT_PAYLOAD: RadarPayload = {
   trackCount: 0,
   isDefault: true,
   trends: [],
+  topGenre: 'Pop',
+  sampleTrack: { title: 'Unknown Track', artist: 'Unknown Artist' },
+  weeks: 4,
 };
 
 /**
@@ -67,7 +70,7 @@ export function useMusicRadar() {
   const [error, setError] = useState<Error | null>(null);
 
   // Fetch AI copy once the main payload is available and not the default
-  const ai = useAIInsights('radar_summary', payload, !payload.isDefault);
+  const ai = useRadarHype(payload, !payload.isDefault);
 
   const fetchAndSetData = useCallback(async () => {
     if (!connected) {

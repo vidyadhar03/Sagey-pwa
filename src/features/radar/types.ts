@@ -51,4 +51,8 @@ export interface RadarPayload {
   trackCount: number; // Total tracks considered for the calculation
   isDefault?: boolean; // True if using default/fallback data
   trends: RadarDataPoint[];
+  // New fields for AI hype personalization
+  topGenre: string; // Most-played genre in recent tracks
+  sampleTrack: { title: string; artist: string }; // Example track for context
+  weeks: number; // Time period for analysis (currently 4)
 } 

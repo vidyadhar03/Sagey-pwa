@@ -1,0 +1,171 @@
+"use client";
+
+import { useState, useEffect } from 'react';
+import { RadarPayload } from '../features/radar/types';
+import { RadarHypeCopy } from '../features/radar/radarNarrativeConfig';
+import { getMockCopy } from '../mocks/aiCopyMock';
+
+/**
+ * Hook for fetching AI-generated radar hype copy with structured format
+ */
+export function useRadarHype(
+  payload: RadarPayload,
+  enabled: boolean = true
+) {
+  const [data, setData] = useState<RadarHypeCopy | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const parseRadarHypeCopy = (rawCopy: string): RadarHypeCopy => {
+    try {
+      // Try to parse as JSON first
+      const parsed = JSON.parse(rawCopy);
+      if (parsed.headline && parsed.context) {
+        return {
+          headline: parsed.headline,
+          context: parsed.context,
+          tip: parsed.tip
+        };
+      }
+    } catch {
+      // If JSON parsing fails, fall back to mock format
+    }
+    
+    // Fallback to a simple structure from mock
+    return {
+      headline: "🎵 Your music radar is looking amazing!",
+      context: "Based on your recent listening patterns.",
+      tip: undefined
+    };
+  };
+
+  useEffect(() => {
+    if (!enabled) {
+      setIsLoading(false);
+      return;
+    }
+
+    const fetchRadarHype = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        // Check if AI is disabled for development
+        if (process.env.NEXT_PUBLIC_DISABLE_AI === 'true') {
+          console.log('🎭 Using mock radar hype copy for development');
+          await new Promise(resolve => setTimeout(resolve, 500));
+          const mockCopy = getMockCopy('radar_hype');
+          setData(parseRadarHypeCopy(mockCopy));
+          setIsLoading(false);
+          return;
+        }
+
+        console.log('🔍 Fetching AI radar hype insight');
+        
+        const response = await fetch('/api/insights/ai', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            type: 'radar_hype',
+            payload
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        
+        if (result.error) {
+          console.warn('⚠️ AI API returned error:', result.error);
+        }
+
+        const parsedCopy = parseRadarHypeCopy(result.copy || '');
+        setData(parsedCopy);
+
+      } catch (err) {
+        console.error('❌ Failed to fetch radar hype insight:', err);
+        setError(err instanceof Error ? err.message : 'Unknown error');
+        
+        // Fallback to mock copy on error
+        const mockCopy = getMockCopy('radar_hype');
+        setData(parseRadarHypeCopy(mockCopy));
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRadarHype();
+  }, [JSON.stringify(payload), enabled]);
+
+  const mutate = async (options?: { regenerate?: boolean }) => {
+    const regenerate = options?.regenerate || false;
+    
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Check if AI is disabled for development
+      if (process.env.NEXT_PUBLIC_DISABLE_AI === 'true') {
+        console.log(`🎭 ${regenerate ? 'Refreshing with new' : 'Using'} mock radar hype copy`);
+        await new Promise(resolve => setTimeout(resolve, 500));
+        const mockCopy = getMockCopy('radar_hype');
+        setData(parseRadarHypeCopy(mockCopy));
+        setIsLoading(false);
+        return;
+      }
+
+      console.log(`🔍 ${regenerate ? 'Regenerating' : 'Fetching'} radar hype insight`);
+      
+      const response = await fetch('/api/insights/ai', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'radar_hype',
+          payload,
+          regenerate
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.error) {
+        console.warn('⚠️ AI API returned error:', result.error);
+      }
+
+      const parsedCopy = parseRadarHypeCopy(result.copy || '');
+      setData(parsedCopy);
+
+    } catch (err) {
+      console.error('❌ Failed to fetch radar hype insight:', err);
+      setError(err instanceof Error ? err.message : 'Unknown error');
+      
+      // Fallback to mock copy on error
+      const mockCopy = getMockCopy('radar_hype');
+      setData(parseRadarHypeCopy(mockCopy));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return {
+    headline: data?.headline || '',
+    context: data?.context || '',
+    tip: data?.tip,
+    isLoading,
+    error,
+    mutate,
+    // Utility functions
+    hasData: !!data,
+    hasTip: !!data?.tip,
+  };
+} 

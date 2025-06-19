@@ -47,33 +47,77 @@ export async function getInsightCopy(
     
     // Call OpenAI
     const openai = getOpenAIClient();
-    console.log(`📡 Making OpenAI API call...`);
+    console.log(`📡 Making OpenAI API call for ${type}...`);
+    console.log(`🎯 Target: ${type === 'radar_hype' ? 'RADAR_HYPE (expecting JSON)' : 'Regular insight'}`);
     
-    const completion = await openai.chat.completions.create({
+    // Special parameters for radar_hype type to ensure JSON output
+    const isRadarHype = type === 'radar_hype';
+    
+    // Build the request configuration
+    const requestConfig: any = {
       model: 'gpt-3.5-turbo',
       messages: [
         {
           role: 'system',
-          content: 'You are a creative copywriter specializing in fun, engaging social media content about music and personality insights. Generate short, shareable captions that are positive, quirky, and emoji-rich.'
+          content: isRadarHype 
+            ? 'You are a Gen-Z hype coach for music insights. Output ONLY valid JSON, no markdown, no code-block. Follow the exact format specified in the user prompt.'
+            : 'You are a creative copywriter specializing in fun, engaging social media content about music and personality insights. Generate short, shareable captions that are positive, quirky, and emoji-rich.'
         },
         {
           role: 'user',
           content: prompt
         }
       ],
-      max_tokens: 100,
-      temperature: 0.95, // Maximum creativity for unique responses
+      max_tokens: isRadarHype ? 160 : 100,
+      temperature: isRadarHype ? 0.9 : 0.95,
       top_p: 0.9,
+    };
+
+    // Add response_format for radar_hype if supported
+    if (isRadarHype) {
+      try {
+        requestConfig.response_format = { type: 'json_object' };
+        console.log('🎯 Using JSON response format for radar_hype');
+      } catch (error) {
+        console.warn('⚠️ JSON response format not supported, relying on prompt instructions');
+      }
+    }
+
+    console.log('📡 OpenAI request config:', {
+      model: requestConfig.model,
+      maxTokens: requestConfig.max_tokens,
+      temperature: requestConfig.temperature,
+      hasResponseFormat: !!requestConfig.response_format,
+      promptLength: prompt.length
     });
 
+    console.log(`🚀 Sending request to OpenAI...`);
+    const completion = await openai.chat.completions.create(requestConfig);
+    console.log(`✅ OpenAI API call successful!`);
+
     const generatedCopy = completion.choices[0]?.message?.content?.trim() || '';
-    console.log(`🤖 OpenAI returned: "${generatedCopy}"`);
+    console.log(`🤖 OpenAI returned (${generatedCopy.length} chars): "${generatedCopy}"`);
+    
+    // Special validation for radar_hype responses
+    if (isRadarHype) {
+      console.log(`🔍 RADAR_HYPE Response Analysis:`);
+      try {
+        const testParse = JSON.parse(generatedCopy);
+        console.log(`✅ Valid JSON structure detected:`, testParse);
+      } catch (parseErr) {
+        console.log(`❌ Invalid JSON from OpenAI:`, parseErr instanceof Error ? parseErr.message : String(parseErr));
+        console.log(`📝 Raw response: "${generatedCopy}"`);
+      }
+    }
+    
     console.log(`📊 OpenAI response details:`, {
       id: completion.id,
       model: completion.model,
       usage: completion.usage,
       choices: completion.choices.length,
-      finishReason: completion.choices[0]?.finish_reason
+      finishReason: completion.choices[0]?.finish_reason,
+      isRadarHype,
+      responseLength: generatedCopy.length
     });
     
     if (!generatedCopy) {
@@ -103,6 +147,17 @@ export async function getInsightCopy(
     if (error && typeof error === 'object' && 'status' in error) {
       console.error(`OpenAI API Status: ${(error as any).status}`);
       console.error(`OpenAI API Error: ${JSON.stringify(error, null, 2)}`);
+    }
+    
+    // Special logging for radar_hype failures
+    if (type === 'radar_hype') {
+      console.error(`🚨 RADAR_HYPE FAILURE - This should return JSON fallback`);
+      console.error(`🔍 Error details for radar_hype:`, {
+        errorType: error?.constructor?.name,
+        errorMessage: error instanceof Error ? error.message : String(error),
+        hasOpenAIKey: !!process.env.OPENAI_API_KEY,
+        keyLength: process.env.OPENAI_API_KEY?.length,
+      });
     }
     
     // Return fallback copy based on insight type
@@ -166,6 +221,28 @@ function getFallbackCopy(type: InsightType, data: InsightPayload): string {
         `${isNight ? '🌆' : '🌄'} ${isNight ? 'Midnight' : 'Sunrise'} soundtrack master! Peak musical powers: ${timeData.peakHour}:00 🎧`
       ];
       return nightVariations[randomSeed % nightVariations.length];
+    
+    case 'radar_hype':
+      // Return valid JSON structure for radar_hype fallback
+      const radarData = data as any;
+      const radarVariations = [
+        {
+          headline: '🎵 You\'re absolutely crushing those musical vibes!',
+          context: `Powered by ${radarData.topGenre || 'amazing'} tracks over ${radarData.weeks || 4} weeks, our friend is on fire.`,
+          tip: undefined
+        },
+        {
+          headline: '✨ Your music radar is looking incredible!',
+          context: `This listener\'s ${radarData.topGenre || 'diverse'} energy dominated the last ${radarData.weeks || 4} weeks.`,
+          tip: undefined
+        },
+        {
+          headline: '🌟 Musical genius detected in your playlist!',
+          context: `Our friend\'s taste for ${radarData.topGenre || 'quality music'} is absolutely next level right now.`,
+          tip: undefined
+        }
+      ];
+      return JSON.stringify(radarVariations[randomSeed % radarVariations.length]);
     
     default:
       const defaultVariations = [

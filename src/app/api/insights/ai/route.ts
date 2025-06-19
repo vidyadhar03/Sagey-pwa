@@ -70,10 +70,23 @@ const RadarSummaryPayloadSchema = z.object({
     axis: z.enum(['Positivity', 'Energy', 'Exploration', 'Nostalgia', 'Night-Owl']),
     value: z.number(),
   })),
+  topGenre: z.string(),
+  sampleTrack: z.object({
+    title: z.string(),
+    artist: z.string(),
+  }),
+  weeks: z.number(),
+});
+
+// Validation schema for radar_hype AI responses
+const RadarHypeResponseSchema = z.object({
+  headline: z.string().min(1).max(120),
+  context: z.string().min(1).max(160),
+  tip: z.string().min(1).max(120).optional()
 });
 
 const RequestSchema = z.object({
-  type: z.enum(['musical_age', 'mood_ring', 'genre_passport', 'night_owl_pattern', 'radar_summary']),
+  type: z.enum(['musical_age', 'mood_ring', 'genre_passport', 'night_owl_pattern', 'radar_summary', 'radar_hype']),
   payload: z.union([
     MusicalAgePayloadSchema,
     MoodRingPayloadSchema,
@@ -127,6 +140,57 @@ export async function POST(request: NextRequest) {
     console.log(`✅ Successfully generated ${type} insight`);
     console.info(`[AI] Cache`, { cached: result.fromCache, regenerate, type });
     console.log(`📝 Generated copy: "${result.copy.substring(0, 100)}${result.copy.length > 100 ? '...' : ''}"`);
+    
+    // Special validation for radar_hype responses
+    if (type === 'radar_hype') {
+      try {
+        console.log('🔍 Validating radar_hype JSON response...');
+        const parsedResponse = JSON.parse(result.copy);
+        const validatedResponse = RadarHypeResponseSchema.parse(parsedResponse);
+        
+        console.log('✅ radar_hype JSON validation passed:', validatedResponse);
+        
+        return NextResponse.json({
+          copy: result.copy,
+          source: 'ai',
+          type,
+          cached: result.fromCache,
+          debug: {
+            regenerated: regenerate,
+            timestamp: new Date().toISOString(),
+            userId: userId.substring(0, 10) + '...',
+            copyLength: result.copy.length,
+            validatedShape: validatedResponse
+          }
+        });
+        
+      } catch (validationError) {
+        console.error('❌ radar_hype JSON validation failed:', validationError);
+        console.error('📝 Raw response that failed validation:', result.copy);
+        
+        // Provide more specific error details
+        let errorDetails: string | z.ZodIssue[] = 'JSON parse error';
+        if (validationError instanceof z.ZodError) {
+          errorDetails = validationError.errors;
+        } else if (validationError instanceof SyntaxError) {
+          errorDetails = 'Invalid JSON syntax';
+        } else if (validationError instanceof Error) {
+          errorDetails = validationError.message;
+        }
+        
+        return NextResponse.json(
+          {
+            error: 'BAD_AI_SHAPE',
+            details: errorDetails,
+            rawResponse: result.copy,
+            type,
+            suggestion: 'This indicates the AI returned non-JSON text. Check server logs for OpenAI API errors.',
+          },
+          { status: 502 }
+        );
+      }
+    }
+    
     console.log(`🔑 Cache key would be based on user: ${userId}, type: ${type}`);
     
     return NextResponse.json({
