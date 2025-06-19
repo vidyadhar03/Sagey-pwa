@@ -217,8 +217,7 @@ function buildRadarHypePrompt(data: RadarPayload): string {
 CRITICAL: Output ONLY valid JSON, no markdown, no code-block, no explanation.
 
 Required JSON Keys:
-- "headline": string (≤ 12 words, starts with exactly one emoji)
-- "context": string (≤ 25 words, must mention either genre OR track)
+- "mainInsight": string (≤ 50 words, starts with exactly one emoji, combines hype and context)
 - "tip": string (optional, ≤ 18 words, starts with "Coach tip:")
 
 Data:
@@ -230,15 +229,15 @@ Data:
 - Weeks: ${weeks}
 
 Rules:
-• headline starts with "${emoji}"
-• context must mention "${topGenre}" OR ${trackReference}
+• mainInsight starts with "${emoji}" and combines excitement with context
+• mainInsight must mention "${topGenre}" OR ${trackReference}
 • ${needsCoachTip ? `include tip starting with "Coach tip:"` : 'omit tip key entirely'}
 • Use Gen-Z language: "our friend", "this listener", never real names
+• Make mainInsight flow as one cohesive, engaging statement
 
 Example format:
 {
-  "headline": "${emoji} You're absolutely ${hypeWord} ${topAxis.toLowerCase()}!",
-  "context": "Powered by ${topGenre} tracks over ${weeks} weeks, our friend is crushing it."${needsCoachTip ? ',\n  "tip": "Coach tip: ' + coachTip + '"' : ''}
+  "mainInsight": "${emoji} You're absolutely ${hypeWord} ${topAxis.toLowerCase()}! Powered by ${topGenre} tracks over ${weeks} weeks, our friend is crushing the music game right now."${needsCoachTip ? ',\n  "tip": "Coach tip: ' + coachTip + '"' : ''}
 }
 
 Generate JSON now:`;

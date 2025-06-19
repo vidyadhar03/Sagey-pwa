@@ -80,8 +80,7 @@ const RadarSummaryPayloadSchema = z.object({
 
 // Validation schema for radar_hype AI responses
 const RadarHypeResponseSchema = z.object({
-  headline: z.string().min(1).max(120),
-  context: z.string().min(1).max(160),
+  mainInsight: z.string().min(1).max(250), // 50 words ≈ 250 characters
   tip: z.string().min(1).max(120).optional()
 });
 

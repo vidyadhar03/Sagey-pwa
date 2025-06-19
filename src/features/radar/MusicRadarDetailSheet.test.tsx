@@ -2,7 +2,7 @@ import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MusicRadarDetailSheet } from './MusicRadarDetailSheet';
 import { getRadarPayload } from './getRadarPayload';
-import { mockRecentTracks, mockTopArtists, mockAudioFeatures } from '../../mocks/radar';
+import { mockRecentTracks, mockTopArtists } from '../../mocks/radar';
 import { RadarAxis } from './types';
 
 // Mock window/browser APIs
@@ -39,49 +39,53 @@ describe('MusicRadarDetailSheet', () => {
         expect(container.firstChild).toBeNull();
     });
 
-    it('renders hero, chart, and suggestions when open', async () => {
+    it('renders new insight layout with music persona and stats', async () => {
         await act(async () => {
-            render(<MusicRadarDetailSheet open={true} onClose={() => {}} payload={testPayload} aiSummary={null} />);
+            render(<MusicRadarDetailSheet open={true} onClose={() => {}} payload={testPayload} aiSummary="Test AI Summary" />);
         });
         
-        // Direct synchronous assertions since mocks are now synchronous
+        // Check new header
+        expect(screen.getByText('Music Insights')).toBeInTheDocument();
+        
+        // Check AI Insights section
+        expect(screen.getByText('AI Insights')).toBeInTheDocument();
+        expect(screen.getByText('Test AI Summary')).toBeInTheDocument();
+        
+        // Check Your Music Persona section
         expect(screen.getByText('Your Music Persona')).toBeInTheDocument();
         
-        // Check for visible chips instead of specific numeric values
-        expect(screen.getByText(/Strongest:/)).toBeInTheDocument();
-        expect(screen.getByText(/Weakest:/)).toBeInTheDocument();
+        // Check Your Music Stats section
+        expect(screen.getByText('Your Music Stats')).toBeInTheDocument();
+        expect(screen.getByText('Tracks Analyzed')).toBeInTheDocument();
+        expect(screen.getByText('Time Period')).toBeInTheDocument();
+        expect(screen.getByText('Top Genre')).toBeInTheDocument();
+        expect(screen.getByText('Featured Track')).toBeInTheDocument();
         
+        // Check Detailed Breakdown section
+        expect(screen.getByText('Detailed Breakdown')).toBeInTheDocument();
+        expect(screen.getByText('Positivity Level')).toBeInTheDocument();
+        expect(screen.getByText('Musical Exploration')).toBeInTheDocument();
+        expect(screen.getByText('Night Owl Behavior')).toBeInTheDocument();
+        expect(screen.getByText('Nostalgia Factor')).toBeInTheDocument();
+        
+        // Check Suggestions section
         expect(screen.getByText('Suggestions For You')).toBeInTheDocument();
         testPayload.suggestions.forEach(suggestion => {
             expect(screen.getByText(suggestion.label)).toBeInTheDocument();
         });
     });
 
-    it('toggles trend switch when clicked', async () => {
-        const user = userEvent.setup();
-        
+    it('renders without AI summary when not provided', async () => {
         await act(async () => {
             render(<MusicRadarDetailSheet open={true} onClose={() => {}} payload={testPayload} aiSummary={null} />);
         });
         
-        const trendSwitch = screen.getByRole('switch');
+        // Should not show AI Insights section
+        expect(screen.queryByText('AI Insights')).not.toBeInTheDocument();
         
-        // Initial state should be unchecked
-        expect(trendSwitch).toHaveAttribute('aria-checked', 'false');
-
-        // Click to enable trends
-        await user.click(trendSwitch);
-        
-        await waitFor(() => {
-            expect(trendSwitch).toHaveAttribute('aria-checked', 'true');
-        });
-
-        // Click again to disable trends
-        await user.click(trendSwitch);
-
-        await waitFor(() => {
-            expect(trendSwitch).toHaveAttribute('aria-checked', 'false');
-        });
+        // But should still show other sections
+        expect(screen.getByText('Your Music Persona')).toBeInTheDocument();
+        expect(screen.getByText('Your Music Stats')).toBeInTheDocument();
     });
 
     it('calls html2canvas when share button is clicked', async () => {
@@ -93,7 +97,7 @@ describe('MusicRadarDetailSheet', () => {
         });
         
         await waitFor(() => {
-            expect(screen.getByTestId('shareable-radar')).toBeInTheDocument();
+            expect(screen.getByTestId('share-button')).toBeInTheDocument();
         });
 
         const shareButton = screen.getByTestId('share-button');
@@ -133,7 +137,7 @@ describe('MusicRadarDetailSheet', () => {
             expect(mockCanShare).toHaveBeenCalled();
             expect(mockShare).toHaveBeenCalledWith({
                 files: expect.any(Array),
-                title: 'My Music Radar',
+                title: 'My Music Insights',
                 text: 'Check out my music persona from Sagey!',
             });
         });
@@ -177,5 +181,42 @@ describe('MusicRadarDetailSheet', () => {
         const closeButton = screen.getByTestId('close-button');
         await user.click(closeButton);
         expect(handleClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('displays music persona scores with progress bars', async () => {
+        await act(async () => {
+            render(<MusicRadarDetailSheet open={true} onClose={() => {}} payload={testPayload} aiSummary={null} />);
+        });
+        
+        // Check that all radar axes are displayed
+        expect(screen.getByText('Positivity')).toBeInTheDocument();
+        expect(screen.getByText('Energy')).toBeInTheDocument();
+        expect(screen.getByText('Exploration')).toBeInTheDocument();
+        expect(screen.getByText('Nostalgia')).toBeInTheDocument();
+        expect(screen.getByText('Night-Owl')).toBeInTheDocument();
+        
+        // Check that percentage values are displayed
+        Object.values(testPayload.scores).forEach(score => {
+            expect(screen.getByText(`${Math.round(score)}%`)).toBeInTheDocument();
+        });
+    });
+
+    it('displays detailed statistics correctly', async () => {
+        await act(async () => {
+            render(<MusicRadarDetailSheet open={true} onClose={() => {}} payload={testPayload} aiSummary={null} />);
+        });
+        
+        // Check track count
+        expect(screen.getByText(testPayload.trackCount.toString())).toBeInTheDocument();
+        
+        // Check weeks
+        expect(screen.getByText(`${testPayload.weeks} weeks`)).toBeInTheDocument();
+        
+        // Check top genre
+        expect(screen.getByText(testPayload.topGenre)).toBeInTheDocument();
+        
+        // Check sample track
+        expect(screen.getByText(testPayload.sampleTrack.title)).toBeInTheDocument();
+        expect(screen.getByText(`by ${testPayload.sampleTrack.artist}`)).toBeInTheDocument();
     });
 });

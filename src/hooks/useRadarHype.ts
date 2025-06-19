@@ -20,10 +20,9 @@ export function useRadarHype(
     try {
       // Try to parse as JSON first
       const parsed = JSON.parse(rawCopy);
-      if (parsed.headline && parsed.context) {
+      if (parsed.mainInsight) {
         return {
-          headline: parsed.headline,
-          context: parsed.context,
+          mainInsight: parsed.mainInsight,
           tip: parsed.tip
         };
       }
@@ -33,8 +32,7 @@ export function useRadarHype(
     
     // Fallback to a simple structure from mock
     return {
-      headline: "🎵 Your music radar is looking amazing!",
-      context: "Based on your recent listening patterns.",
+      mainInsight: "🎵 Your music radar is looking amazing! Based on your recent listening patterns, you're creating some incredible musical vibes.",
       tip: undefined
     };
   };
@@ -158,8 +156,7 @@ export function useRadarHype(
   };
 
   return {
-    headline: data?.headline || '',
-    context: data?.context || '',
+    mainInsight: data?.mainInsight || '',
     tip: data?.tip,
     isLoading,
     error,

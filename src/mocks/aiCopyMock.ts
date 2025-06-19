@@ -10,12 +10,12 @@ export const mockAICopy: Record<InsightType, string[]> = {
     "Based on your listening, you're a true night owl with a love for high-energy bangers. Time to sleep?",
   ],
   radar_hype: [
-    '{"headline": "✨ You\'re absolutely radiating positivity!", "context": "Powered by Tamil Pop bops like \\"Solo Dolo, Pt III\\", your vibe dominated the last 4-weeks radar.", "tip": "Coach tip: Try adding some upbeat pop or dance tracks to boost those good vibes!"}',
-    '{"headline": "⚡ You\'re electric with energy!", "context": "This listener\'s Indie Rock selection crushed it over 4 weeks with tracks like \\"Midnight City\\".", "tip": "Coach tip: Mix in some high-energy electronic or rock to pump up your playlists!"}',
-    '{"headline": "🗺️ You\'re adventuring through musical exploration!", "context": "Our friend\'s genre-hopping through Electronic and Hip-Hop is next level right now."}',
-    '{"headline": "🌙 You\'re commanding night owl energy!", "context": "Those late-night Alternative sessions really show up on your 4-week radar."}',
-    '{"headline": "🎵 Next-level energy wizard!", "context": "Fueled by Dance tracks over the past 4 weeks, our friend is absolutely crushing it."}',
-    '{"headline": "📻 Nostalgia mode activated!", "context": "This listener\'s throwback Pop choices from the 90s are giving major vintage energy."}',
+    '{"mainInsight": "✨ You\'re absolutely radiating positivity! Powered by Tamil Pop bops like \\"Solo Dolo, Pt III\\", your vibe dominated the last 4-weeks radar.", "tip": "Coach tip: Try adding some upbeat pop or dance tracks to boost those good vibes!"}',
+    '{"mainInsight": "⚡ You\'re electric with energy! This listener\'s Indie Rock selection crushed it over 4 weeks with tracks like \\"Midnight City\\".", "tip": "Coach tip: Mix in some high-energy electronic or rock to pump up your playlists!"}',
+    '{"mainInsight": "🗺️ You\'re adventuring through musical exploration! Our friend\'s genre-hopping through Electronic and Hip-Hop is next level right now."}',
+    '{"mainInsight": "🌙 You\'re commanding night owl energy! Those late-night Alternative sessions really show up on your 4-week radar."}',
+    '{"mainInsight": "🎵 Next-level energy wizard! Fueled by Dance tracks over the past 4 weeks, our friend is absolutely crushing it."}',
+    '{"mainInsight": "📻 Nostalgia mode activated! This listener\'s throwback Pop choices from the 90s are giving major vintage energy."}',
   ],
   musical_age: [
     "🎂 Your ears are stuck in 2010! Musical age: 27 - clearly you peaked during the indie rock renaissance ✨",

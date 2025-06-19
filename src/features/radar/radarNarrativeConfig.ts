@@ -1,6 +1,5 @@
 export interface RadarHypeCopy {
-  headline: string;
-  context: string;
+  mainInsight: string;
   tip?: string;
 }
 

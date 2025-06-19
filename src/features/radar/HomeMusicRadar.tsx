@@ -9,6 +9,7 @@ import RadarSkeleton from './RadarSkeleton';
 import { MusicRadarDetailSheet } from './MusicRadarDetailSheet';
 import { cn } from '@/utils';
 import InsightCard from '@/components/insights/cards/InsightCard';
+import TypingInsight from '@/components/TypingInsight';
 
 export default function HomeMusicRadar() {
   const { payload, ai, isLoading } = useMusicRadar();
@@ -239,18 +240,24 @@ export default function HomeMusicRadar() {
             <div className="h-4 bg-zinc-800 rounded w-2/3 mx-auto"></div>
             <div className="h-3 bg-zinc-800 rounded w-1/2 mx-auto"></div>
           </div>
-        ) : ai.headline && ai.context ? (
+        ) : ai.mainInsight ? (
           <>
-            <h3 className="text-lg font-bold text-white">{ai.headline}</h3>
-            <p className="text-sm text-zinc-300 mb-1">{ai.context}</p>
+            <TypingInsight 
+              text={ai.mainInsight}
+              speed={30}
+              className="mb-3"
+            />
             {ai.tip && (
               <p className="text-xs text-purple-400 italic">{ai.tip}</p>
             )}
           </>
         ) : (
           <>
-            <h3 className="text-lg font-semibold text-white">🎵 Your music radar is amazing!</h3>
-            <p className="text-sm text-zinc-300 mb-1">Based on your recent listening patterns.</p>
+            <TypingInsight 
+              text="🎵 Your music radar is amazing! Based on your recent listening patterns, you're creating some incredible musical vibes."
+              speed={30}
+              className="mb-3"
+            />
           </>
         )}
       </div>
@@ -269,7 +276,7 @@ export default function HomeMusicRadar() {
         open={isDetailSheetOpen} 
         onClose={() => setDetailSheetOpen(false)}
         payload={payload}
-        aiSummary={`${ai.headline} ${ai.context}${ai.tip ? ` ${ai.tip}` : ''}`}
+        aiSummary={`${ai.mainInsight}${ai.tip ? ` ${ai.tip}` : ''}`}
       />
     </div>
   );
