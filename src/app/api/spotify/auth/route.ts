@@ -40,15 +40,19 @@ export async function GET(request: NextRequest) {
   const state = Math.random().toString(36).substring(2, 15);
     console.log('🔐 Generated state:', `${state.substring(0, 10)}...`);
     
-    // Determine redirect URI based on environment
-    const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
-    const redirectUri = process.env.SPOTIFY_REDIRECT_URI || 
-      (isProduction 
-        ? 'https://sagey-pwa.vercel.app/api/spotify/callback'
-        : 'http://localhost:3000/api/spotify/callback');
+    // Build redirect URI dynamically for dev so we don't end up with 0.0.0.0 which Chrome blocks
+    let redirectUri: string;
+    if (process.env.SPOTIFY_REDIRECT_URI) {
+      redirectUri = process.env.SPOTIFY_REDIRECT_URI;
+    } else {
+      const hostHeader = request.headers.get('host') || 'localhost:3000';
+      const protocol = request.nextUrl.protocol; // http: or https:
+      const hostSanitized = hostHeader.startsWith('0.0.0.0') ? hostHeader.replace('0.0.0.0', 'localhost') : hostHeader;
+      redirectUri = `${protocol}//${hostSanitized}/api/spotify/callback`;
+    }
     
     console.log('🌍 Environment detection:', {
-      isProduction,
+      isProduction: process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production',
       redirectUri,
       explicitRedirectUri: process.env.SPOTIFY_REDIRECT_URI
     });
@@ -72,35 +76,37 @@ export async function GET(request: NextRequest) {
     console.log('🍪 Setting state cookie...');
   const response = NextResponse.redirect(authUrl);
   
-  // iOS Safari compatibility detection
+  // Mobile compatibility detection (iOS & Android)
   const userAgent = request.headers.get('user-agent') || '';
   const isIOSSafari = /iPhone|iPad|iPod/.test(userAgent) && /Safari/.test(userAgent);
   const isIOSChrome = /iPhone|iPad|iPod/.test(userAgent) && /CriOS/.test(userAgent);
   const isIOS = isIOSSafari || isIOSChrome;
+  const isAndroid = /Android/i.test(userAgent);
   
   console.log('🍎 iOS detection:', {
     userAgent: userAgent.substring(0, 100),
     isIOSSafari,
     isIOSChrome,
-    isIOS
+    isIOS,
+    isAndroid
   });
   
   // Simple, reliable cookie options that work everywhere
   let cookieOptions;
-  if (isIOS) {
-    // iOS-specific: Most permissive settings to bypass privacy restrictions
+  if (isIOS || isAndroid) {
+    // iOS/Android-specific: Most permissive settings to bypass privacy restrictions
     cookieOptions = {
-      httpOnly: false, // Allow client-side access for iOS compatibility
-      secure: isProduction,
+      httpOnly: false, // Allow client-side access for mobile compatibility
+      secure: process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production',
       maxAge: 600, // 10 minutes
-      sameSite: 'none' as const, // Required for iOS cross-site requests
+      sameSite: 'none' as const, // Required for cross-site requests on mobile browsers
       path: '/',
     };
-    console.log('🍎 Using iOS-compatible cookie settings');
+    console.log('📱 Using mobile-compatible cookie settings (SameSite=None)');
   } else {
     cookieOptions = {
       httpOnly: true,
-      secure: isProduction,
+      secure: process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production',
       maxAge: 600, // 10 minutes
       sameSite: 'lax' as const,
       path: '/',
@@ -111,7 +117,7 @@ export async function GET(request: NextRequest) {
   try {
     response.cookies.set('spotify_auth_state', state, cookieOptions);
     console.log('✅ State cookie set successfully');
-    console.log('🔐 State value stored:', `${state.substring(0, 10)}...`);
+    console.log('�� State value stored:', `${state.substring(0, 10)}...`);
   } catch (cookieError) {
     console.error('❌ CRITICAL: Failed to set state cookie:', cookieError);
     console.error('❌ This will cause state_mismatch errors!');

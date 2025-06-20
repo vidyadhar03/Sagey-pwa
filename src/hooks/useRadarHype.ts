@@ -12,8 +12,14 @@ export function useRadarHype(
   payload: RadarPayload,
   enabled: boolean = true
 ) {
-  const [data, setData] = useState<RadarHypeCopy | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // Simple cache keyed by type (radar_hype)
+  const staticCache = (globalThis as any).__radarHypeCache ?? ((globalThis as any).__radarHypeCache = new Map<string, RadarHypeCopy>());
+
+  const cacheKey = 'radar-hype';
+  const cachedInitial = staticCache.get(cacheKey) || null;
+
+  const [data, setData] = useState<RadarHypeCopy | null>(cachedInitial);
+  const [isLoading, setIsLoading] = useState(!cachedInitial);
   const [error, setError] = useState<string | null>(null);
 
   const parseRadarHypeCopy = (rawCopy: string): RadarHypeCopy => {
@@ -38,6 +44,12 @@ export function useRadarHype(
   };
 
   useEffect(() => {
+    // If we already have cached data, skip fetching unless regenerate is explicitly requested later
+    if (cachedInitial) {
+      setIsLoading(false);
+      return;
+    }
+
     if (!enabled) {
       setIsLoading(false);
       return;
@@ -53,7 +65,9 @@ export function useRadarHype(
           console.log('🎭 Using mock radar hype copy for development');
           await new Promise(resolve => setTimeout(resolve, 500));
           const mockCopy = getMockCopy('radar_hype');
-          setData(parseRadarHypeCopy(mockCopy));
+          const parsed = parseRadarHypeCopy(mockCopy);
+          setData(parsed);
+          staticCache.set(cacheKey, parsed);
           setIsLoading(false);
           return;
         }
@@ -83,6 +97,7 @@ export function useRadarHype(
 
         const parsedCopy = parseRadarHypeCopy(result.copy || '');
         setData(parsedCopy);
+        staticCache.set(cacheKey, parsedCopy);
 
       } catch (err) {
         console.error('❌ Failed to fetch radar hype insight:', err);
@@ -90,7 +105,9 @@ export function useRadarHype(
         
         // Fallback to mock copy on error
         const mockCopy = getMockCopy('radar_hype');
-        setData(parseRadarHypeCopy(mockCopy));
+        const parsed = parseRadarHypeCopy(mockCopy);
+        setData(parsed);
+        staticCache.set(cacheKey, parsed);
       } finally {
         setIsLoading(false);
       }
@@ -111,7 +128,9 @@ export function useRadarHype(
         console.log(`🎭 ${regenerate ? 'Refreshing with new' : 'Using'} mock radar hype copy`);
         await new Promise(resolve => setTimeout(resolve, 500));
         const mockCopy = getMockCopy('radar_hype');
-        setData(parseRadarHypeCopy(mockCopy));
+        const parsed = parseRadarHypeCopy(mockCopy);
+        setData(parsed);
+        staticCache.set(cacheKey, parsed);
         setIsLoading(false);
         return;
       }
@@ -142,6 +161,7 @@ export function useRadarHype(
 
       const parsedCopy = parseRadarHypeCopy(result.copy || '');
       setData(parsedCopy);
+      staticCache.set(cacheKey, parsedCopy);
 
     } catch (err) {
       console.error('❌ Failed to fetch radar hype insight:', err);
@@ -149,7 +169,9 @@ export function useRadarHype(
       
       // Fallback to mock copy on error
       const mockCopy = getMockCopy('radar_hype');
-      setData(parseRadarHypeCopy(mockCopy));
+      const parsed = parseRadarHypeCopy(mockCopy);
+      setData(parsed);
+      staticCache.set(cacheKey, parsed);
     } finally {
       setIsLoading(false);
     }

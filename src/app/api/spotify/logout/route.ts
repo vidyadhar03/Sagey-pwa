@@ -19,32 +19,23 @@ export async function POST(request: NextRequest) {
       'spotify_code_verifier'
     ];
 
-    cookiesToClear.forEach(cookieName => {
-      // Clear for current domain
-      response.cookies.set(cookieName, '', {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 0,
-        path: '/'
-      });
+    // --- Build exhaustive Set-Cookie headers manually (bypass Next.js cookie Map) ---
+    const buildHeader = (name: string, path: string, secure: boolean, sameSite: 'Lax' | 'None', httpOnly: boolean) => {
+      return `${name}=; Path=${path}; Max-Age=0; ${httpOnly ? 'HttpOnly; ' : ''}${secure ? 'Secure; ' : ''}SameSite=${sameSite}`;
+    };
 
-      // Clear for all possible domains/paths
-      response.cookies.set(cookieName, '', {
-        httpOnly: false,
-        secure: process.env.NODE_ENV === 'production', 
-        sameSite: 'lax',
-        maxAge: 0,
-        path: '/'
-      });
-      
-      // Also clear with different sameSite settings for mobile compatibility
-      response.cookies.set(cookieName, '', {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'none',
-        maxAge: 0,
-        path: '/'
+    cookiesToClear.forEach(name => {
+      ['/', '/api/spotify', '/api/spotify/'].forEach(path => {
+        [true, false].forEach(secure => {
+          // SameSite=Lax
+          response.headers.append('Set-Cookie', buildHeader(name, path, secure, 'Lax', true));
+          response.headers.append('Set-Cookie', buildHeader(name, path, secure, 'Lax', false));
+          // SameSite=None only when secure true (spec requirement)
+          if (secure) {
+            response.headers.append('Set-Cookie', buildHeader(name, path, secure, 'None', true));
+            response.headers.append('Set-Cookie', buildHeader(name, path, secure, 'None', false));
+          }
+        });
       });
     });
 

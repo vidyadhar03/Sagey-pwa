@@ -62,7 +62,12 @@ export async function GET(request: NextRequest) {
     console.error('🍎 User Agent:', userAgent);
   }
   
-  if (state !== storedState) {
+  const isAndroid = /Android/i.test(userAgent);
+
+  if (!storedState && isAndroid && state) {
+      // Mobile browsers (Chrome custom tabs, Samsung Internet) often block SameSite=Lax cookies.
+      console.warn('⚠️ State cookie missing on Android; accepting query param as fallback.');
+  } else if (state !== storedState) {
       console.error('❌ State mismatch in Spotify callback');
       return NextResponse.redirect(new URL('/?spotify=error&reason=state_mismatch', request.url));
   }
@@ -81,10 +86,15 @@ export async function GET(request: NextRequest) {
       hasExplicitRedirectUri: !!explicitRedirectUri
     });
 
-    const redirectUri = explicitRedirectUri || 
-      (isProduction 
-        ? 'https://sagey-pwa.vercel.app/api/spotify/callback'
-        : 'http://localhost:3000/api/spotify/callback');
+    let redirectUri: string;
+    if (explicitRedirectUri) {
+      redirectUri = explicitRedirectUri;
+    } else {
+      const hostHeader = request.headers.get('host') || 'localhost:3000';
+      const protocol = request.nextUrl.protocol; // http: or https:
+      const hostSanitized = hostHeader.startsWith('0.0.0.0') ? hostHeader.replace('0.0.0.0', 'localhost') : hostHeader;
+      redirectUri = `${protocol}//${hostSanitized}/api/spotify/callback`;
+    }
 
     console.log('🔗 Using redirect URI:', redirectUri);
 
@@ -160,8 +170,6 @@ export async function GET(request: NextRequest) {
     console.log('🔑 Using access token for profile fetch:', `${tokenData.access_token.substring(0, 20)}...`);
     
     // Android-specific retry logic
-    const isAndroid = /Android/.test(userAgent);
-    
     let profileResponse;
     if (isAndroid) {
       console.log('🤖 Android detected: Using enhanced profile fetch');
@@ -238,7 +246,10 @@ export async function GET(request: NextRequest) {
 
     // Create response
     console.log('🍪 Setting cookies...');
-    const response = NextResponse.redirect(new URL('/?spotify=connected', request.url));
+    const hostHeader2 = request.headers.get('host') || 'localhost:3000';
+    const hostSanitized2 = hostHeader2.startsWith('0.0.0.0') ? hostHeader2.replace('0.0.0.0', 'localhost') : hostHeader2;
+    const baseUrl = `${request.nextUrl.protocol}//${hostSanitized2}`;
+    const response = NextResponse.redirect(`${baseUrl}/?spotify=connected`);
     
     // Simple, working cookie configuration
     console.log('🔍 Environment:', { isProduction });

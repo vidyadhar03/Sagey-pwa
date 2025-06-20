@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useSpotify } from '../hooks/useSpotify';
+import { useRouter } from 'next/navigation';
 
 interface UserProfileProps {
   onClose: () => void;
@@ -10,6 +11,7 @@ interface UserProfileProps {
 
 export default function UserProfile({ onClose }: UserProfileProps) {
   const { user, connected, logout } = useSpotify();
+  const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const formatNumber = (num: number) => {
@@ -25,7 +27,9 @@ export default function UserProfile({ onClose }: UserProfileProps) {
     try {
       setIsLoggingOut(true);
       await logout();
-      // Close the modal after successful logout
+      // Navigate to onboarding immediately
+      router.push('/onboarding');
+      // Close the modal (in case route keeps component mounted during transition)
       onClose();
     } catch (error) {
       console.error('Failed to disconnect:', error);

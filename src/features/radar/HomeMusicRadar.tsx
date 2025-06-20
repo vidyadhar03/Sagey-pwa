@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
 import { RotateCw, Share2 } from 'lucide-react';
@@ -25,6 +25,21 @@ export default function HomeMusicRadar() {
 
   // The AI hook has its own loading state
   const isContentLoading = isLoading || ai.isLoading;
+
+  // Determine whether to skip typing animation based on session flag
+  const [skipTyping, setSkipTyping] = useState(true);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const shown = sessionStorage.getItem('shownRadarTyping');
+      if (shown === 'true') {
+        setSkipTyping(true);
+      } else {
+        setSkipTyping(false);
+        sessionStorage.setItem('shownRadarTyping', 'true');
+      }
+    }
+  }, []);
 
   const handleRefresh = async () => {
     if (!canRefresh || isRefreshing) return;
@@ -246,6 +261,7 @@ export default function HomeMusicRadar() {
               text={ai.mainInsight}
               speed={30}
               className="mb-3"
+              skip={skipTyping}
             />
             {ai.tip && (
               <p className="text-xs text-purple-400 italic">{ai.tip}</p>

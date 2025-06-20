@@ -6,21 +6,28 @@ interface TypingInsightProps {
   text: string;
   speed?: number;
   className?: string;
+  skip?: boolean;
 }
 
-export default function TypingInsight({ text, speed = 50, className = "" }: TypingInsightProps) {
+export default function TypingInsight({ text, speed = 50, className = "", skip = false }: TypingInsightProps) {
   const [displayedText, setDisplayedText] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTyping, setIsTyping] = useState(true);
 
   useEffect(() => {
     // Reset when text changes
-    setDisplayedText('');
-    setCurrentIndex(0);
-    setIsTyping(true);
-  }, [text]);
+    if (skip) {
+      setDisplayedText(text);
+      setIsTyping(false);
+    } else {
+      setDisplayedText('');
+      setCurrentIndex(0);
+      setIsTyping(true);
+    }
+  }, [text, skip]);
 
   useEffect(() => {
+    if (skip) return;
     if (!isTyping || currentIndex >= text.length) {
       setIsTyping(false);
       return;
@@ -32,13 +39,13 @@ export default function TypingInsight({ text, speed = 50, className = "" }: Typi
     }, speed);
 
     return () => clearTimeout(timeout);
-  }, [currentIndex, text, speed, isTyping]);
+  }, [currentIndex, isTyping, speed, text, skip]);
 
   return (
     <div className={`${className} relative`}>
       <span className="text-base font-medium text-white">
         {displayedText}
-        {isTyping && (
+        {isTyping && !skip && (
           <span className="animate-pulse text-green-400 ml-1">|</span>
         )}
       </span>

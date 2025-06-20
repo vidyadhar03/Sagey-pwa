@@ -736,7 +736,18 @@ export function useSpotify() {
         console.warn('⚠️ useSpotify: Logout API failed, but local state cleared');
       }
       
-      // Optional: Clear any cached data from localStorage/sessionStorage
+      // Aggressively clear any residual cookies on the client (covers path variants the server cannot)
+      try {
+        ['spotify_access_token','spotify_refresh_token','spotify_user_info','spotify_auth_state','spotify_code_verifier'].forEach(name=>{
+          document.cookie = `${name}=; Max-Age=0; path=/;`;
+          document.cookie = `${name}=; Max-Age=0; path=/api/spotify;`;
+          document.cookie = `${name}=; Max-Age=0; path=/api/spotify/;`;
+        });
+      } catch(e) {
+        console.warn('⚠️ useSpotify: Unable to clear cookies on client', e);
+      }
+      
+      // Clear any cached data from localStorage/sessionStorage
       try {
         localStorage.removeItem('spotify_cache');
         sessionStorage.removeItem('spotify_temp');

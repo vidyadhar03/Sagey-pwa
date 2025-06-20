@@ -65,8 +65,10 @@ const radarFetcher = async (
  */
 export function useMusicRadar() {
   const { connected, getRecentTracks, getTopArtists } = useSpotify();
-  const [payload, setPayload] = useState<RadarPayload>({ ...DEFAULT_PAYLOAD });
-  const [isLoading, setIsLoading] = useState(true);
+  // Initialise from cache to avoid loading flash when user revisits Home tab
+  const cachedInitial = cache.get('music-radar');
+  const [payload, setPayload] = useState<RadarPayload>(cachedInitial ? cachedInitial.payload : { ...DEFAULT_PAYLOAD });
+  const [isLoading, setIsLoading] = useState(!cachedInitial);
   const [error, setError] = useState<Error | null>(null);
 
   // Fetch AI copy once the main payload is available and not the default
