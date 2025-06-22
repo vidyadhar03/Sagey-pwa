@@ -101,7 +101,6 @@ export default function MoodRingCard() {
   return (
     <InsightCard
       title="Mood Ring"
-      onShare={handleShare}
       onInfo={handleInfo}
       delay={0.1}
     >

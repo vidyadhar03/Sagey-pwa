@@ -51,7 +51,6 @@ export default function GenrePassportCard() {
     <>
       <InsightCard
         title="Genre Passport"
-        onShare={handleShare}
         onInfo={handleInfo}
         delay={0.2}
       >

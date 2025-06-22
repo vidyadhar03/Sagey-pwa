@@ -70,7 +70,6 @@ export default function NightOwlCard() {
   return (
     <InsightCard
       title="Night Owl Pattern"
-      onShare={handleShare}
       onInfo={handleInfo}
       delay={0.3}
     >

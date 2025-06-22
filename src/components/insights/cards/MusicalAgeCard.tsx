@@ -103,7 +103,6 @@ export default function MusicalAgeCard() {
 
       <InsightCard
         title="Musical Age"
-        onShare={handleShare}
         onInfo={handleInfo}
         delay={0}
       >

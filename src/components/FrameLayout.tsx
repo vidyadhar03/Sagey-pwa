@@ -9,12 +9,15 @@ import SpotifyDataView from './SpotifyDataView';
 import UserProfile from './UserProfile';
 import RefreshTestPanel from './debug/RefreshTestPanel';
 import { useSpotify } from '../hooks/useSpotify';
+import GlobalShareInterface from './GlobalShareInterface';
+import { useGlobalShare } from '../hooks/useGlobalShare';
 
 // Dynamic Top Bar Component - Only show when Spotify is connected
 const DynamicTopBar = ({ 
   activeTab, 
   onProfileClick, 
-  exploreTopBarData 
+  exploreTopBarData,
+  onInsightShare
 }: { 
   activeTab: string; 
   onProfileClick: () => void;
@@ -25,6 +28,7 @@ const DynamicTopBar = ({
     onViewModeToggle: () => void;
     onShareClick: () => void;
   };
+  onInsightShare: () => void;
 }) => {
   const getTopBarContent = () => {
     switch (activeTab) {
@@ -45,6 +49,7 @@ const DynamicTopBar = ({
         return {
           title: 'Insights',
           showProfile: false,
+          showInsightsShare: true,
           titleAlign: 'left' as const
         };
       default:
@@ -56,7 +61,7 @@ const DynamicTopBar = ({
     }
   };
 
-  const { title, showProfile, showExploreControls, titleAlign } = getTopBarContent();
+  const { title, showProfile, showExploreControls, showInsightsShare, titleAlign } = getTopBarContent();
 
   return (
     <header 
@@ -94,17 +99,30 @@ const DynamicTopBar = ({
                  </button>
                )}
                
-               {/* Share Insights Button */}
+               {/* Share Top Aspects Button */}
                <button
                  onClick={exploreTopBarData.onShareClick}
                  className="p-2 hover:text-[#1ed760] transition-all"
-                 title="Share insights"
+                 title="Share top music data"
                >
                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5 text-[#1DB954] hover:text-[#1ed760] transition-colors">
                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
                  </svg>
                </button>
             </>
+          )}
+
+          {/* Insights Share Button */}
+          {showInsightsShare && (
+            <button
+              onClick={onInsightShare}
+              className="p-2 hover:text-[#1ed760] transition-all"
+              title="Share insights"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5 text-[#1DB954] hover:text-[#1ed760] transition-colors">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+              </svg>
+            </button>
           )}
           
           {showProfile && (
@@ -137,8 +155,17 @@ export default function FrameLayout({}: FrameLayoutProps) {
     onShareClick: () => void;
   }>();
   
-  // Get Spotify connection status
+  // Get Spotify connection status and global share functionality
   const { connected } = useSpotify();
+  const { 
+    isShareOpen, 
+    shareDataType, 
+    insightData, 
+    topAspectData, 
+    openInsightShare, 
+    openTopAspectShare, 
+    closeShare 
+  } = useGlobalShare();
   
   const handleTabClick = (tab: string, options?: { section?: string }) => {
     if (tab !== activeTab) {
@@ -168,7 +195,12 @@ export default function FrameLayout({}: FrameLayoutProps) {
       case 'home':
         return <HomeLayout onTabClick={handleTabClick} />;
       case 'explore':
-        return <SpotifyDataView initialSection={exploreOptions?.section} onUpdateTopBar={setExploreTopBarData} />;
+        return <SpotifyDataView initialSection={exploreOptions?.section} onUpdateTopBar={(data) => {
+          setExploreTopBarData({
+            ...data,
+            onShareClick: openTopAspectShare
+          });
+        }} />;
       case 'insights-plus':
         return <NewInsightsLayout />;
       default:
@@ -179,7 +211,7 @@ export default function FrameLayout({}: FrameLayoutProps) {
   return (
     <div className="w-full h-screen flex flex-col bg-[#0D0D0F] text-white">
       {/* Dynamic Top Bar - Only show when Spotify is connected */}
-      {connected && <DynamicTopBar activeTab={activeTab} onProfileClick={handleProfileClick} exploreTopBarData={exploreTopBarData} />}
+      {connected && <DynamicTopBar activeTab={activeTab} onProfileClick={handleProfileClick} exploreTopBarData={exploreTopBarData} onInsightShare={openInsightShare} />}
       
       <main className={`flex-1 relative overflow-hidden ${connected ? 'pt-[60px]' : ''}`}>
         {/* Render the active tab component without forced remounting */}
@@ -194,6 +226,15 @@ export default function FrameLayout({}: FrameLayoutProps) {
       
       {/* Debug Panel for Testing Refresh Functionality */}
       <RefreshTestPanel enabled={true} />
+      
+      {/* Global Share Interface */}
+      <GlobalShareInterface
+        isOpen={isShareOpen}
+        onClose={closeShare}
+        dataType={shareDataType}
+        insightData={insightData}
+        topAspectData={topAspectData}
+      />
     </div>
   );
 } 

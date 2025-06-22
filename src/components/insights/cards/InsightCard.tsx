@@ -6,7 +6,6 @@ import { motion } from 'framer-motion';
 interface InsightCardProps {
   title: string;
   children: ReactNode;
-  onShare?: () => void;
   onInfo?: () => void;
   className?: string;
   delay?: number;
@@ -15,7 +14,6 @@ interface InsightCardProps {
 export default function InsightCard({ 
   title, 
   children, 
-  onShare, 
   onInfo, 
   className = "",
   delay = 0 
@@ -50,22 +48,7 @@ export default function InsightCard({
               </svg>
             </button>
           )}
-          {onShare && (
-            <button
-              onClick={onShare}
-              className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center
-                       hover:bg-[#1DB954]/20 hover:text-[#1DB954] transition-colors"
-              aria-label="Share insight"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                <circle cx="18" cy="5" r="3"/>
-                <circle cx="6" cy="12" r="3"/>
-                <circle cx="18" cy="19" r="3"/>
-                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
-                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-              </svg>
-            </button>
-          )}
+
         </div>
       </div>
 
