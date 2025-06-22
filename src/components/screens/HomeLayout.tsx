@@ -282,7 +282,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
           {/* Music Radar Overview */}
           {connected && (
             <div className="mb-8">
-              <HomeMusicRadar />
+              <HomeMusicRadar onTabClick={onTabClick} />
             </div>
           )}
 

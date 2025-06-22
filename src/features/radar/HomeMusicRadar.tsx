@@ -11,7 +11,11 @@ import { cn } from '@/utils';
 import InsightCard from '@/components/insights/cards/InsightCard';
 import TypingInsight from '@/components/TypingInsight';
 
-export default function HomeMusicRadar() {
+interface HomeMusicRadarProps {
+  onTabClick?: (tab: string, options?: { section?: string }) => void;
+}
+
+export default function HomeMusicRadar({ onTabClick }: HomeMusicRadarProps) {
   const { payload, ai, isLoading } = useMusicRadar();
   const [isDetailSheetOpen, setDetailSheetOpen] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<number>(0);
@@ -247,44 +251,19 @@ export default function HomeMusicRadar() {
         </div>
       </div>
       
-      {/* AI Hype Copy */}
-      <div className="text-center mt-4 space-y-2">
-        {ai.isLoading ? (
-          <div className="animate-pulse space-y-2">
-            <div className="h-6 bg-zinc-800 rounded w-3/4 mx-auto"></div>
-            <div className="h-4 bg-zinc-800 rounded w-2/3 mx-auto"></div>
-            <div className="h-3 bg-zinc-800 rounded w-1/2 mx-auto"></div>
-          </div>
-        ) : ai.mainInsight ? (
-          <>
-            <TypingInsight 
-              text={ai.mainInsight}
-              speed={30}
-              className="mb-3"
-              skip={skipTyping}
-            />
-            {ai.tip && (
-              <p className="text-xs text-purple-400 italic">{ai.tip}</p>
-            )}
-          </>
-        ) : (
-          <>
-            <TypingInsight 
-              text="🎵 Your music radar is amazing! Based on your recent listening patterns, you're creating some incredible musical vibes."
-              speed={30}
-              className="mb-3"
-            />
-          </>
-        )}
-      </div>
-      
-      {/* View Details Button */}
-      <div className="flex justify-center mt-6">
+      {/* Action Buttons */}
+      <div className="flex justify-center gap-4 mt-6">
         <button
           onClick={() => setDetailSheetOpen(true)}
-          className="text-sm underline text-green-400 hover:text-green-300 transition-colors"
+          className="flex-1 bg-zinc-800/50 hover:bg-zinc-700/50 text-green-400 hover:text-green-300 border border-green-400/30 hover:border-green-300/50 font-medium py-3 px-4 rounded-xl transition-all duration-200 text-sm"
         >
           View details ▸
+        </button>
+        <button
+          onClick={() => onTabClick?.('insights-plus')}
+          className="flex-1 bg-zinc-800/50 hover:bg-zinc-700/50 text-blue-400 hover:text-blue-300 border border-blue-400/30 hover:border-blue-300/50 font-medium py-3 px-4 rounded-xl transition-all duration-200 text-sm"
+        >
+          More insights ▸
         </button>
       </div>
       

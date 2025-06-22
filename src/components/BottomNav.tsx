@@ -36,8 +36,7 @@ export default function BottomNav({ activeTab, onTabClick }: BottomNavProps) {
           }`}
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-            <circle cx="11" cy="11" r="8" />
-            <path d="M21 21l-4.35-4.35" />
+            <path d="M12 6V4m0 2a2 2 0 1 0 0 4m0-4a2 2 0 1 1 0 4m-6 8a2 2 0 1 0 0-4m0 4a2 2 0 1 1 0-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 1 0 0-4m0 4a2 2 0 1 1 0-4m0 4v2m0-6V4" />
           </svg>
         </button>
 
@@ -51,9 +50,9 @@ export default function BottomNav({ activeTab, onTabClick }: BottomNavProps) {
           }`}
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-            <path d="M3 3v18h18" />
-            <path d="M7 16l4-4 4 4 6-6" />
-            <path d="M17 10h4v4" />
+            <path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z" />
+            <path d="M9 21h6" />
+            <path d="M10 3h4" />
           </svg>
         </button>
       </nav>
