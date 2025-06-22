@@ -8,6 +8,7 @@ import RefreshButton from './RefreshButton';
 import { useSpotifyInsights } from '../../../hooks/useSpotifyInsights';
 import { useAIInsights } from '../../../hooks/useAIInsights';
 import MusicalAgeDetailSheet from '../detail/MusicalAgeDetailSheet';
+import Loader from '../../Loader';
 
 export default function MusicalAgeCard() {
   const { insights, isLoading } = useSpotifyInsights();
@@ -165,8 +166,8 @@ export default function MusicalAgeCard() {
           >
             {aiInsights.isLoading ? (
               <div className="flex items-center justify-center space-x-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#1DB954]"></div>
-                <span className="text-xs text-zinc-400">Generating insight...</span>
+                <Loader size={16} />
+                <span className="text-xs text-zinc-400 ml-2">Generating insight...</span>
               </div>
             ) : aiInsights.error ? (
               <p className="text-xs text-zinc-400 text-center">We&apos;re speechless 🤫</p>

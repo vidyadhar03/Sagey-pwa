@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import TopAppBar from '../TopAppBar';
 import { useSpotify } from '../../hooks/useSpotify';
+import { getTrackImage } from '@/utils';
+import Loader from '../Loader';
 
 export default function ExploreLayout() {
   const { 
@@ -144,11 +146,8 @@ export default function ExploreLayout() {
   // Show loading screen only during initial Spotify connection check
   if (spotifyLoading) {
     return (
-      <div className="h-full flex items-center justify-center p-6">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1DB954] mx-auto mb-4"></div>
-          <p className="text-gray-400">Checking Spotify connection...</p>
-        </div>
+      <div className="h-full flex items-center justify-center">
+        <Loader size={64} />
       </div>
     );
   }

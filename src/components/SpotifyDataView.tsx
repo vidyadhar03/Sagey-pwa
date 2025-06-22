@@ -7,6 +7,7 @@ import { useSpotifyDebug } from '../hooks/useSpotifyDebug';
 import ShareableCards from './ShareableCards';
 import TopAppBar from './TopAppBar';
 import { getTrackImage } from '../utils';
+import Loader from './Loader';
 
 // Data cache interface for better organization
 interface DataCache {
@@ -533,7 +534,11 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
   const renderContent = () => {
     if (activeTab === 'recent') {
       if (dataLoading && recentTracks.length === 0) {
-        return <p className="text-center text-zinc-400">Loading recent plays...</p>;
+        return (
+          <div className="flex items-center justify-center py-12">
+            <Loader size={32} />
+          </div>
+        );
       }
 
       if (recentTracks.length === 0) {
@@ -569,10 +574,7 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
   if (loading) {
     return (
       <div className="w-full h-screen flex items-center justify-center bg-gradient-to-br from-[#0A0A0A] via-[#1A1A1A] to-[#0A0A0A]">
-          <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1DB954] mx-auto mb-4"></div>
-          <p className="text-white">Loading...</p>
-        </div>
+          <Loader size={48} />
       </div>
     );
   }
@@ -737,8 +739,7 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
 
           {dataLoading && (
             <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1DB954]"></div>
-              <span className="ml-3 text-gray-400">Loading...</span>
+              <Loader size={32} />
             </div>
           )}
 

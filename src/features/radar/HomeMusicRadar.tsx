@@ -24,7 +24,7 @@ export default function HomeMusicRadar() {
   const cooldownRemaining = Math.max(0, REFRESH_COOLDOWN - (now - lastRefresh));
 
   // The AI hook has its own loading state
-  const isContentLoading = isLoading || ai.isLoading;
+  const isContentLoading = isLoading || payload.isDefault || ai.isLoading;
 
   // Determine whether to skip typing animation based on session flag
   const [skipTyping, setSkipTyping] = useState(true);

@@ -7,6 +7,7 @@ import { XMarkIcon, ShareIcon, MusicalNoteIcon } from '@heroicons/react/24/outli
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { MusicalAgePayload } from '../../../utils/insightSelectors';
 import { useAIInsights } from '../../../hooks/useAIInsights';
+import Loader from '../../Loader';
 
 export interface Props {
   payload: MusicalAgePayload;
@@ -247,7 +248,7 @@ export default function MusicalAgeDetailSheet({ payload, open, onClose }: Props)
                       <h3 className="text-lg font-semibold text-neutral-100 mb-3">Musical Insights</h3>
                       {aiInsights.isLoading ? (
                         <div className="flex items-center space-x-2">
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-400"></div>
+                          <Loader size={16} />
                           <span className="text-sm text-neutral-400">Generating insights...</span>
                         </div>
                       ) : aiInsights.error ? (

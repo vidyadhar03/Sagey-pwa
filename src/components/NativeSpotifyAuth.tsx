@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNativeSpotifyAuth } from '../hooks/useNativeSpotifyAuth';
+import Loader from './Loader';
 
 interface NativeSpotifyAuthProps {
   onAuthChange?: (connected: boolean, userInfo: any) => void;
@@ -99,8 +100,7 @@ export const NativeSpotifyAuth: React.FC<NativeSpotifyAuthProps> = ({
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center p-8 space-y-4">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
-        <p className="text-white/60">Checking authentication...</p>
+        <Loader size={32} />
       </div>
     );
   }
@@ -187,7 +187,7 @@ export const NativeSpotifyAuth: React.FC<NativeSpotifyAuthProps> = ({
             <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.5 14.5c-.203 0-.406-.078-.563-.234-.312-.312-.312-.813 0-1.125 1.875-1.875 1.875-4.906 0-6.781-.312-.312-.312-.813 0-1.125s.813-.312 1.125 0c2.5 2.5 2.5 6.531 0 9.031-.156.156-.359.234-.562.234zM12 16c-2.219 0-4-1.781-4-4s1.781-4 4-4 4 1.781 4 4-1.781 4-4 4zm2.5-2.5c-.203 0-.406-.078-.563-.234-.312-.312-.312-.813 0-1.125.625-.625.625-1.656 0-2.281-.312-.312-.312-.813 0-1.125s.813-.312 1.125 0c1.25 1.25 1.25 3.281 0 4.531-.156.156-.359.234-.562.234z"/>
           </svg>
           <span>
-            {loading ? 'Connecting...' : 
+            {loading ? <Loader size={16} /> : 
              isNativeApp && spotifyAppInstalled ? 'Connect with Spotify' :
              'Connect with Spotify'}
           </span>
