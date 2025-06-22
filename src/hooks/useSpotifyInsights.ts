@@ -85,27 +85,27 @@ export function useSpotifyInsights() {
 
   // Calculate mood distribution from audio features
   const calculateMoodRing = useCallback(async (tracks: any[]) => {
-    console.warn('🎭 SAGEY: calculateMoodRing starting with', tracks?.length, 'tracks');
+    console.warn('🎭 VYNCE: calculateMoodRing starting with', tracks?.length, 'tracks');
     
     if (!tracks || tracks.length === 0) {
-      console.warn('❌ SAGEY: calculateMoodRing - No tracks provided');
+              console.warn('❌ VYNCE: calculateMoodRing - No tracks provided');
       return DEFAULT_INSIGHTS.moodRing;
     }
 
     // Check connection first - if not connected, return defaults immediately
     if (!connected) {
-      console.warn('⚠️ SAGEY: calculateMoodRing - Not connected, using defaults');
+              console.warn('⚠️ VYNCE: calculateMoodRing - Not connected, using defaults');
       return DEFAULT_INSIGHTS.moodRing;
     }
 
     try {
-      console.warn('🎭 SAGEY: Audio Features API deprecated for new apps - using genre-based mood estimation');
+              console.warn('🎭 VYNCE: Audio Features API deprecated for new apps - using genre-based mood estimation');
       
       // Get artist data to analyze genres for mood estimation
       const topArtists = await getTopArtists('medium_term').catch(() => []);
       
       if (!topArtists || topArtists.length === 0) {
-        console.warn('⚠️ SAGEY: No artists available for genre-based mood calculation');
+                  console.warn('⚠️ VYNCE: No artists available for genre-based mood calculation');
         return DEFAULT_INSIGHTS.moodRing;
       }
 
@@ -118,7 +118,7 @@ export function useSpotifyInsights() {
       });
 
       if (allGenres.length === 0) {
-        console.warn('⚠️ SAGEY: No genres found for mood calculation');
+                  console.warn('⚠️ VYNCE: No genres found for mood calculation');
         return DEFAULT_INSIGHTS.moodRing;
       }
 
@@ -193,7 +193,7 @@ export function useSpotifyInsights() {
           { label: 'Melancholy', pct: 25, color: '#9B59B6' }
         ];
 
-        console.warn('✅ SAGEY: Mood Ring calculated (balanced fallback)');
+        console.warn('✅ VYNCE: Mood Ring calculated (balanced fallback)');
         return { emotions, dominantMood, distribution };
       }
 
@@ -222,7 +222,7 @@ export function useSpotifyInsights() {
         distribution
       };
 
-      console.warn('✅ SAGEY: Mood Ring calculated via genre analysis!', {
+              console.warn('✅ VYNCE: Mood Ring calculated via genre analysis!', {
         dominantMood: result.dominantMood,
         genreCount: allGenres.length,
         artistCount: topArtists.length
@@ -230,7 +230,7 @@ export function useSpotifyInsights() {
 
       return result;
     } catch (error) {
-      console.error('❌ SAGEY: calculateMoodRing error:', error);
+      console.error('❌ VYNCE: calculateMoodRing error:', error);
       return DEFAULT_INSIGHTS.moodRing;
     }
   }, [connected, getTopArtists]);
@@ -240,19 +240,19 @@ export function useSpotifyInsights() {
     try {
       // Check if we're connected before trying to fetch artists
       if (!connected) {
-        console.log('⚠️ Not connected to Spotify, using fallback genre passport data');
+        console.log('⚠️ VYNCE: Not connected to Spotify, using fallback genre passport data');
         return DEFAULT_INSIGHTS.genrePassport;
       }
 
-      console.log('🎤 Fetching top artists for genre calculation...');
+      console.log('🎤 VYNCE: Fetching top artists for genre calculation...');
       const topArtists = await getTopArtists('medium_term');
       
       if (!topArtists || topArtists.length === 0) {
-        console.log('⚠️ No top artists found');
+        console.log('⚠️ VYNCE: No top artists found');
         return DEFAULT_INSIGHTS.genrePassport;
       }
 
-      console.log('📊 Processing genres from artists...', { artistCount: topArtists.length });
+      console.log('📊 VYNCE: Processing genres from artists...', { artistCount: topArtists.length });
 
       const genreSet = new Set<string>();
       const genreCounts: GenreCount = {};
@@ -277,7 +277,7 @@ export function useSpotifyInsights() {
       // Calculate exploration score based on genre diversity
       const explorationScore = Math.min(100, Math.round((totalGenres / 20) * 100));
       
-      console.log('✅ Genre passport calculated successfully:', { totalGenres, topGenres: topGenres.slice(0, 3), explorationScore });
+      console.log('✅ VYNCE: Genre passport calculated successfully:', { totalGenres, topGenres: topGenres.slice(0, 3), explorationScore });
 
       return { 
         totalGenres,
@@ -287,7 +287,7 @@ export function useSpotifyInsights() {
         newDiscoveries: Math.floor(totalGenres * 0.2) // Estimate
       };
     } catch (error) {
-      console.error('❌ Error calculating genre passport (falling back to defaults):', error);
+      console.error('❌ VYNCE: Error calculating genre passport (falling back to defaults):', error);
       return DEFAULT_INSIGHTS.genrePassport;
     }
   }, [connected, getTopArtists]);
@@ -339,14 +339,14 @@ export function useSpotifyInsights() {
     
     // Circuit breaker: prevent API spam
     if (now - lastLoadTime < MIN_LOAD_INTERVAL) {
-      console.error('🚫 SAGEY DEBUG: Rate limited - too soon since last load');
+      console.error('🚫 VYNCE DEBUG: Rate limited - too soon since last load');
       return;
     }
     
-    console.error('🔄 SAGEY DEBUG: loadInsights started, connected:', connected);
+    console.error('🔄 VYNCE DEBUG: loadInsights started, connected:', connected);
     
     if (!connected) {
-      console.error('❌ SAGEY DEBUG: Not connected to Spotify, using defaults');
+      console.error('❌ VYNCE DEBUG: Not connected to Spotify, using defaults');
       setInsights(DEFAULT_INSIGHTS);
       setIsLoading(false);
       setError(null);
@@ -358,26 +358,26 @@ export function useSpotifyInsights() {
     setLastLoadTime(now);
 
     try {
-      console.error('🔄 SAGEY DEBUG: Fetching Spotify data...');
+      console.error('🔄 VYNCE DEBUG: Fetching Spotify data...');
       
       // Fetch data in parallel
       const [recentTracks, topTracks] = await Promise.all([
         getRecentTracks().catch(error => {
-          console.error('SAGEY DEBUG: Failed to fetch recent tracks:', error);
+          console.error('VYNCE DEBUG: Failed to fetch recent tracks:', error);
           return [];
         }),
         getTopTracks('medium_term').catch(error => {
-          console.error('SAGEY DEBUG: Failed to fetch top tracks:', error);
+          console.error('VYNCE DEBUG: Failed to fetch top tracks:', error);
           return [];
         })
       ]);
 
-      console.error('📊 SAGEY DEBUG: Data fetched - recent:', recentTracks?.length, 'top:', topTracks?.length);
+      console.error('📊 VYNCE DEBUG: Data fetched - recent:', recentTracks?.length, 'top:', topTracks?.length);
 
       // Use top tracks for more comprehensive analysis, fallback to recent tracks
       const tracksToAnalyze = topTracks && topTracks.length > 0 ? topTracks : recentTracks;
       
-      console.error('🎯 SAGEY DEBUG: Analyzing', tracksToAnalyze?.length, 'tracks from', 
+      console.error('🎯 VYNCE DEBUG: Analyzing', tracksToAnalyze?.length, 'tracks from', 
         topTracks && topTracks.length > 0 ? 'top tracks' : 'recent tracks');
       
       // Debug: Log first track structure
@@ -387,7 +387,7 @@ export function useSpotifyInsights() {
         const actualTrack = (firstTrack as any)?.track || firstTrack;
         const album = actualTrack?.album;
         
-        console.error('🔍 SAGEY DEBUG: First track structure:', {
+        console.error('🔍 VYNCE DEBUG: First track structure:', {
           track: firstTrack,
           actualTrack: actualTrack,
           hasAlbum: !!album,
@@ -398,17 +398,17 @@ export function useSpotifyInsights() {
       }
       
       if (!tracksToAnalyze || tracksToAnalyze.length === 0) {
-        console.error('⚠️ SAGEY DEBUG: No tracks found, using fallback data');
+        console.error('⚠️ VYNCE DEBUG: No tracks found, using fallback data');
         setInsights({ ...DEFAULT_INSIGHTS, isDefault: true });
         setIsLoading(false);
         return;
       }
 
       // Calculate Musical Age first (no API calls needed) - ADD DEBUGGING INFO TO DESCRIPTION
-      console.error('🎂 SAGEY DEBUG: Starting Musical Age calculation with', tracksToAnalyze.length, 'tracks...');
+      console.error('🎂 VYNCE DEBUG: Starting Musical Age calculation with', tracksToAnalyze.length, 'tracks...');
       const musicalAge = getMusicalAgePayload({ tracks: tracksToAnalyze });
       
-      console.error('🎂 SAGEY DEBUG: Musical Age result:', {
+      console.error('🎂 VYNCE DEBUG: Musical Age result:', {
         age: musicalAge.age,
         era: musicalAge.era,
         description: musicalAge.description,
@@ -418,29 +418,29 @@ export function useSpotifyInsights() {
       });
 
       // Calculate Genre Passport (uses artist data, should work)
-      console.error('🎤 SAGEY DEBUG: Calculating Genre Passport...');
+      console.error('🎤 VYNCE DEBUG: Calculating Genre Passport...');
       let genrePassport;
       try {
         genrePassport = await calculateGenrePassport();
-        console.error('🎤 SAGEY DEBUG: Genre Passport calculated:', genrePassport.totalGenres, 'genres');
+        console.error('🎤 VYNCE DEBUG: Genre Passport calculated:', genrePassport.totalGenres, 'genres');
       } catch (error) {
-        console.error('🎤 SAGEY DEBUG: Genre passport failed:', error);
+        console.error('🎤 VYNCE DEBUG: Genre passport failed:', error);
         genrePassport = DEFAULT_INSIGHTS.genrePassport;
       }
 
       // Calculate Night Owl Pattern (uses recent tracks, no API calls)
-      console.error('🦉 SAGEY DEBUG: Calculating Night Owl Pattern...');
+      console.error('🦉 VYNCE DEBUG: Calculating Night Owl Pattern...');
       const nightOwlPattern = calculateNightOwlPattern(recentTracks || []);
-      console.error('🦉 SAGEY DEBUG: Night Owl Pattern calculated, score:', nightOwlPattern.score);
+      console.error('🦉 VYNCE DEBUG: Night Owl Pattern calculated, score:', nightOwlPattern.score);
 
       // Calculate Mood Ring (try to get audio features)
-      console.error('🎭 SAGEY DEBUG: Calculating Mood Ring...');
+      console.error('🎭 VYNCE DEBUG: Calculating Mood Ring...');
       let moodRing;
       try {
         moodRing = await calculateMoodRing(tracksToAnalyze || []);
-        console.error('🎭 SAGEY DEBUG: Mood Ring calculated successfully');
+        console.error('🎭 VYNCE DEBUG: Mood Ring calculated successfully');
       } catch (error) {
-        console.error('🎭 SAGEY DEBUG: Mood Ring failed, using defaults:', error);
+        console.error('🎭 VYNCE DEBUG: Mood Ring failed, using defaults:', error);
         moodRing = DEFAULT_INSIGHTS.moodRing;
       }
 
@@ -452,7 +452,7 @@ export function useSpotifyInsights() {
         isDefault: false
       };
 
-      console.error('✅ SAGEY DEBUG: All calculations completed!', {
+      console.error('✅ VYNCE DEBUG: All calculations completed!', {
         musicalAge: musicalAge.age,
         genreCount: genrePassport.totalGenres,
         nightOwlScore: nightOwlPattern.score,
@@ -462,7 +462,7 @@ export function useSpotifyInsights() {
       setInsights(comprehensiveInsights);
 
     } catch (error) {
-      console.error('💥 SAGEY DEBUG: Failed to load insights:', error);
+      console.error('💥 VYNCE DEBUG: Failed to load insights:', error);
       setError(error instanceof Error ? error.message : 'Failed to load insights');
       setInsights({ ...DEFAULT_INSIGHTS, isDefault: true });
     } finally {

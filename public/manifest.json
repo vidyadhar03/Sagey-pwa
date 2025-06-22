@@ -1,7 +1,7 @@
 {
-  "name": "Sagey PWA",
-  "short_name": "Sagey",
-  "description": "Sagey Progressive Web Application",
+  "name": "Vynce PWA",
+  "short_name": "Vynce",
+  "description": "Vynce Progressive Web Application",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0A0A0A",

@@ -30,7 +30,7 @@ const DynamicTopBar = ({
     switch (activeTab) {
       case 'home':
         return {
-          title: 'Sagey',
+          title: 'Vynce',
           showProfile: true,
           titleAlign: 'left' as const
         };
@@ -49,7 +49,7 @@ const DynamicTopBar = ({
         };
       default:
         return {
-          title: 'Sagey',
+          title: 'Vynce',
           showProfile: true,
           titleAlign: 'left' as const
         };

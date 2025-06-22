@@ -159,7 +159,7 @@ function buildRadarSummaryPrompt(data: RadarPayload): string {
   const strongest = scoreEntries.reduce((a, b) => a[1] > b[1] ? a : b);
   const weakest = scoreEntries.reduce((a, b) => a[1] < b[1] ? a : b);
 
-  return `You are Sagey's fun music coach. Output two playful sentences that summarize a user's Music Radar based on the data below.
+  return `You are Vynce's fun music coach. Output two playful sentences that summarize a user's Music Radar based on the data below.
 
 Context:
 - Positivity Score: ${scores.Positivity.toFixed(0)}

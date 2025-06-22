@@ -14,13 +14,13 @@ const geistMono = Roboto_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sagey PWA",
-  description: "Sagey Progressive Web Application",
+  title: "Vynce PWA",
+  description: "Vynce Progressive Web Application",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Sagey PWA",
+    title: "Vynce PWA",
   },
 };
 

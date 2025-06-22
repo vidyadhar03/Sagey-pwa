@@ -202,7 +202,7 @@ export const useNativeSpotifyAuth = () => {
   const authConfig: AuthConfig = {
     clientId: process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID || '',
     redirectUri: isNativeApp() 
-      ? 'com.sagey.app://spotify-callback' 
+              ? 'com.vynce.app://spotify-callback' 
       : window?.location?.origin + '/api/spotify/callback' || '',
     scopes: [
       'user-read-email',

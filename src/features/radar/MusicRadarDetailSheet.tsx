@@ -74,7 +74,7 @@ export function MusicRadarDetailSheet({ open, onClose, payload, aiSummary }: Mus
           await navigator.share({
             files: [file],
             title: 'My Music Insights',
-            text: 'Check out my music persona from Sagey!',
+            text: 'Check out my music persona from Vynce!',
           });
           return;
         }

@@ -138,7 +138,7 @@ describe('MusicRadarDetailSheet', () => {
             expect(mockShare).toHaveBeenCalledWith({
                 files: expect.any(Array),
                 title: 'My Music Insights',
-                text: 'Check out my music persona from Sagey!',
+                text: 'Check out my music persona from Vynce!',
             });
         });
     });

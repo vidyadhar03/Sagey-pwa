@@ -174,7 +174,7 @@ describe('AI Insight Prompts', () => {
 
     it('should include the specified system message and requirements', () => {
       const prompt = buildPrompt('radar_summary', mockRadarData);
-      expect(prompt).toContain("You are Sagey's fun music coach.");
+      expect(prompt).toContain("You are Vynce's fun music coach.");
       expect(prompt).toContain("First sentence should highlight the strongest trait");
       expect(prompt).toContain("Second sentence should playfully mention the weakest trait");
     });

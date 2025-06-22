@@ -218,7 +218,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
       {/* TopAppBar - Only show when Spotify is not connected */}
       {!connected && (
         <TopAppBar 
-          title="Sagey"
+          title="Vynce"
           showRightIcon={true}
           onRightClick={handleAccountClick}
           titleAlign="left"

@@ -34,8 +34,8 @@ export async function shareInsight(element: HTMLElement, data: ShareData): Promi
 
 export function createShareData(insightType: string, value: string | number, description: string): ShareData {
   return {
-    title: `My ${insightType} - Sagey Music Insights`,
-    text: `🎵 ${description} - ${value}\n\nDiscover your own musical DNA with Sagey!`,
+    title: `My ${insightType} - Vynce Music Insights`,
+    text: `🎵 ${description} - ${value}\n\nDiscover your own musical DNA with Vynce!`,
     url: window.location.origin
   };
 } 

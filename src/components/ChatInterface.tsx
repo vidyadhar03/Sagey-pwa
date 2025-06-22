@@ -147,7 +147,7 @@ export default function ChatInterface() {
     }
   };
 
-  // Suggestion prompts - expanded to 6 Sagey-specific tasks
+      // Suggestion prompts - expanded to 6 Vynce-specific tasks
   const suggestions = [
     "Analyse my music listening patterns",
     "Psychoanalyse me by asking the right questions",
@@ -236,7 +236,7 @@ export default function ChatInterface() {
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-[#A0A0A0]">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                   </svg>
-                  <span className="text-sm text-[#A0A0A0]">Chat with Sagey…</span>
+                  <span className="text-sm text-[#A0A0A0]">Chat with Vynce…</span>
                 </div>
                 
                 {/* Right: Send button - Original arrow icon without background */}
