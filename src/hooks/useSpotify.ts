@@ -33,6 +33,7 @@ interface SpotifyStatus {
 export interface SpotifyTrack {
   id: string;
   name: string;
+  artist?: string; // Flattened artist name from API
   artists: SpotifyArtistSummary[];
   album: SpotifyAlbumSummary;
   duration_ms: number;
@@ -549,6 +550,7 @@ export function useSpotify() {
       const tracks: SpotifyTrack[] = tracksData.map((item: any) => ({
         id: item.id,
         name: item.name,
+        artist: item.artist, // Keep the flattened artist field from API
         artists: item.artists ? item.artists.map((a: any) => ({
           id: a.id,
           name: a.name,

@@ -362,7 +362,7 @@ export default function HomeLayout({ onTabClick, onInsightShare, scrollContainer
                           <div className="flex-1 min-w-0">
                             <h4 className="text-white font-medium truncate">{track.name || 'Unknown Track'}</h4>
                             <p className="text-gray-400 text-sm truncate">
-                              {track.artist || 'Unknown Artist'} • {typeof track.album === 'string' ? track.album : track.album?.name || 'Unknown Album'}
+                              {track.artist || track.artists?.[0]?.name || 'Unknown Artist'} • {typeof track.album === 'string' ? track.album : track.album?.name || 'Unknown Album'}
                             </p>
                             <div className="flex items-center">
                               <span className="text-xs text-gray-400">{track.duration_ms ? formatDuration(track.duration_ms) : '--:--'}</span>
