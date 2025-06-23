@@ -6,12 +6,19 @@ import InsightsGrid from '../insights/InsightsGrid';
 import TopAppBar from '../TopAppBar';
 import { useSpotify } from '../../hooks/useSpotify';
 
-export default function NewInsightsLayout() {
+interface NewInsightsLayoutProps {
+  scrollContainerRef?: React.RefObject<HTMLDivElement>;
+}
+
+export default function NewInsightsLayout({ scrollContainerRef }: NewInsightsLayoutProps) {
   // Get Spotify connection status
   const { connected } = useSpotify();
   
   return (
-    <div className="w-full h-full overflow-y-auto">
+    <div 
+      ref={scrollContainerRef}
+      className="w-full h-full overflow-y-auto"
+    >
       {/* TopAppBar - Only show when Spotify is not connected */}
       {!connected && (
         <TopAppBar 

@@ -17,9 +17,10 @@ import Loader from '../Loader';
 interface HomeLayoutProps {
   onTabClick?: (tab: string, options?: { section?: string }) => void;
   onInsightShare?: () => void;
+  scrollContainerRef?: React.RefObject<HTMLDivElement>;
 }
 
-export default function HomeLayout({ onTabClick, onInsightShare }: HomeLayoutProps) {
+export default function HomeLayout({ onTabClick, onInsightShare, scrollContainerRef }: HomeLayoutProps) {
   const { connected, user, loading, error: spotifyHookError, getTopTracks, getTopArtists, connect } = useSpotify();
   const { addLog } = useSpotifyDebug();
   const { 
@@ -215,7 +216,10 @@ export default function HomeLayout({ onTabClick, onInsightShare }: HomeLayoutPro
   };
 
   return (
-    <div className="w-full h-full overflow-y-auto bg-gradient-to-br from-[#0A0A0A] via-[#1A1A1A] to-[#0A0A0A]">
+    <div 
+      ref={scrollContainerRef}
+      className="w-full h-full overflow-y-auto bg-gradient-to-br from-[#0A0A0A] via-[#1A1A1A] to-[#0A0A0A]"
+    >
       {/* TopAppBar - Only show when Spotify is not connected */}
       {!connected && (
         <TopAppBar 

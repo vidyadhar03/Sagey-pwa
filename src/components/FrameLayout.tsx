@@ -1,6 +1,6 @@
 "use client";
 
-import React, { ReactNode, useState, useCallback } from 'react';
+import React, { ReactNode, useState, useCallback, useRef } from 'react';
 import BottomNav from './BottomNav';
 import HomeLayout from './screens/HomeLayout';
 import InsightsLayout from './screens/InsightsLayout';
@@ -155,6 +155,11 @@ export default function FrameLayout({}: FrameLayoutProps) {
     onShareClick: () => void;
   }>();
   
+  // Add scroll containers ref for scroll-to-top functionality
+  const homeScrollRef = useRef<HTMLDivElement>(null);
+  const exploreScrollRef = useRef<HTMLDivElement>(null);
+  const insightsScrollRef = useRef<HTMLDivElement>(null);
+  
   // Get Spotify connection status and global share functionality
   const { connected } = useSpotify();
   const { 
@@ -179,6 +184,28 @@ export default function FrameLayout({}: FrameLayoutProps) {
         setExploreOptions(options);
       } else {
         setExploreOptions(undefined);
+      }
+    } else {
+      // Same tab clicked - scroll to top
+      let scrollRef: React.RefObject<HTMLDivElement> | null = null;
+      
+      switch (tab) {
+        case 'home':
+          scrollRef = homeScrollRef;
+          break;
+        case 'explore':
+          scrollRef = exploreScrollRef;
+          break;
+        case 'insights-plus':
+          scrollRef = insightsScrollRef;
+          break;
+      }
+      
+      if (scrollRef?.current) {
+        scrollRef.current.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
       }
     }
   };
@@ -215,13 +242,13 @@ export default function FrameLayout({}: FrameLayoutProps) {
   const renderActiveTab = () => {
     switch (activeTab) {
       case 'home':
-        return <HomeLayout onTabClick={handleTabClick} onInsightShare={openInsightShare} />;
+        return <HomeLayout onTabClick={handleTabClick} onInsightShare={openInsightShare} scrollContainerRef={homeScrollRef} />;
       case 'explore':
-        return <SpotifyDataView initialSection={exploreOptions?.section} onUpdateTopBar={handleExploreTopBarUpdate} />;
+        return <SpotifyDataView initialSection={exploreOptions?.section} onUpdateTopBar={handleExploreTopBarUpdate} scrollContainerRef={exploreScrollRef} />;
       case 'insights-plus':
-        return <NewInsightsLayout />;
+        return <NewInsightsLayout scrollContainerRef={insightsScrollRef} />;
       default:
-        return <HomeLayout onTabClick={handleTabClick} />;
+        return <HomeLayout onTabClick={handleTabClick} scrollContainerRef={homeScrollRef} />;
     }
   };
 

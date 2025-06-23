@@ -38,9 +38,10 @@ interface SpotifyDataViewProps {
     onViewModeToggle: () => void;
     onShareClick: () => void;
   }) => void;
+  scrollContainerRef?: React.RefObject<HTMLDivElement>;
 }
 
-export default function SpotifyDataView({ initialSection, onUpdateTopBar }: SpotifyDataViewProps) {
+export default function SpotifyDataView({ initialSection, onUpdateTopBar, scrollContainerRef }: SpotifyDataViewProps) {
   const { connected, user, loading, connect, checkStatus, getTopTracks, getTopArtists, getTopAlbums, getRecentTracks } = useSpotify();
   
   const [activeTab, setActiveTab] = useState<'tracks' | 'artists' | 'genres' | 'albums' | 'recent'>(
@@ -685,7 +686,10 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
         </div>
       )}
 
-      <div className="w-full h-screen overflow-y-auto bg-gradient-to-br from-[#0A0A0A] via-[#1A1A1A] to-[#0A0A0A]">
+      <div 
+        ref={scrollContainerRef}
+        className="w-full h-screen overflow-y-auto bg-gradient-to-br from-[#0A0A0A] via-[#1A1A1A] to-[#0A0A0A]"
+      >
         <div className={`max-w-7xl mx-auto px-4 pb-[120px] ${connected ? 'pt-[103px]' : 'pt-4'}`}>
           {activeTab !== 'recent' && (
             <div className="mb-6 mt-0">
