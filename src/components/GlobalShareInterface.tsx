@@ -53,39 +53,70 @@ export const timeRangeLabels = {
 
 const colorThemes = [
   {
-    name: 'Vynce Green',
+    name: 'Vynce Aurora',
     primary: '#1DB954',
-    secondary: '#1AA34A',
-    accent: '#16803C',
-    bg: '#0D0F0D'
+    secondary: '#00FF7F', 
+    accent: '#32CD32',
+    bg: 'linear-gradient(135deg, #0D0F0D 0%, #1a2f1a 50%, #0D0F0D 100%)',
+    bgSolid: '#0D0F0D',
+    gradient: 'linear-gradient(135deg, #1DB954 0%, #00FF7F 50%, #32CD32 100%)',
+    glow: 'rgba(29, 185, 84, 0.4)',
+    preview: 'linear-gradient(45deg, #1DB954, #00FF7F)'
   },
   {
-    name: 'Electric Blue',
-    primary: '#3B82F6',
-    secondary: '#2563EB',
-    accent: '#1D4ED8',
-    bg: '#0F1419'
+    name: 'Cyberpunk Neon',
+    primary: '#00D4FF',
+    secondary: '#FF0080',
+    accent: '#7C3AED',
+    bg: 'linear-gradient(135deg, #0A0A0F 0%, #1a0a2e 50%, #16213e 100%)',
+    bgSolid: '#0A0A0F',
+    gradient: 'linear-gradient(135deg, #00D4FF 0%, #FF0080 50%, #7C3AED 100%)',
+    glow: 'rgba(0, 212, 255, 0.5)',
+    preview: 'linear-gradient(45deg, #00D4FF, #FF0080)'
   },
   {
-    name: 'Purple Haze',
-    primary: '#8B5CF6',
-    secondary: '#7C3AED',
-    accent: '#6D28D9',
-    bg: '#1A0F2E'
+    name: 'Miami Vice',
+    primary: '#FF6B9D',
+    secondary: '#C44569',
+    accent: '#F8B500',
+    bg: 'linear-gradient(135deg, #2C1810 0%, #3a1f3d 50%, #2C1810 100%)',
+    bgSolid: '#2C1810',
+    gradient: 'linear-gradient(135deg, #FF6B9D 0%, #C44569 50%, #F8B500 100%)',
+    glow: 'rgba(255, 107, 157, 0.4)',
+    preview: 'linear-gradient(45deg, #FF6B9D, #F8B500)'
   },
   {
-    name: 'Sunset Orange',
-    primary: '#F97316',
-    secondary: '#EA580C',
-    accent: '#C2410C',
-    bg: '#1F1209'
+    name: 'Northern Lights',
+    primary: '#4FACFE',
+    secondary: '#00F2FE', 
+    accent: '#43E97B',
+    bg: 'linear-gradient(135deg, #0A1628 0%, #1e3a5f 50%, #0A1628 100%)',
+    bgSolid: '#0A1628',
+    gradient: 'linear-gradient(135deg, #4FACFE 0%, #00F2FE 50%, #43E97B 100%)',
+    glow: 'rgba(79, 172, 254, 0.5)',
+    preview: 'linear-gradient(45deg, #4FACFE, #43E97B)'
   },
   {
-    name: 'Rose Gold',
-    primary: '#EC4899',
-    secondary: '#DB2777',
-    accent: '#BE185D',
-    bg: '#1F0A14'
+    name: 'Sunset Blaze',
+    primary: '#FF512F',
+    secondary: '#DD2476',
+    accent: '#F953C6',
+    bg: 'linear-gradient(135deg, #1A0A0A 0%, #3d1a1a 50%, #1A0A0A 100%)',
+    bgSolid: '#1A0A0A',
+    gradient: 'linear-gradient(135deg, #FF512F 0%, #DD2476 50%, #F953C6 100%)',
+    glow: 'rgba(255, 81, 47, 0.4)',
+    preview: 'linear-gradient(45deg, #FF512F, #F953C6)'
+  },
+  {
+    name: 'Golden Hour',
+    primary: '#FFB75E',
+    secondary: '#ED8F03',
+    accent: '#FF6B35',
+    bg: 'linear-gradient(135deg, #1F1611 0%, #3d2914 50%, #1F1611 100%)',
+    bgSolid: '#1F1611',
+    gradient: 'linear-gradient(135deg, #FFB75E 0%, #ED8F03 50%, #FF6B35 100%)',
+    glow: 'rgba(255, 183, 94, 0.4)',
+    preview: 'linear-gradient(45deg, #FFB75E, #FF6B35)'
   }
 ];
 
@@ -240,7 +271,7 @@ export default function GlobalShareInterface({
       const html2canvas = (await import('html2canvas')).default;
       
       const canvas = await html2canvas(cardRef.current, {
-        backgroundColor: colorThemes[selectedTheme].bg,
+        backgroundColor: colorThemes[selectedTheme].bgSolid,
         useCORS: true,
         scale: 2,
         width: 1080,
@@ -419,7 +450,7 @@ export default function GlobalShareInterface({
                       ref={cardRef}
                       className="w-full h-full rounded-xl lg:rounded-3xl overflow-hidden shadow-2xl"
                       style={{
-                        background: `linear-gradient(135deg, ${colorThemes[selectedTheme].primary}, ${colorThemes[selectedTheme].secondary})`
+                        background: colorThemes[selectedTheme].bg
                       }}
                     >
                       {dataType === 'insights' ? (
@@ -535,22 +566,58 @@ export default function GlobalShareInterface({
 
               {/* Color Theme Selector */}
               <div>
-                <label className="block text-sm font-medium text-white mb-2">Color</label>
-                <div className="flex flex-wrap gap-2 justify-center">
+                <label className="block text-sm font-medium text-white mb-3">Theme</label>
+                <div className="flex flex-wrap gap-3 justify-center">
                   {colorThemes.map((theme, index) => (
                     <button
                       key={index}
                       onClick={() => setSelectedTheme(index)}
-                      className={`w-8 h-8 lg:w-10 lg:h-10 rounded-full transition-all duration-200 border-3 ${
-                        selectedTheme === index
-                          ? 'border-white scale-110 shadow-lg'
-                          : 'border-white/30 hover:border-white/60 hover:scale-105'
+                      className={`relative group transition-all duration-300 ${
+                        selectedTheme === index 
+                          ? 'scale-110' 
+                          : 'hover:scale-105'
                       }`}
-                      style={{
-                        background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})`
-                      }}
                       title={theme.name}
-                    />
+                    >
+                      <div 
+                        className={`w-10 h-10 lg:w-12 lg:h-12 rounded-full border-2 transition-all duration-300 relative overflow-hidden ${
+                          selectedTheme === index 
+                            ? 'border-white shadow-xl' 
+                            : 'border-white/40 hover:border-white/70'
+                        }`}
+                        style={{ 
+                          background: theme.preview,
+                          boxShadow: selectedTheme === index 
+                            ? `0 0 25px ${theme.glow}` 
+                            : 'none'
+                        }}
+                      >
+                        {/* Shimmer effect */}
+                        <div 
+                          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"
+                          style={{ animationDuration: '2s' }}
+                        />
+                      </div>
+                      
+                      {/* Active indicator */}
+                      {selectedTheme === index && (
+                        <div 
+                          className="absolute inset-0 rounded-full animate-pulse"
+                          style={{
+                            background: theme.preview,
+                            filter: 'blur(12px)',
+                            opacity: 0.4,
+                            zIndex: -1
+                          }}
+                        />
+                      )}
+                      
+                      {/* Theme name tooltip */}
+                      <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-black/90 text-white text-xs px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap z-20">
+                        {theme.name}
+                        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-black/90"></div>
+                      </div>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -612,11 +679,54 @@ function InsightShareCard({
 
   return (
     <div className="w-full h-full p-4 lg:p-6 text-white relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-6 lg:top-10 left-6 lg:left-10 w-20 lg:w-32 h-20 lg:h-32 rounded-full border-2 border-white"></div>
-        <div className="absolute bottom-6 lg:bottom-10 right-6 lg:right-10 w-16 lg:w-24 h-16 lg:h-24 rounded-full border border-white"></div>
-        <div className="absolute top-1/2 left-1/4 w-12 lg:w-16 h-12 lg:h-16 rounded-full border border-white"></div>
+      {/* Enhanced Background Pattern with Translucent Effects */}
+      <div className="absolute inset-0 overflow-hidden">
+        {/* Gradient overlay */}
+        <div 
+          className="absolute inset-0 opacity-20"
+          style={{ 
+            background: `radial-gradient(circle at 30% 20%, ${theme.glow} 0%, transparent 50%), radial-gradient(circle at 70% 80%, ${theme.glow} 0%, transparent 50%)`
+          }}
+        />
+        
+        {/* Floating orbs with glow */}
+        <div 
+          className="absolute top-6 lg:top-10 left-6 lg:left-10 w-20 lg:w-32 h-20 lg:h-32 rounded-full border-2 border-white/30 animate-pulse"
+          style={{
+            background: `radial-gradient(circle, ${theme.glow} 0%, transparent 70%)`,
+            boxShadow: `0 0 30px ${theme.glow}`
+          }}
+        />
+        <div 
+          className="absolute bottom-6 lg:bottom-10 right-6 lg:right-10 w-16 lg:w-24 h-16 lg:h-24 rounded-full border border-white/20"
+          style={{
+            background: `conic-gradient(from 0deg, ${theme.primary}20, ${theme.secondary}20, ${theme.accent}20, ${theme.primary}20)`,
+            animation: 'spin 20s linear infinite'
+          }}
+        />
+        <div 
+          className="absolute top-1/2 left-1/4 w-12 lg:w-16 h-12 lg:h-16 rounded-full border border-white/15"
+          style={{
+            background: `linear-gradient(45deg, ${theme.glow}, transparent)`,
+            filter: 'blur(2px)'
+          }}
+        />
+        
+        {/* Subtle particle effects */}
+        <div className="absolute inset-0">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-1 h-1 bg-white/20 rounded-full animate-ping"
+              style={{
+                top: `${20 + i * 15}%`,
+                left: `${10 + i * 12}%`,
+                animationDelay: `${i * 0.5}s`,
+                animationDuration: '3s'
+              }}
+            />
+          ))}
+        </div>
       </div>
 
       {/* Content */}
@@ -630,7 +740,7 @@ function InsightShareCard({
         )}
 
         {/* Header for other insights */}
-        {data.type !== 'music-radar' && (
+        {data.type !== 'music-radar' && data.type !== 'genre-passport' && data.type !== 'night-owl' && (
           <div className="text-center mb-3 lg:mb-4">
             <div className="w-10 lg:w-12 h-10 lg:h-12 mx-auto mb-2 lg:mb-3 rounded-full bg-white/20 flex items-center justify-center">
               <Sparkles size={20} className="lg:w-6 lg:h-6" />
@@ -641,21 +751,344 @@ function InsightShareCard({
           </div>
         )}
 
-        {/* Visual Chart - Larger for Music Radar */}
-        <div className="flex-1 flex items-center justify-center mb-1 lg:mb-2">
-          <div className={`w-full h-full ${
-            data.type === 'music-radar' 
-              ? 'max-w-[280px] lg:max-w-[320px] max-h-[200px] lg:max-h-[240px]' 
-              : 'max-w-[200px] lg:max-w-[240px] h-[120px] lg:h-[150px]'
-          }`}>
-            {renderVisual()}
+        {/* Header for Genre Passport */}
+        {data.type === 'genre-passport' && (
+          <div className="text-center mb-3 lg:mb-4">
+            <div className="w-10 lg:w-12 h-10 lg:h-12 mx-auto mb-2 lg:mb-3 rounded-full bg-white/20 flex items-center justify-center">
+              <span className="text-lg lg:text-xl">🎵</span>
+            </div>
+            <h1 className="text-lg lg:text-xl font-bold mb-1">{data.title}</h1>
+            <p className="text-white/70 text-xs lg:text-sm">{getInsightSubtitle(data.type)}</p>
           </div>
-        </div>
+        )}
+
+        {/* Header for Night Owl */}
+        {data.type === 'night-owl' && (
+          <div className="text-center mb-3 lg:mb-4">
+            <div className="w-10 lg:w-12 h-10 lg:h-12 mx-auto mb-2 lg:mb-3 rounded-full bg-white/20 flex items-center justify-center">
+              <span className="text-lg lg:text-xl">
+                {data.visualData?.isNightOwl ? '🌙' : '☀️'}
+              </span>
+            </div>
+            <h1 className="text-lg lg:text-xl font-bold mb-1">{data.title}</h1>
+            <p className="text-white/70 text-xs lg:text-sm">{getInsightSubtitle(data.type)}</p>
+          </div>
+        )}
+
+        {/* Visual Chart - Larger for Music Radar, Hidden for Genre Passport and Night Owl */}
+        {data.type !== 'genre-passport' && data.type !== 'night-owl' && (
+          <div className="flex-1 flex items-center justify-center mb-1 lg:mb-2">
+            <div className={`w-full h-full ${
+              data.type === 'music-radar' 
+                ? 'max-w-[280px] lg:max-w-[320px] max-h-[200px] lg:max-h-[240px]' 
+                : 'max-w-[200px] lg:max-w-[240px] h-[120px] lg:h-[150px]'
+            }`}>
+              {renderVisual()}
+            </div>
+          </div>
+        )}
 
         {/* Main Value - Only for non-radar insights */}
-        {data.type !== 'music-radar' && (
+        {data.type !== 'music-radar' && data.type !== 'musical-age' && data.type !== 'mood-ring' && data.type !== 'genre-passport' && data.type !== 'night-owl' && (
           <div className="text-center mb-3 lg:mb-4">
             <div className="text-2xl lg:text-3xl font-bold mb-2">{data.mainValue}</div>
+          </div>
+        )}
+
+        {/* Mood Ring specific display */}
+        {data.type === 'mood-ring' && (
+          <div className="text-center mb-3 lg:mb-4">
+            {/* All Moods with Percentages - Compact */}
+            {data.visualData?.emotions && (
+              <div className="grid grid-cols-2 gap-1.5 text-xs">
+                {Object.entries(data.visualData.emotions)
+                  .sort(([,a], [,b]) => (b as number) - (a as number))
+                  .map(([mood, value]) => {
+                    const total = Object.values(data.visualData.emotions).reduce((sum: number, val) => sum + (val as number), 0);
+                    const percentage = total > 0 ? Math.round((value as number / total) * 100) : 0;
+                    const moodColors = {
+                      happy: '#1DB954',
+                      energetic: '#FF6B6B', 
+                      chill: '#4ECDC4',
+                      melancholy: '#9B59B6'
+                    };
+                    const moodColor = moodColors[mood as keyof typeof moodColors] || theme.primary;
+                    
+                    return (
+                      <div 
+                        key={mood}
+                        className="rounded-md p-1.5 backdrop-blur-sm border flex items-center justify-between"
+                        style={{ 
+                          backgroundColor: 'rgba(255,255,255,0.08)',
+                          borderColor: 'rgba(255,255,255,0.15)'
+                        }}
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <div 
+                            className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                            style={{ backgroundColor: moodColor }}
+                          />
+                          <span className="text-white/80 font-medium capitalize text-xs">
+                            {mood}
+                          </span>
+                        </div>
+                        <span className="text-white font-semibold text-xs">
+                          {percentage}%
+                        </span>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Musical Age specific display */}
+        {data.type === 'musical-age' && (
+          <div className="text-center mb-3 lg:mb-4">
+            {/* Enhanced Age Display with better styling */}
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div 
+                className="text-5xl lg:text-6xl font-black tracking-tight text-white"
+                style={{ 
+                  textShadow: `0 0 20px rgba(255,255,255,0.4)`
+                }}
+              >
+                {data.visualData.age || '9'}
+              </div>
+              <div className="flex flex-col items-start">
+                <span className="text-white font-bold text-lg lg:text-xl">years</span>
+                <div 
+                  className="text-xs px-3 py-1 rounded-full font-semibold mt-1 border text-white"
+                  style={{ 
+                    backgroundColor: `${theme.primary}25`, 
+                    borderColor: `${theme.primary}50`
+                  }}
+                >
+                  {data.visualData.description || 'Streaming Era'}
+                </div>
+              </div>
+            </div>
+
+            {/* Enhanced Compact Track Info - Always show with fallback data */}
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div 
+                className="rounded-lg p-2.5 backdrop-blur-sm border"
+                style={{ 
+                  backgroundColor: 'rgba(255,255,255,0.08)',
+                  borderColor: 'rgba(255,255,255,0.15)'
+                }}
+              >
+                <div className="text-white/60 font-medium mb-1.5 text-center">Oldest Track</div>
+                <div className="text-white font-semibold truncate text-center text-xs">
+                  {data.visualData.oldestTrack?.name || 
+                   data.visualData.oldestSong?.name || 
+                   'What A Wonderful World'}
+                </div>
+                <div className="text-white/70 truncate text-center text-xs">
+                  {(data.visualData.oldestTrack?.artist || 
+                    data.visualData.oldestSong?.artist || 
+                    'Louis Armstrong')} • {(data.visualData.oldestTrack?.year || 
+                    data.visualData.oldestSong?.year || 
+                    '1968')}
+                </div>
+              </div>
+              
+              <div 
+                className="rounded-lg p-2.5 backdrop-blur-sm border"
+                style={{ 
+                  backgroundColor: 'rgba(255,255,255,0.08)',
+                  borderColor: 'rgba(255,255,255,0.15)'
+                }}
+              >
+                <div className="text-white/60 font-medium mb-1.5 text-center">Newest Track</div>
+                <div className="text-white font-semibold truncate text-center text-xs">
+                  {data.visualData.newestTrack?.name || 
+                   data.visualData.newestSong?.name || 
+                   'Madira'}
+                </div>
+                <div className="text-white/70 truncate text-center text-xs">
+                  {(data.visualData.newestTrack?.artist || 
+                    data.visualData.newestSong?.artist || 
+                    'Seedhe Maut')} • {(data.visualData.newestTrack?.year || 
+                    data.visualData.newestSong?.year || 
+                    '2025')}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Genre Passport specific display */}
+        {data.type === 'genre-passport' && (
+          <div className="text-center mb-3 lg:mb-4">
+            {/* Exploration Text */}
+            <div className="mb-4">
+              <p className="text-white text-sm lg:text-base font-medium">
+                You have explored
+              </p>
+              <div className="text-3xl lg:text-4xl font-bold">
+                <span 
+                  className="font-black"
+                  style={{ 
+                    color: theme.primary,
+                    textShadow: `0 0 20px ${theme.primary}80, 0 2px 4px rgba(0,0,0,0.8)`,
+                    WebkitTextFillColor: theme.primary,
+                    filter: 'brightness(1.2)'
+                  }}
+                >
+                  {data.visualData?.totalGenres || data.mainValue || 0}
+                </span>
+                <span 
+                  className="text-white font-bold ml-2"
+                  style={{ 
+                    textShadow: '0 2px 4px rgba(0,0,0,0.8)'
+                  }}
+                >
+                  genres
+                </span>
+              </div>
+            </div>
+
+            {/* Top 3 Genres Display */}
+            {data.visualData?.topGenres && (
+              <div className="space-y-2 max-w-[200px] lg:max-w-[240px] mx-auto">
+                <h4 className="text-white/70 text-xs lg:text-sm font-medium mb-3">Your Top Genres</h4>
+                {data.visualData.topGenres.slice(0, 3).map((genre: any, index: number) => {
+                  const genreName = typeof genre === 'string' ? genre : genre.name || genre.genre;
+                  return (
+                    <div
+                      key={genreName}
+                      className="flex items-center gap-2 lg:gap-3 bg-white/8 rounded-lg lg:rounded-xl p-2 lg:p-3 backdrop-blur-sm border border-white/15"
+                    >
+                      {/* Rank Badge */}
+                      <div className={`w-6 h-6 lg:w-7 lg:h-7 rounded-full flex items-center justify-center text-xs lg:text-sm font-bold
+                        ${index === 0 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-black' :
+                          index === 1 ? 'bg-gradient-to-br from-gray-300 to-gray-500 text-black' :
+                          'bg-gradient-to-br from-amber-600 to-amber-800 text-white'
+                        }`}
+                      >
+                        {index + 1}
+                      </div>
+                      
+                      {/* Genre Name */}
+                      <div className="flex-1 text-left">
+                        <span className="text-white font-medium capitalize text-sm lg:text-base">
+                          {genreName}
+                        </span>
+                      </div>
+                      
+                      {/* Musical Note Icon */}
+                      <div className="text-sm lg:text-base" style={{ color: theme.primary }}>🎵</div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Night Owl specific display */}
+        {data.type === 'night-owl' && (
+          <div className="text-center mb-3 lg:mb-4">
+            {/* Pattern Type & Peak Hour */}
+            <div className="mb-6">
+              <div className="flex items-center justify-center gap-3 mb-3">
+                <span className="text-2xl lg:text-3xl">
+                  {data.visualData?.isNightOwl ? '🌙' : '☀️'}
+                </span>
+                <div className="text-center">
+                  <div 
+                    className="text-lg lg:text-xl font-bold leading-tight"
+                    style={{ 
+                      color: theme.primary,
+                      textShadow: `0 0 15px ${theme.primary}60, 0 2px 4px rgba(0,0,0,0.8)`,
+                      WebkitTextFillColor: theme.primary,
+                      filter: 'brightness(1.1)'
+                    }}
+                  >
+                    {data.visualData?.isNightOwl ? 'Night Owl' : 'Early Bird'}
+                  </div>
+                  <div className="text-white/80 text-xs lg:text-sm">
+                    Peak at {data.visualData?.peakHour !== undefined ? 
+                      (data.visualData.peakHour === 0 ? '12AM' : 
+                       data.visualData.peakHour === 12 ? '12PM' :
+                       data.visualData.peakHour > 12 ? `${data.visualData.peakHour - 12}PM` : 
+                       `${data.visualData.peakHour}AM`) : '9PM'}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Enhanced 24-Hour Heatmap */}
+            {data.visualData?.histogram && (
+              <div className="w-full max-w-[280px] lg:max-w-[300px] mx-auto">
+                <h4 className="text-white/80 text-xs lg:text-sm font-medium mb-3">24-Hour Listening Pattern</h4>
+                
+                {/* Visual Heatmap */}
+                <div className="grid grid-cols-12 gap-1 mb-3">
+                  {data.visualData.histogram.slice(0, 12).map((value: number, index: number) => {
+                    const hour = index * 2; // Show every 2 hours for better spacing
+                    const maxValue = Math.max(...data.visualData.histogram);
+                    const intensity = maxValue > 0 ? value / maxValue : 0;
+                    const isPeak = hour === data.visualData.peakHour || (hour + 1) === data.visualData.peakHour;
+                    const height = Math.max(6, intensity * 32);
+                    
+                    return (
+                      <div key={hour} className="flex flex-col items-center">
+                        <div
+                          className="w-full rounded-sm transition-all duration-300 relative overflow-hidden"
+                          style={{
+                            background: isPeak 
+                              ? `linear-gradient(to top, ${theme.primary}, ${theme.secondary || theme.primary})`
+                              : intensity > 0.1 
+                                ? `linear-gradient(to top, ${theme.primary}${Math.round(intensity * 255).toString(16).padStart(2, '0')}, ${theme.primary}${Math.round(intensity * 180).toString(16).padStart(2, '0')})`
+                                : 'rgba(255,255,255,0.1)',
+                            height: `${height}px`,
+                            boxShadow: isPeak 
+                              ? `0 0 8px ${theme.primary}60, 0 0 12px ${theme.primary}30`
+                              : intensity > 0.5 ? `0 0 4px ${theme.primary}40` : 'none',
+                            border: isPeak ? `1px solid ${theme.primary}` : 'none'
+                          }}
+                        >
+                          {/* Peak indicator glow */}
+                          {isPeak && (
+                            <div className="absolute inset-0 bg-gradient-to-t from-transparent to-white/20 rounded-sm" />
+                          )}
+                        </div>
+                        
+                        {/* Time labels */}
+                        <span className="text-xs text-white/60 mt-1 font-medium">
+                          {hour === 0 ? '12A' : hour === 12 ? '12P' : hour > 12 ? `${hour-12}P` : `${hour}A`}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                {/* Activity Summary */}
+                <div className="flex justify-center gap-3 text-xs">
+                  <div className="flex items-center gap-1">
+                    <div 
+                      className="w-2 h-2 rounded-full"
+                      style={{ backgroundColor: theme.primary }}
+                    />
+                    <span className="text-white/70">High</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div 
+                      className="w-2 h-2 rounded-full"
+                      style={{ backgroundColor: `${theme.primary}60` }}
+                    />
+                    <span className="text-white/70">Med</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="w-2 h-2 rounded-full bg-white/20" />
+                    <span className="text-white/70">Low</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -819,9 +1252,10 @@ function CompactMoodRing({ data, theme }: { data: any; theme: typeof colorThemes
     return { emotion, value: value as number, percentage, angle };
   });
 
-  const outerRadius = 50;
-  const innerRadius = 35;
-  const center = 60;
+  // Enhanced dimensions for better visibility
+  const outerRadius = 70;
+  const innerRadius = 45;
+  const center = 90;
 
   let accumulatedAngle = 0;
   const pathSegments = segments.map((segment) => {
@@ -858,38 +1292,69 @@ function CompactMoodRing({ data, theme }: { data: any; theme: typeof colorThemes
 
   return (
     <div className="w-full h-full flex items-center justify-center">
-      <svg width="120" height="120" viewBox="0 0 120 120">
+      <svg width="180" height="180" viewBox="0 0 180 180" className="lg:w-[200px] lg:h-[200px]">
+        {/* Enhanced background ring with gradient */}
+        <defs>
+          <radialGradient id="moodRingBg" cx="0.5" cy="0.5" r="0.5">
+            <stop offset="0%" stopColor="rgba(255,255,255,0.05)" />
+            <stop offset="100%" stopColor="rgba(255,255,255,0.15)" />
+          </radialGradient>
+          
+          {/* Individual gradients for each mood */}
+          {Object.entries(colors).map(([mood, color]) => (
+            <radialGradient key={`${mood}Gradient`} id={`${mood}Gradient`} cx="0.5" cy="0.5" r="0.8">
+              <stop offset="0%" stopColor={color} stopOpacity="0.9" />
+              <stop offset="70%" stopColor={color} stopOpacity="0.7" />
+              <stop offset="100%" stopColor={color} stopOpacity="0.5" />
+            </radialGradient>
+          ))}
+        </defs>
+        
         {/* Background ring */}
         <circle
           cx={center}
           cy={center}
           r={(outerRadius + innerRadius) / 2}
-          fill="none"
-          stroke="rgba(255,255,255,0.1)"
-          strokeWidth={outerRadius - innerRadius}
+          fill="url(#moodRingBg)"
+          stroke="rgba(255,255,255,0.2)"
+          strokeWidth="2"
         />
         
-        {/* Segments */}
+        {/* Enhanced segments with gradients and glow */}
         {pathSegments.map((segment) => (
-          <path
-            key={segment.emotion}
-            d={segment.pathData}
-            fill={colors[segment.emotion as keyof typeof colors]}
-            stroke={colors[segment.emotion as keyof typeof colors]}
-            strokeWidth="1"
-            opacity="0.9"
-          />
+          <g key={segment.emotion}>
+            {/* Glow effect */}
+            <path
+              d={segment.pathData}
+              fill={`url(#${segment.emotion}Gradient)`}
+              stroke={colors[segment.emotion as keyof typeof colors]}
+              strokeWidth="3"
+              opacity="0.95"
+              filter="drop-shadow(0 0 8px rgba(255,255,255,0.3))"
+            />
+          </g>
         ))}
         
-        {/* Center icon */}
+        {/* Enhanced center with mood icon */}
+        <circle
+          cx={center}
+          cy={center}
+          r={innerRadius - 5}
+          fill="rgba(0,0,0,0.3)"
+          stroke="rgba(255,255,255,0.3)"
+          strokeWidth="2"
+        />
+        
+        {/* Center mood icon */}
         <text
           x={center}
           y={center}
           textAnchor="middle"
           dominantBaseline="central"
-          className="text-lg"
+          className="text-2xl"
+          fill="white"
         >
-          🎵
+          🎭
         </text>
       </svg>
     </div>
@@ -967,24 +1432,63 @@ function CompactMusicalAgeChart({ data, theme }: { data: any; theme: typeof colo
 
   return (
     <div className="w-full h-full flex items-center justify-center">
-      <div className="w-full max-w-[160px]">
-        <div className="flex items-end justify-between gap-1 h-16">
+      <div className="w-full max-w-[180px] lg:max-w-[200px]">
+        <div className="flex items-end justify-between gap-1.5 lg:gap-2 h-20 lg:h-24">
           {chartData.map((item: any, index: number) => {
             const value = item.value || item.weight || 0;
-            const height = maxValue > 0 ? (value / maxValue) * 60 : 10;
+            const height = maxValue > 0 ? (value / maxValue) * 75 : 12;
             const label = item.decade || item.label || `${60 + index * 10}s`;
             const isPeak = value === maxValue;
+            const intensity = maxValue > 0 ? value / maxValue : 0.3;
             
             return (
-              <div key={label} className="flex flex-col items-center flex-1">
+              <div key={label} className="flex flex-col items-center flex-1 relative">
+                {/* Enhanced bar with gradient and glow effect */}
                 <div
-                  className="w-full rounded-t-sm transition-all duration-300"
+                  className="w-full rounded-t-lg lg:rounded-t-xl transition-all duration-500 relative overflow-hidden"
                   style={{
-                    backgroundColor: isPeak ? theme.primary : `${theme.primary}80`,
-                    height: `${Math.max(4, height)}px`
+                    background: isPeak 
+                      ? `linear-gradient(to top, ${theme.primary}, ${theme.secondary})`
+                      : `linear-gradient(to top, ${theme.primary}${Math.round(intensity * 255).toString(16).padStart(2, '0')}, ${theme.primary}${Math.round(intensity * 180).toString(16).padStart(2, '0')})`,
+                    height: `${Math.max(8, height)}px`,
+                    boxShadow: isPeak 
+                      ? `0 0 12px ${theme.primary}40, 0 0 20px ${theme.primary}20`
+                      : `0 0 6px ${theme.primary}30`,
+                    border: isPeak ? `1px solid ${theme.primary}60` : 'none'
                   }}
-                />
-                <span className="text-xs text-white/60 mt-1">{label}</span>
+                >
+                  {/* Highlight overlay for peak */}
+                  {isPeak && (
+                    <div 
+                      className="absolute inset-0 bg-gradient-to-t from-transparent to-white/20 rounded-t-lg lg:rounded-t-xl"
+                    />
+                  )}
+                  
+                  {/* Subtle animation shimmer */}
+                  <div 
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-pulse"
+                    style={{ animationDuration: isPeak ? '2s' : '3s' }}
+                  />
+                </div>
+                
+                {/* Enhanced label */}
+                <span 
+                  className={`text-xs mt-1.5 lg:mt-2 font-medium transition-colors duration-300 ${
+                    isPeak ? 'text-white' : 'text-white/70'
+                  }`}
+                >
+                  {label}
+                </span>
+                
+                {/* Peak indicator */}
+                {isPeak && (
+                  <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
+                    <div 
+                      className="w-1.5 h-1.5 rounded-full animate-pulse"
+                      style={{ backgroundColor: theme.primary }}
+                    />
+                  </div>
+                )}
               </div>
             );
           })}

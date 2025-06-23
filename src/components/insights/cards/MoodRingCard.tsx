@@ -57,9 +57,9 @@ export default function MoodRingCard() {
     return { emotion, value, percentage, angle };
   });
 
-  // SVG properties for the donut
+  // Enhanced SVG properties for the donut - matching share interface
   const outerRadius = 70;
-  const innerRadius = 62;
+  const innerRadius = 45;
   const center = 90;
 
   // Calculate path data for each segment
@@ -122,73 +122,81 @@ export default function MoodRingCard() {
           {/* Very subtle glow with muted colors and less blur */}
           <div className="absolute inset-0 rounded-full blur-md bg-gradient-to-r from-slate-600/20 via-gray-600/20 to-slate-600/20" />
           
-          {/* SVG Donut Chart */}
+          {/* Enhanced SVG Donut Chart - matching share interface */}
           <svg 
             width="180" 
             height="180" 
             viewBox="0 0 180 180"
-            className="relative z-10"
+            className="relative z-10 lg:w-[200px] lg:h-[200px]"
           >
+            {/* Enhanced background ring with gradient */}
+            <defs>
+              <radialGradient id="moodRingBg" cx="0.5" cy="0.5" r="0.5">
+                <stop offset="0%" stopColor="rgba(255,255,255,0.05)" />
+                <stop offset="100%" stopColor="rgba(255,255,255,0.15)" />
+              </radialGradient>
+              
+              {/* Individual gradients for each mood */}
+              {Object.entries(colors).map(([mood, color]) => (
+                <radialGradient key={`${mood}Gradient`} id={`${mood}Gradient`} cx="0.5" cy="0.5" r="0.8">
+                  <stop offset="0%" stopColor={color} stopOpacity="0.9" />
+                  <stop offset="70%" stopColor={color} stopOpacity="0.7" />
+                  <stop offset="100%" stopColor={color} stopOpacity="0.5" />
+                </radialGradient>
+              ))}
+            </defs>
+            
             {/* Background ring */}
             <circle
               cx={center}
               cy={center}
               r={(outerRadius + innerRadius) / 2}
-              fill="none"
-              stroke="#1f2937"
-              strokeWidth={outerRadius - innerRadius}
-              opacity="0.3"
+              fill="url(#moodRingBg)"
+              stroke="rgba(255,255,255,0.2)"
+              strokeWidth="2"
             />
             
-            {/* Gradient definitions */}
-            <defs>
-              {Object.entries(colors).map(([emotion, color]) => (
-                <radialGradient key={emotion} id={`gradient-${emotion}`} cx="0.5" cy="0.5" r="0.5">
-                  <stop offset="0%" stopColor={color} stopOpacity="1" />
-                  <stop offset="100%" stopColor={color} stopOpacity="0.7" />
-                </radialGradient>
-              ))}
-            </defs>
-            
-            {/* Animated segments */}
+            {/* Enhanced segments with gradients and glow */}
             {!isFallback && pathSegments.map((segment, segmentIndex) => (
-              <motion.path
-                key={segment.emotion}
-                d={segment.pathData}
-                fill={`url(#gradient-${segment.emotion})`}
-                stroke={colors[segment.emotion as keyof typeof colors]}
-                strokeWidth="1"
-                filter="drop-shadow(0 0 8px rgba(255,255,255,0.3))"
-                initial={{ 
-                  opacity: 0,
-                  scale: 0.8,
-                }}
-                animate={{ 
-                  opacity: 1,
-                  scale: 1,
-                }}
-                transition={{ 
-                  delay: 0.6 + segmentIndex * 0.2, 
-                  duration: 0.8,
-                  ease: "easeOut"
-                }}
-                whileHover={{ 
-                  scale: 1.05,
-                  filter: "drop-shadow(0 0 16px rgba(255,255,255,0.5))"
-                }}
-              />
+              <motion.g key={segment.emotion}>
+                <motion.path
+                  d={segment.pathData}
+                  fill={`url(#${segment.emotion}Gradient)`}
+                  stroke={colors[segment.emotion as keyof typeof colors]}
+                  strokeWidth="3"
+                  opacity="0.95"
+                  filter="drop-shadow(0 0 8px rgba(255,255,255,0.3))"
+                  initial={{ 
+                    opacity: 0,
+                    scale: 0.8,
+                  }}
+                  animate={{ 
+                    opacity: 1,
+                    scale: 1,
+                  }}
+                  transition={{ 
+                    delay: 0.6 + segmentIndex * 0.2, 
+                    duration: 0.8,
+                    ease: "easeOut"
+                  }}
+                  whileHover={{ 
+                    scale: 1.05,
+                    filter: "drop-shadow(0 0 16px rgba(255,255,255,0.5))"
+                  }}
+                />
+              </motion.g>
             ))}
 
-            {/* Pulsing center */}
+            {/* Enhanced center with mood icon */}
             <motion.circle
               cx={center}
               cy={center}
-              r="20"
-              fill="rgba(255,255,255,0.1)"
+              r={innerRadius - 5}
+              fill="rgba(0,0,0,0.3)"
               stroke="rgba(255,255,255,0.3)"
-              strokeWidth="1"
+              strokeWidth="2"
               animate={{
-                r: [18, 22, 18],
+                r: [innerRadius - 7, innerRadius - 3, innerRadius - 5],
                 opacity: [0.3, 0.6, 0.3]
               }}
               transition={{
@@ -198,18 +206,19 @@ export default function MoodRingCard() {
               }}
             />
             
-            {/* Center icon */}
+            {/* Center mood icon */}
             <motion.text
               x={center}
               y={center}
               textAnchor="middle"
               dominantBaseline="central"
               className="text-2xl"
+              fill="white"
               initial={{ opacity: 0, scale: 0 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 1.5, duration: 0.8, ease: "backOut" }}
             >
-              🎵
+              🎭
             </motion.text>
           </svg>
 
@@ -316,58 +325,53 @@ export default function MoodRingCard() {
         </motion.div>
       )}
 
-      {/* Clean Legend with Percentages */}
+      {/* Enhanced Compact Legend with Percentages - matching share interface */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6 }}
-        className="grid grid-cols-2 gap-3"
+        className="grid grid-cols-2 gap-1.5 text-xs"
       >
-        {segments.map((segment, index) => (
+        {segments
+          .sort((a, b) => b.percentage - a.percentage)
+          .map((segment, index) => (
           <motion.div
             key={segment.emotion}
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.8 + index * 0.1 }}
-            className="flex items-center gap-3"
+            className="rounded-md p-1.5 backdrop-blur-sm border flex items-center justify-between"
+            style={{ 
+              backgroundColor: 'rgba(255,255,255,0.08)',
+              borderColor: 'rgba(255,255,255,0.15)'
+            }}
           >
-            <motion.div 
-              className="w-4 h-4 rounded-full flex-shrink-0"
-              style={{ 
-                backgroundColor: isFallback ? '#4a5568' : colors[segment.emotion as keyof typeof colors],
-                boxShadow: isFallback ? 'none' : `0 0 8px ${colors[segment.emotion as keyof typeof colors]}50`
-              }}
-              animate={{
-                boxShadow: isFallback ? 'none' : [
-                  `0 0 8px ${colors[segment.emotion as keyof typeof colors]}50`,
-                  `0 0 16px ${colors[segment.emotion as keyof typeof colors]}80`,
-                  `0 0 8px ${colors[segment.emotion as keyof typeof colors]}50`
-                ]
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-            />
-            <div className="flex items-center gap-2 flex-1">
-              <span 
-                className="capitalize font-medium text-sm"
+            <div className="flex items-center gap-1.5">
+              <motion.div 
+                className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                 style={{ 
-                  color: isFallback ? '#9ca3af' : colors[segment.emotion as keyof typeof colors] 
+                  backgroundColor: isFallback ? '#4a5568' : colors[segment.emotion as keyof typeof colors]
                 }}
-              >
+                animate={{
+                  boxShadow: isFallback ? 'none' : [
+                    `0 0 4px ${colors[segment.emotion as keyof typeof colors]}50`,
+                    `0 0 8px ${colors[segment.emotion as keyof typeof colors]}80`,
+                    `0 0 4px ${colors[segment.emotion as keyof typeof colors]}50`
+                  ]
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              />
+              <span className="text-white/80 font-medium capitalize text-xs">
                 {segment.emotion}
               </span>
-              <span 
-                className="text-xs font-bold ml-auto"
-                style={{ 
-                  color: isFallback ? '#6b7280' : colors[segment.emotion as keyof typeof colors] 
-                }}
-              >
-                {Math.round(segment.percentage)}%
-              </span>
             </div>
+            <span className="text-white font-semibold text-xs">
+              {Math.round(segment.percentage)}%
+            </span>
           </motion.div>
         ))}
       </motion.div>

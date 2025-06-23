@@ -47,6 +47,9 @@ export default function GenrePassportCard() {
     }
   };
 
+  // Get top 3 genres for display
+  const topThreeGenres = payload?.topGenres?.slice(0, 3) || [];
+
   return (
     <>
       <InsightCard
@@ -61,145 +64,163 @@ export default function GenrePassportCard() {
           </div>
         )}
 
-        {/* Genre Count Badge */}
-        <div className="flex justify-center mb-4">
-          <motion.button
-            onClick={handleBadgeClick}
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.3, duration: 0.6, type: "spring" }}
-            whileHover={!isFallback ? { scale: 1.05 } : {}}
-            whileTap={!isFallback ? { scale: 0.95 } : {}}
-            className={`relative rounded-full w-24 h-24 
-                     flex items-center justify-center shadow-lg transition-shadow
-                     border-4 ${
-                       isFallback 
-                         ? 'bg-zinc-700 border-zinc-600 cursor-default' 
-                         : 'bg-gradient-to-br from-[#1DB954] to-[#1AA34A] border-white/20 hover:shadow-xl cursor-pointer'
-                     }`}
-          >
-            <div className="text-center">
-              <div className={`text-2xl font-bold ${isFallback ? 'text-zinc-400' : 'text-white'}`}>
-                {payload.totalGenres}
-              </div>
-              <div className={`text-xs ${isFallback ? 'text-zinc-500' : 'text-white/90'}`}>
-                genres
-              </div>
-            </div>
-            
-            {/* Passport stamps effect */}
-            {!isFallback && (
-              <div className="absolute -top-1 -right-1 w-6 h-6 bg-[#FFD700] rounded-full flex items-center justify-center">
-                <span className="text-xs">🌟</span>
-              </div>
-            )}
-          </motion.button>
-        </div>
-
-        {/* Description */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="text-center mb-4"
-        >
-          <p className={`font-semibold ${isFallback ? 'text-zinc-500' : 'text-white'}`}>
-            {isFallback ? 'Musical Explorer' : 'Musical Explorer'}
-          </p>
-          <p className="text-zinc-400 text-sm">Your taste spans {payload.totalGenres} genres</p>
-        </motion.div>
-
-        {/* AI Generated Copy */}
-        {!isFallback && !aiLoading && !aiError && copy && (
+        {/* Main Content */}
+        <div className="space-y-4">
+          {/* Exploration Text */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
-            className="bg-white/5 rounded-xl p-4 mb-4 border border-white/10"
+            transition={{ delay: 0.3 }}
+            className="text-center"
           >
-            <p className="text-sm leading-snug">{copy}</p>
-            <div className="flex justify-between items-center mt-1">
-              <span className="inline-flex items-center gap-1 text-xs text-zinc-400">
-                ✨ AI Generated
-              </span>
-              <RefreshButton 
-                onRefresh={handleRefreshInsight}
-              />
-            </div>
-          </motion.div>
-        )}
-
-        {/* Loading skeleton for AI */}
-        {!isFallback && aiLoading && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="bg-white/5 rounded-xl p-4 mb-4 border border-white/10"
-          >
-            <div className="animate-pulse">
-              <div className="h-4 bg-white/10 rounded w-3/4 mb-2"></div>
-              <div className="h-4 bg-white/10 rounded w-1/2"></div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Error state */}
-        {!isFallback && aiError && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="bg-white/5 rounded-xl p-4 mb-4 border border-white/10"
-          >
-            <p className="text-sm leading-snug text-zinc-400">We&apos;re speechless 🤫</p>
-            <div className="flex justify-between items-center mt-1">
-              <span className="inline-flex items-center gap-1 text-xs text-zinc-500">
-                ✨ AI Generated
-              </span>
-              <RefreshButton 
-                onRefresh={handleRefreshInsight}
-              />
-            </div>
-          </motion.div>
-        )}
-
-        {/* Exploration Score */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
-          className="bg-white/5 rounded-xl p-3"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-zinc-300 text-sm">Exploration Score</span>
-            <span className={`font-semibold ${isFallback ? 'text-zinc-500' : 'text-[#1DB954]'}`}>
-              {payload.explorationScore}/100
-            </span>
-          </div>
-          <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
+            <p className={`text-lg font-semibold ${isFallback ? 'text-zinc-500' : 'text-white'}`}>
+              You have explored
+            </p>
             <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${payload.explorationScore}%` }}
-              transition={{ delay: 1, duration: 1.2 }}
-              className={`h-full rounded-full ${
-                isFallback 
-                  ? 'bg-zinc-600' 
-                  : 'bg-gradient-to-r from-[#1DB954] to-[#1AA34A]'
-              }`}
-            />
-          </div>
-        </motion.div>
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.5, type: "spring" }}
+              className={`text-3xl font-bold ${isFallback ? 'text-zinc-400' : 'text-[#1DB954]'}`}
+            >
+              {payload?.totalGenres || 0} genres
+            </motion.div>
+          </motion.div>
 
-        {/* Tap to view hint */}
-        {!isFallback && (
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.2 }}
-            className="text-zinc-500 text-xs text-center mt-2"
-          >
-            Tap badge to view all genres
-          </motion.p>
-        )}
+          {/* Top 3 Genres Visual */}
+          {!isFallback && topThreeGenres.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+              className="space-y-3"
+            >
+              <h4 className="text-white/80 text-sm font-medium text-center mb-4">Your Top Genres</h4>
+              {topThreeGenres.map((genre, index) => (
+                <motion.div
+                  key={genre}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.8 + index * 0.1 }}
+                  className="relative"
+                >
+                  <div className="flex items-center gap-3 bg-white/5 rounded-xl p-3 border border-white/10 hover:bg-white/10 transition-colors">
+                    {/* Rank Badge */}
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold
+                      ${index === 0 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-black' :
+                        index === 1 ? 'bg-gradient-to-br from-gray-300 to-gray-500 text-black' :
+                        'bg-gradient-to-br from-amber-600 to-amber-800 text-white'
+                      }`}
+                    >
+                      {index + 1}
+                    </div>
+                    
+                    {/* Genre Name */}
+                    <div className="flex-1">
+                      <span className="text-white font-medium capitalize">{genre}</span>
+                    </div>
+                    
+                    {/* Musical Note Icon */}
+                    <div className="text-[#1DB954] text-lg">🎵</div>
+                  </div>
+                  
+                  {/* Connecting line for visual flow */}
+                  {index < 2 && (
+                    <div className="absolute left-7 top-full w-0.5 h-3 bg-gradient-to-b from-white/20 to-transparent" />
+                  )}
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+
+          {/* Fallback state for genres */}
+          {isFallback && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.7 }}
+              className="space-y-3"
+            >
+              <h4 className="text-zinc-500 text-sm font-medium text-center mb-4">Your Top Genres</h4>
+              {[1, 2, 3].map((index) => (
+                <div key={index} className="flex items-center gap-3 bg-zinc-800/50 rounded-xl p-3 border border-zinc-700">
+                  <div className="w-8 h-8 rounded-full bg-zinc-600 flex items-center justify-center text-sm font-bold text-zinc-400">
+                    {index}
+                  </div>
+                  <div className="flex-1">
+                    <span className="text-zinc-500 font-medium">Connect Spotify to see genres</span>
+                  </div>
+                  <div className="text-zinc-600 text-lg">🎵</div>
+                </div>
+              ))}
+            </motion.div>
+          )}
+
+          {/* AI Generated Copy */}
+          {!isFallback && !aiLoading && !aiError && copy && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.2 }}
+              className="bg-white/5 rounded-xl p-4 border border-white/10"
+            >
+              <p className="text-sm leading-snug text-white/90">{copy}</p>
+              <div className="flex justify-between items-center mt-2">
+                <span className="inline-flex items-center gap-1 text-xs text-zinc-400">
+                  ✨ AI Generated
+                </span>
+                <RefreshButton 
+                  onRefresh={handleRefreshInsight}
+                />
+              </div>
+            </motion.div>
+          )}
+
+          {/* Loading skeleton for AI */}
+          {!isFallback && aiLoading && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="bg-white/5 rounded-xl p-4 border border-white/10"
+            >
+              <div className="animate-pulse">
+                <div className="h-4 bg-white/10 rounded w-3/4 mb-2"></div>
+                <div className="h-4 bg-white/10 rounded w-1/2"></div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Error state */}
+          {!isFallback && aiError && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="bg-white/5 rounded-xl p-4 border border-white/10"
+            >
+              <p className="text-sm leading-snug text-zinc-400">We&apos;re speechless 🤫</p>
+              <div className="flex justify-between items-center mt-2">
+                <span className="inline-flex items-center gap-1 text-xs text-zinc-500">
+                  ✨ AI Generated
+                </span>
+                <RefreshButton 
+                  onRefresh={handleRefreshInsight}
+                />
+              </div>
+            </motion.div>
+          )}
+
+          {/* Tap to view all hint */}
+          {!isFallback && payload?.topGenres?.length > 3 && (
+            <motion.button
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.4 }}
+              onClick={handleBadgeClick}
+              className="w-full text-zinc-500 text-xs text-center py-2 hover:text-zinc-400 transition-colors"
+            >
+              Tap to view all {payload.totalGenres} genres
+            </motion.button>
+          )}
+        </div>
       </InsightCard>
 
       {/* Modal */}
@@ -235,7 +256,7 @@ export default function GenrePassportCard() {
               </div>
               
               <div className="overflow-y-auto max-h-60 space-y-2">
-                {payload.topGenres.map((genre, index) => (
+                {payload?.topGenres?.map((genre, index) => (
                   <motion.div
                     key={genre}
                     initial={{ opacity: 0, x: -20 }}
@@ -244,7 +265,7 @@ export default function GenrePassportCard() {
                     className="flex items-center gap-3 p-2 bg-white/5 rounded-lg"
                   >
                     <div className="w-2 h-2 bg-[#1DB954] rounded-full" />
-                    <span className="text-white text-sm">{genre}</span>
+                    <span className="text-white text-sm capitalize">{genre}</span>
                   </motion.div>
                 ))}
               </div>
