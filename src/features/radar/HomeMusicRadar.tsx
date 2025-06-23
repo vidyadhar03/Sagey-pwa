@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
-import { RotateCw, Share2 } from 'lucide-react';
+import { Share2 } from 'lucide-react';
 import { useMusicRadar } from '../../hooks/useMusicRadar';
 import RadarSkeleton from './RadarSkeleton';
 import { MusicRadarDetailSheet } from './MusicRadarDetailSheet';
@@ -19,14 +19,6 @@ interface HomeMusicRadarProps {
 export default function HomeMusicRadar({ onTabClick, onShareClick }: HomeMusicRadarProps) {
   const { payload, ai, isLoading } = useMusicRadar();
   const [isDetailSheetOpen, setDetailSheetOpen] = useState(false);
-  const [lastRefresh, setLastRefresh] = useState<number>(0);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  // 15-second cooldown for refresh
-  const REFRESH_COOLDOWN = 15000;
-  const now = Date.now();
-  const canRefresh = now - lastRefresh > REFRESH_COOLDOWN;
-  const cooldownRemaining = Math.max(0, REFRESH_COOLDOWN - (now - lastRefresh));
 
   // The AI hook has its own loading state
   const isContentLoading = isLoading || payload.isDefault || ai.isLoading;
@@ -45,21 +37,6 @@ export default function HomeMusicRadar({ onTabClick, onShareClick }: HomeMusicRa
       }
     }
   }, []);
-
-  const handleRefresh = async () => {
-    if (!canRefresh || isRefreshing) return;
-
-    setIsRefreshing(true);
-    setLastRefresh(now);
-
-    try {
-      await ai.mutate({ regenerate: true });
-    } catch (error) {
-      console.error('Failed to refresh radar:', error);
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
 
   const handleShare = () => {
     // Use global share if available, otherwise fallback to detail sheet
@@ -82,41 +59,16 @@ export default function HomeMusicRadar({ onTabClick, onShareClick }: HomeMusicRa
   
   return (
     <div className="bg-zinc-900 rounded-2xl p-6 border border-white/10 shadow-lg hover:shadow-xl transition-all duration-300 hover:border-[#1DB954]/30 group relative">
-      {/* Header with title and icons */}
+      {/* Header with title and share icon */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold text-white">Your Music Radar</h2>
-        <div className="flex items-center gap-2">
-        <button
-          onClick={handleRefresh}
-          disabled={!canRefresh || isRefreshing}
-          className={cn(
-            "p-2 rounded-lg transition-all duration-200",
-            "hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed",
-            canRefresh ? "text-blue-400 hover:text-blue-300" : "text-zinc-600"
-          )}
-          title={
-            !canRefresh
-              ? `Refresh available in ${Math.ceil(cooldownRemaining / 1000)}s`
-              : "Refresh AI insights"
-          }
-        >
-          <RotateCw 
-            size={16} 
-            className={cn(
-              "transition-transform duration-200",
-              isRefreshing && "animate-spin"
-            )} 
-          />
-        </button>
-        
         <button
           onClick={handleShare}
           className="p-2 rounded-lg transition-all duration-200 text-green-400 hover:text-green-300 hover:bg-zinc-800"
           title="Share music radar"
         >
-          <Share2 size={16} />
+          <Share2 size={20} />
         </button>
-        </div>
       </div>
 
       {/* Chart with animated background */}

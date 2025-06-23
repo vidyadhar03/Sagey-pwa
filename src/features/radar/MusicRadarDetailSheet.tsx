@@ -128,19 +128,9 @@ export function MusicRadarDetailSheet({ open, onClose, payload, aiSummary }: Mus
                            bg-zinc-900 border border-zinc-700/50 shadow-2xl transition-all"
               >
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-zinc-700/50">
-                  <Dialog.Title as="h3" className="text-xl font-semibold text-white flex items-center gap-2">
-                    <BarChart3 size={24} className="text-green-400" />
-                    Music Insights
-                  </Dialog.Title>
+                <div className="flex items-center justify-between p-6 border-b border-zinc-700">
+                  <h2 className="text-2xl font-bold text-white">Music Radar Details</h2>
                   <div className="flex items-center gap-2">
-                    <button 
-                      onClick={handleShare} 
-                      className="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors" 
-                      data-testid="share-button"
-                    >
-                      <Share2 size={20} />
-                    </button>
                     <button 
                       onClick={onClose} 
                       className="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors" 
@@ -196,7 +186,6 @@ export function MusicRadarDetailSheet({ open, onClose, payload, aiSummary }: Mus
                                 <div>
                                   <p className="font-medium text-white">{axis}</p>
                                   {isStrongest && <p className="text-xs text-green-400">Your strongest trait</p>}
-                                  {isWeakest && <p className="text-xs text-red-400">Room for growth</p>}
                                 </div>
                               </div>
                               <div className="flex items-center gap-3">
@@ -233,10 +222,10 @@ export function MusicRadarDetailSheet({ open, onClose, payload, aiSummary }: Mus
                         </div>
                         <div className="bg-zinc-800/50 rounded-lg p-4 border border-zinc-700/50">
                           <p className="text-zinc-400 text-sm">Top Genre</p>
-                          <p className="text-lg font-semibold text-green-400">{payload.topGenre}</p>
+                          <p className="text-lg font-semibold text-white">{payload.topGenre}</p>
                         </div>
                         <div className="bg-zinc-800/50 rounded-lg p-4 border border-zinc-700/50">
-                          <p className="text-zinc-400 text-sm">Featured Track</p>
+                          <p className="text-zinc-400 text-sm">Recent Track</p>
                           <p className="text-sm font-medium text-white truncate">{payload.sampleTrack.title}</p>
                           <p className="text-xs text-zinc-400 truncate">by {payload.sampleTrack.artist}</p>
                         </div>
