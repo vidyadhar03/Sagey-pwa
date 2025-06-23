@@ -280,7 +280,7 @@ export default function HomeLayout({ onTabClick, onInsightShare, scrollContainer
               <h1 className="text-3xl font-bold text-white">
                 Welcome, <span className="text-green-400">{user.display_name}</span>
               </h1>
-              <p className="text-zinc-400 mt-1">Here&apos;s what your music says about you today.</p>
+                              <p className="text-zinc-400 mt-1">Here&apos;s what your music says about you.</p>
             </div>
           )}
 
@@ -489,53 +489,59 @@ export default function HomeLayout({ onTabClick, onInsightShare, scrollContainer
             className="mt-6 mb-8"
           >
             <h3 className="text-white font-semibold text-lg mb-4">Quick Actions</h3>
-            <div className="grid grid-cols-3 gap-4">
-              {/* Explore Tab CTA */}
+            <div className="grid grid-cols-2 gap-3">
+              {/* Top Music Tab */}
               <button 
                 onClick={() => onTabClick?.('explore')}
-                className="p-4 rounded-2xl bg-gradient-to-r from-[#1DB954]/20 to-[#1ed760]/20 border border-[#1DB954]/30 hover:border-[#1DB954]/50 transition-all"
+                className="flex-1 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-[#1ed760]/30 transition-all"
               >
-                <div className="flex flex-col items-center text-center">
-                  <div className="w-12 h-12 rounded-full bg-[#1DB954]/30 flex items-center justify-center mb-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 text-[#1DB954]">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-                    </svg>
-                  </div>
-                  <span className="text-white font-semibold text-sm">Explore Music</span>
-                  <span className="text-[#1DB954]/80 text-xs mt-1">Discover new tracks</span>
+                <div className="flex items-center justify-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-[#1ed760]">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6V4m0 2a2 2 0 1 0 0 4m0-4a2 2 0 1 1 0 4m-6 8a2 2 0 1 0 0-4m0 4a2 2 0 1 1 0-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 1 0 0-4m0 4a2 2 0 1 1 0-4m0 4v2m0-6V4" />
+                  </svg>
+                  <span className="text-white font-medium text-sm">Top music</span>
                 </div>
               </button>
 
-              {/* Insights Tab CTA */}
+              {/* AI Insights Tab */}
               <button 
                 onClick={() => onTabClick?.('insights-plus')}
-                className="p-4 rounded-2xl bg-gradient-to-r from-[#1ed760]/20 to-[#1AA34A]/20 border border-[#1ed760]/30 hover:border-[#1ed760]/50 transition-all"
+                className="flex-1 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-[#1ed760]/30 transition-all"
               >
-                <div className="flex flex-col items-center text-center">
-                  <div className="w-12 h-12 rounded-full bg-[#1ed760]/30 flex items-center justify-center mb-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 text-[#1ed760]">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
-                    </svg>
-                  </div>
-                  <span className="text-white font-semibold text-sm">View Insights</span>
-                  <span className="text-[#1ed760]/80 text-xs mt-1">Your music DNA</span>
+                <div className="flex items-center justify-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-[#1ed760]">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z" />
+                  </svg>
+                  <span className="text-white font-medium text-sm">Insights</span>
                 </div>
               </button>
 
-              {/* Stats Tab CTA */}
+              {/* Share Insights */}
               <button 
-                onClick={() => onTabClick?.('stats')}
-                className="p-4 rounded-2xl bg-gradient-to-r from-[#1AA34A]/20 to-[#16803C]/20 border border-[#1AA34A]/30 hover:border-[#1AA34A]/50 transition-all"
+                onClick={onInsightShare}
+                className="flex-1 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-[#1ed760]/30 transition-all"
               >
-                <div className="flex flex-col items-center text-center">
-                  <div className="w-12 h-12 rounded-full bg-[#1AA34A]/30 flex items-center justify-center mb-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 text-[#1AA34A]">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M16 4v10l-4-4-4 4V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18h.01M10 18h.01M14 18h.01M18 18h.01M6 14h12v6H6z" />
-                    </svg>
-                  </div>
-                  <span className="text-white font-semibold text-sm">Full Stats</span>
-                  <span className="text-[#1AA34A]/80 text-xs mt-1">Complete data</span>
+                <div className="flex items-center justify-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-[#1ed760]">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
+                  </svg>
+                  <span className="text-white font-medium text-sm">Share</span>
+                </div>
+              </button>
+
+              {/* Psychoanalyse Me */}
+              <button 
+                onClick={() => {
+                  // TODO: Implement psychoanalysis feature
+                  console.log('Psychoanalyse me feature - coming soon!');
+                }}
+                className="flex-1 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-[#1ed760]/30 transition-all"
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-[#1ed760]">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                  </svg>
+                  <span className="text-white font-medium text-sm">Analyse me</span>
                 </div>
               </button>
             </div>
