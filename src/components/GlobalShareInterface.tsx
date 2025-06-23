@@ -644,22 +644,22 @@ function TopAspectShareCard({
           <p className="text-white/80 text-sm lg:text-base">{data.period}</p>
         </div>
 
-        {/* Items List */}
-        <div className="flex-1 space-y-2 lg:space-y-4 overflow-hidden">
+        {/* Items List - Expanded */}
+        <div className="flex-1 space-y-3 lg:space-y-4 overflow-hidden pb-8">
           {data.items.slice(0, 5).map((item, index) => (
-            <div key={index} className="flex items-center gap-3 lg:gap-4 bg-white/10 rounded-lg lg:rounded-xl p-2 lg:p-3 backdrop-blur-sm">
-              <span className="text-white/60 font-bold text-sm lg:text-lg w-6 lg:w-8">#{index + 1}</span>
+            <div key={index} className="flex items-center gap-3 lg:gap-4 bg-white/10 rounded-lg lg:rounded-xl p-3 lg:p-4 backdrop-blur-sm">
+              <span className="text-white/60 font-bold text-base lg:text-xl w-6 lg:w-8">#{index + 1}</span>
               {item.image && (
                 <img 
                   src={item.image} 
                   alt={item.name}
-                  className="w-8 lg:w-12 h-8 lg:h-12 rounded-md lg:rounded-lg object-cover"
+                  className="w-10 lg:w-14 h-10 lg:h-14 rounded-md lg:rounded-lg object-cover"
                 />
               )}
               <div className="flex-1 min-w-0">
-                <h4 className="text-white font-medium truncate text-sm lg:text-base">{item.name}</h4>
+                <h4 className="text-white font-medium truncate text-base lg:text-lg">{item.name}</h4>
                 {item.artist && (
-                  <p className="text-white/60 text-xs lg:text-sm truncate">{item.artist}</p>
+                  <p className="text-white/60 text-sm lg:text-base truncate">{item.artist}</p>
                 )}
                 {data.type === 'top-genres' && item.popularity && (
                   <p className="text-white/40 text-xs lg:text-sm">
@@ -671,10 +671,11 @@ function TopAspectShareCard({
           ))}
         </div>
 
-        {/* Footer */}
-        <div className="text-center mt-4 lg:mt-6">
-          <div className="text-lg lg:text-xl font-semibold">Vynce</div>
-          <div className="text-white/60 text-sm lg:text-base">Your musical DNA</div>
+        {/* Tiny Footer - Bottom Left */}
+        <div className="absolute bottom-2 left-2 lg:bottom-4 lg:left-4">
+          <div className="text-xs lg:text-sm text-white/50 font-medium">
+            Vynce - your musical DNA
+          </div>
         </div>
       </div>
     </div>
