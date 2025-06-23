@@ -679,54 +679,74 @@ function InsightShareCard({
 
   return (
     <div className="w-full h-full p-4 lg:p-6 text-white relative overflow-hidden">
-      {/* Enhanced Background Pattern with Translucent Effects */}
+      {/* Modern Gradient Background Effects */}
       <div className="absolute inset-0 overflow-hidden">
-        {/* Gradient overlay */}
+        {/* Layered gradient mesh */}
         <div 
-          className="absolute inset-0 opacity-20"
+          className="absolute inset-0 opacity-8"
           style={{ 
-            background: `radial-gradient(circle at 30% 20%, ${theme.glow} 0%, transparent 50%), radial-gradient(circle at 70% 80%, ${theme.glow} 0%, transparent 50%)`
+            background: `
+              conic-gradient(from 0deg at 20% 30%, ${theme.primary}15 0%, transparent 50%),
+              conic-gradient(from 120deg at 80% 70%, ${theme.secondary}12 0%, transparent 50%),
+              radial-gradient(ellipse at 60% 20%, ${theme.glow} 0%, transparent 70%)
+            `
           }}
         />
         
-        {/* Floating orbs with glow */}
+        {/* Geometric pattern elements */}
         <div 
-          className="absolute top-6 lg:top-10 left-6 lg:left-10 w-20 lg:w-32 h-20 lg:h-32 rounded-full border-2 border-white/30 animate-pulse"
+          className="absolute top-6 lg:top-10 right-6 lg:right-10 w-24 lg:w-32 h-24 lg:h-32 opacity-15"
           style={{
-            background: `radial-gradient(circle, ${theme.glow} 0%, transparent 70%)`,
-            boxShadow: `0 0 30px ${theme.glow}`
-          }}
-        />
-        <div 
-          className="absolute bottom-6 lg:bottom-10 right-6 lg:right-10 w-16 lg:w-24 h-16 lg:h-24 rounded-full border border-white/20"
-          style={{
-            background: `conic-gradient(from 0deg, ${theme.primary}20, ${theme.secondary}20, ${theme.accent}20, ${theme.primary}20)`,
-            animation: 'spin 20s linear infinite'
-          }}
-        />
-        <div 
-          className="absolute top-1/2 left-1/4 w-12 lg:w-16 h-12 lg:h-16 rounded-full border border-white/15"
-          style={{
-            background: `linear-gradient(45deg, ${theme.glow}, transparent)`,
-            filter: 'blur(2px)'
+            background: `linear-gradient(135deg, ${theme.primary}20 0%, ${theme.secondary}15 50%, transparent 100%)`,
+            clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
+            filter: 'blur(0.5px)'
           }}
         />
         
-        {/* Subtle particle effects */}
-        <div className="absolute inset-0">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-1 h-1 bg-white/20 rounded-full animate-ping"
-              style={{
-                top: `${20 + i * 15}%`,
-                left: `${10 + i * 12}%`,
-                animationDelay: `${i * 0.5}s`,
-                animationDuration: '3s'
-              }}
-            />
-          ))}
+        {/* Flowing curves */}
+        <div 
+          className="absolute bottom-10 lg:bottom-16 left-4 lg:left-8 w-32 lg:w-40 h-16 lg:h-20 opacity-12"
+          style={{
+            background: `linear-gradient(90deg, ${theme.secondary}18 0%, ${theme.accent}12 50%, transparent 100%)`,
+            borderRadius: '100px 20px 100px 20px',
+            transform: 'rotate(-15deg)'
+          }}
+        />
+        
+        {/* Translucent hexagon */}
+        <div 
+          className="absolute top-1/2 left-4 lg:left-8 w-16 lg:w-20 h-16 lg:h-20 opacity-10"
+          style={{
+            background: `linear-gradient(60deg, ${theme.primary}15, ${theme.glow} 50%, transparent)`,
+            clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
+            filter: 'blur(0.8px)'
+          }}
+        />
+        
+        {/* Subtle gradient lines */}
+        <div className="absolute inset-0 opacity-8">
+          <div 
+            className="absolute top-1/4 left-0 w-full h-px"
+            style={{
+              background: `linear-gradient(90deg, transparent 0%, ${theme.primary}30 50%, transparent 100%)`
+            }}
+          />
+          <div 
+            className="absolute top-3/4 left-0 w-full h-px"
+            style={{
+              background: `linear-gradient(90deg, transparent 0%, ${theme.secondary}25 50%, transparent 100%)`
+            }}
+          />
         </div>
+        
+        {/* Corner accent */}
+        <div 
+          className="absolute bottom-4 lg:bottom-6 right-4 lg:right-6 w-12 lg:w-16 h-12 lg:h-16 opacity-12"
+          style={{
+            background: `radial-gradient(ellipse at center, ${theme.accent}20 0%, ${theme.primary}10 50%, transparent 100%)`,
+            borderRadius: '50% 10% 50% 10%'
+          }}
+        />
       </div>
 
       {/* Content */}
@@ -1567,11 +1587,74 @@ function TopAspectShareCard({
 
   return (
     <div className="w-full h-full p-4 lg:p-8 text-white relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-6 lg:top-10 left-6 lg:left-10 w-20 lg:w-32 h-20 lg:h-32 rounded-full border-2 border-white"></div>
-        <div className="absolute bottom-6 lg:bottom-10 right-6 lg:right-10 w-16 lg:w-24 h-16 lg:h-24 rounded-full border border-white"></div>
-        <div className="absolute top-1/2 left-1/4 w-12 lg:w-16 h-12 lg:h-16 rounded-full border border-white"></div>
+      {/* Modern Gradient Background Effects */}
+      <div className="absolute inset-0 overflow-hidden">
+        {/* Layered gradient mesh */}
+        <div 
+          className="absolute inset-0 opacity-8"
+          style={{ 
+            background: `
+              conic-gradient(from 0deg at 20% 30%, ${theme.primary}15 0%, transparent 50%),
+              conic-gradient(from 120deg at 80% 70%, ${theme.secondary}12 0%, transparent 50%),
+              radial-gradient(ellipse at 60% 20%, ${theme.glow} 0%, transparent 70%)
+            `
+          }}
+        />
+        
+        {/* Geometric pattern elements */}
+        <div 
+          className="absolute top-6 lg:top-10 right-6 lg:right-10 w-24 lg:w-32 h-24 lg:h-32 opacity-15"
+          style={{
+            background: `linear-gradient(135deg, ${theme.primary}20 0%, ${theme.secondary}15 50%, transparent 100%)`,
+            clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
+            filter: 'blur(0.5px)'
+          }}
+        />
+        
+        {/* Flowing curves */}
+        <div 
+          className="absolute bottom-10 lg:bottom-16 left-4 lg:left-8 w-32 lg:w-40 h-16 lg:h-20 opacity-12"
+          style={{
+            background: `linear-gradient(90deg, ${theme.secondary}18 0%, ${theme.accent}12 50%, transparent 100%)`,
+            borderRadius: '100px 20px 100px 20px',
+            transform: 'rotate(-15deg)'
+          }}
+        />
+        
+        {/* Translucent hexagon */}
+        <div 
+          className="absolute top-1/2 left-4 lg:left-8 w-16 lg:w-20 h-16 lg:h-20 opacity-10"
+          style={{
+            background: `linear-gradient(60deg, ${theme.primary}15, ${theme.glow} 50%, transparent)`,
+            clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
+            filter: 'blur(0.8px)'
+          }}
+        />
+        
+        {/* Subtle gradient lines */}
+        <div className="absolute inset-0 opacity-8">
+          <div 
+            className="absolute top-1/4 left-0 w-full h-px"
+            style={{
+              background: `linear-gradient(90deg, transparent 0%, ${theme.primary}30 50%, transparent 100%)`
+            }}
+          />
+          <div 
+            className="absolute top-3/4 left-0 w-full h-px"
+            style={{
+              background: `linear-gradient(90deg, transparent 0%, ${theme.secondary}25 50%, transparent 100%)`
+            }}
+          />
+        </div>
+        
+        {/* Corner accent */}
+        <div 
+          className="absolute bottom-4 lg:bottom-6 right-4 lg:right-6 w-12 lg:w-16 h-12 lg:h-16 opacity-12"
+          style={{
+            background: `radial-gradient(ellipse at center, ${theme.accent}20 0%, ${theme.primary}10 50%, transparent 100%)`,
+            borderRadius: '50% 10% 50% 10%'
+          }}
+        />
       </div>
 
       {/* Content */}

@@ -280,10 +280,74 @@ export default function ShareableCards({ onClose, data }: ShareableCardsProps) {
             border: `1px solid ${currentCard.color}30`
           }}
         >
-          {/* Background Pattern */}
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-4 right-4 w-32 h-32 rounded-full border-2 border-white/20"></div>
-            <div className="absolute bottom-4 left-4 w-24 h-24 rounded-full border-2 border-white/20"></div>
+          {/* Modern Gradient Background Effects */}
+          <div className="absolute inset-0 overflow-hidden">
+            {/* Layered gradient mesh */}
+            <div 
+              className="absolute inset-0 opacity-8"
+              style={{ 
+                background: `
+                  conic-gradient(from 0deg at 20% 30%, ${currentCard.color}15 0%, transparent 50%),
+                  conic-gradient(from 120deg at 80% 70%, ${currentCard.color}12 0%, transparent 50%),
+                  radial-gradient(ellipse at 60% 20%, ${currentCard.color} 0%, transparent 70%)
+                `
+              }}
+            />
+            
+            {/* Geometric pattern elements */}
+            <div 
+              className="absolute top-4 right-4 w-16 h-16 opacity-15"
+              style={{
+                background: `linear-gradient(135deg, ${currentCard.color}20 0%, ${currentCard.color}15 50%, transparent 100%)`,
+                clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
+                filter: 'blur(0.5px)'
+              }}
+            />
+            
+            {/* Flowing curves */}
+            <div 
+              className="absolute bottom-6 left-3 w-20 h-10 opacity-12"
+              style={{
+                background: `linear-gradient(90deg, ${currentCard.color}18 0%, ${currentCard.color}12 50%, transparent 100%)`,
+                borderRadius: '100px 20px 100px 20px',
+                transform: 'rotate(-15deg)'
+              }}
+            />
+            
+            {/* Translucent hexagon */}
+            <div 
+              className="absolute top-1/2 left-3 w-12 h-12 opacity-10"
+              style={{
+                background: `linear-gradient(60deg, ${currentCard.color}15, ${currentCard.color} 50%, transparent)`,
+                clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
+                filter: 'blur(0.8px)'
+              }}
+            />
+            
+            {/* Subtle gradient lines */}
+            <div className="absolute inset-0 opacity-8">
+              <div 
+                className="absolute top-1/4 left-0 w-full h-px"
+                style={{
+                  background: `linear-gradient(90deg, transparent 0%, ${currentCard.color}30 50%, transparent 100%)`
+                }}
+              />
+              <div 
+                className="absolute top-3/4 left-0 w-full h-px"
+                style={{
+                  background: `linear-gradient(90deg, transparent 0%, ${currentCard.color}25 50%, transparent 100%)`
+                }}
+              />
+            </div>
+            
+            {/* Corner accent */}
+            <div 
+              className="absolute bottom-3 right-3 w-8 h-8 opacity-12"
+              style={{
+                background: `radial-gradient(ellipse at center, ${currentCard.color}20 0%, ${currentCard.color}10 50%, transparent 100%)`,
+                borderRadius: '50% 10% 50% 10%'
+              }}
+            />
           </div>
 
           {/* Header */}
