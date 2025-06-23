@@ -71,6 +71,35 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar, scroll
   const [topArtists, setTopArtists] = useState<SpotifyArtist[]>([]);
   const [topAlbums, setTopAlbums] = useState<SpotifyAlbum[]>([]);
 
+  /* --------------------------------------------------------------------
+   * Layout helpers
+   * ------------------------------------------------------------------*/
+  // Ref & state to capture the runtime height of the filter-chip row so we
+  // can apply precise top-padding to the scroll container. This eliminates
+  // the need for hard-coded spacing that previously left either too much
+  // or too little gap on different devices.
+  const chipsRowRef = useRef<HTMLDivElement>(null);
+  const [chipsRowHeight, setChipsRowHeight] = useState(0);
+
+  // Measure the chip row height once it mounts and whenever the window
+  // resizes (to account for orientation changes on mobile).
+  useEffect(() => {
+    const updateHeight = () => {
+      if (chipsRowRef.current) {
+        setChipsRowHeight(chipsRowRef.current.offsetHeight);
+      }
+    };
+
+    // Run once immediately and again every resize/orientation change
+    updateHeight();
+    window.addEventListener('resize', updateHeight);
+
+    // When the component unmounts or the dependency changes, clean up
+    return () => {
+      window.removeEventListener('resize', updateHeight);
+    };
+  }, [connected]);
+
   const initializeData = useCallback(async () => {
     if (loadingStates.current.initializing) {
       console.log('⚠️ Initialization already in progress, skipping');
@@ -620,7 +649,7 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar, scroll
       
       {connected && (
         <div 
-          className="fixed top-[60px] left-0 right-0 z-30"
+          className="fixed top-[60px] left-0 right-0 z-30 -mt-[2px]"
           style={{
             background: 'rgba(18, 18, 20, 0.8)',
             backdropFilter: 'blur(20px)',
@@ -628,11 +657,11 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar, scroll
           }}
         >
           <div className="max-w-7xl mx-auto">
-            <div className="pl-4 pr-0 py-3">
-              <div className="flex gap-2 overflow-x-auto scrollbar-none pb-2 pr-4">
+            <div className="pl-4 pr-0 py-2" ref={chipsRowRef}>
+              <div className="flex gap-3 overflow-x-auto scrollbar-none pb-0 pr-4">
                 <button
                   onClick={() => setActiveTab('tracks')}
-                  className={`flex-shrink-0 py-2 px-4 rounded-xl text-sm font-medium transition-all ${
+                  className={`flex-shrink-0 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
                     activeTab === 'tracks'
                       ? 'bg-[#1DB954] text-white shadow-sm'
                       : 'bg-[#2A2A2D] text-gray-400 hover:text-white hover:bg-[#3A3A3D]'
@@ -642,7 +671,7 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar, scroll
                 </button>
                 <button
                   onClick={() => setActiveTab('artists')}
-                  className={`flex-shrink-0 py-2 px-4 rounded-xl text-sm font-medium transition-all ${
+                  className={`flex-shrink-0 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
                     activeTab === 'artists'
                       ? 'bg-[#1DB954] text-white shadow-sm'
                       : 'bg-[#2A2A2D] text-gray-400 hover:text-white hover:bg-[#3A3A3D]'
@@ -652,7 +681,7 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar, scroll
                 </button>
                 <button
                   onClick={() => setActiveTab('albums')}
-                  className={`flex-shrink-0 py-2 px-4 rounded-xl text-sm font-medium transition-all ${
+                  className={`flex-shrink-0 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
                     activeTab === 'albums'
                       ? 'bg-[#1DB954] text-white shadow-sm'
                       : 'bg-[#2A2A2D] text-gray-400 hover:text-white hover:bg-[#3A3A3D]'
@@ -662,7 +691,7 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar, scroll
                 </button>
                 <button
                   onClick={() => setActiveTab('genres')}
-                  className={`flex-shrink-0 py-2 px-4 rounded-xl text-sm font-medium transition-all ${
+                  className={`flex-shrink-0 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
                     activeTab === 'genres'
                       ? 'bg-[#1DB954] text-white shadow-sm'
                       : 'bg-[#2A2A2D] text-gray-400 hover:text-white hover:bg-[#3A3A3D]'
@@ -672,7 +701,7 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar, scroll
                 </button>
                 <button
                   onClick={() => setActiveTab('recent')}
-                  className={`flex-shrink-0 py-2 px-4 rounded-xl text-sm font-medium transition-all ${
+                  className={`flex-shrink-0 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
                     activeTab === 'recent'
                       ? 'bg-[#1DB954] text-white shadow-sm'
                       : 'bg-[#2A2A2D] text-gray-400 hover:text-white hover:bg-[#3A3A3D]'
@@ -690,10 +719,13 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar, scroll
         ref={scrollContainerRef}
         className="w-full h-screen overflow-y-auto bg-gradient-to-br from-[#0A0A0A] via-[#1A1A1A] to-[#0A0A0A]"
       >
-        <div className={`max-w-7xl mx-auto px-4 pb-[120px] ${connected ? 'pt-[103px]' : 'pt-4'}`}>
+        <div
+          className="max-w-7xl mx-auto px-4 pb-[120px]"
+          style={{ paddingTop: connected ? `${60 + chipsRowHeight + 8}px` : '1rem' }}
+        >
           {activeTab !== 'recent' && (
-            <div className="mb-6 mt-0">
-              <div className="flex gap-2 mb-4">
+            <div className="mb-2 mt-2">
+              <div className="flex gap-2 mb-2">
                 <button
                   onClick={() => setTimeRange('short_term')}
                   className={`py-1.5 px-3 rounded-lg text-xs font-medium transition-all ${

@@ -152,13 +152,13 @@ export default function LastFourWeeksSection() {
                 {formatMinutes(data.minutesThis)}
               </div>
               {subtitle && (
-                <p className={`text-xs ${
+              <p className={`text-xs ${
                   (delta ?? 0) < 0 ? 'text-red-400' :
                   (delta ?? 0) > 0 ? 'text-green-400' :
-                  'text-zinc-400'
-                }`}>
-                  {subtitle}
-                </p>
+                'text-zinc-400'
+              }`}>
+                {subtitle}
+              </p>
               )}
             </>
           )}
