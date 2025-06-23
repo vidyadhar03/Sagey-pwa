@@ -357,50 +357,50 @@ export default function GlobalShareInterface({
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="h-full w-full flex flex-col"
+          className="h-full w-full flex flex-col max-h-screen overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Header - Compact */}
-          <div className="flex items-center justify-between p-4 bg-zinc-900/90 backdrop-blur-sm border-b border-white/10">
-            <h2 className="text-lg font-semibold text-white">
+          {/* Header - Mobile Optimized */}
+          <div className="flex items-center justify-between p-3 lg:p-4 bg-zinc-900/90 backdrop-blur-sm border-b border-white/10">
+            <h2 className="text-base lg:text-lg font-semibold text-white">
               Share Your {dataType === 'insights' ? 'Music Insights' : 'Top Music'}
             </h2>
             <button
               onClick={onClose}
               className="p-2 rounded-full hover:bg-white/10 transition-colors"
             >
-              <X size={20} className="text-white" />
+              <X size={18} className="text-white lg:w-5 lg:h-5" />
             </button>
           </div>
 
-          {/* Main Content Area - Optimized Layout */}
-          <div className="flex-1 flex flex-col lg:flex-row min-h-0">
+          {/* Main Content Area - Mobile Optimized Layout */}
+          <div className="flex-1 flex flex-col lg:flex-row min-h-0 overflow-hidden">
             {/* Card Display Area */}
-            <div className="flex-1 flex items-center justify-center p-3 lg:p-4 bg-gradient-to-br from-zinc-900 to-black">
+            <div className="flex-1 flex items-center justify-center p-2 lg:p-4 bg-gradient-to-br from-zinc-900 to-black min-h-0">
               {totalCards > 0 ? (
-                <div className="relative w-full max-w-sm lg:max-w-md mx-auto px-6 lg:px-8">
+                <div className="relative w-full max-w-sm lg:max-w-md mx-auto px-3 lg:px-8 h-full flex flex-col justify-center">
                   {/* Navigation Arrows */}
                   {totalCards > 1 && (
                     <>
                       <button
                         onClick={goToPrevious}
                         disabled={currentIndex === 0}
-                        className="absolute -left-2 lg:-left-4 top-1/2 -translate-y-1/2 z-20 p-3 lg:p-4 rounded-full bg-black/80 backdrop-blur-md shadow-2xl disabled:opacity-30 disabled:cursor-not-allowed hover:bg-black/90 hover:scale-110 active:scale-95 transition-all duration-200 border border-white/20"
+                        className="absolute -left-1 lg:-left-4 top-1/2 -translate-y-1/2 z-20 p-2 lg:p-4 rounded-full bg-black/80 backdrop-blur-md shadow-2xl disabled:opacity-30 disabled:cursor-not-allowed hover:bg-black/90 hover:scale-110 active:scale-95 transition-all duration-200 border border-white/20"
                         style={{ 
                           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1)' 
                         }}
                       >
-                        <ChevronLeft size={24} className="text-white lg:w-7 lg:h-7" />
+                        <ChevronLeft size={20} className="text-white lg:w-7 lg:h-7" />
                       </button>
                       <button
                         onClick={goToNext}
                         disabled={currentIndex === totalCards - 1}
-                        className="absolute -right-2 lg:-right-4 top-1/2 -translate-y-1/2 z-20 p-3 lg:p-4 rounded-full bg-black/80 backdrop-blur-md shadow-2xl disabled:opacity-30 disabled:cursor-not-allowed hover:bg-black/90 hover:scale-110 active:scale-95 transition-all duration-200 border border-white/20"
+                        className="absolute -right-1 lg:-right-4 top-1/2 -translate-y-1/2 z-20 p-2 lg:p-4 rounded-full bg-black/80 backdrop-blur-md shadow-2xl disabled:opacity-30 disabled:cursor-not-allowed hover:bg-black/90 hover:scale-110 active:scale-95 transition-all duration-200 border border-white/20"
                         style={{ 
                           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1)' 
                         }}
                       >
-                        <ChevronRight size={24} className="text-white lg:w-7 lg:h-7" />
+                        <ChevronRight size={20} className="text-white lg:w-7 lg:h-7" />
                       </button>
                     </>
                   )}
@@ -413,11 +413,11 @@ export default function GlobalShareInterface({
                     dragElastic={0.1}
                     onDragEnd={handleDragEnd}
                     whileDrag={{ scale: 0.95 }}
-                    className="w-full aspect-[9/16] max-h-[60vh] lg:max-h-[70vh]"
+                    className="w-full aspect-[9/16] max-h-[55vh] lg:max-h-[70vh]"
                   >
                     <div
                       ref={cardRef}
-                      className="w-full h-full rounded-2xl lg:rounded-3xl overflow-hidden shadow-2xl"
+                      className="w-full h-full rounded-xl lg:rounded-3xl overflow-hidden shadow-2xl"
                       style={{
                         background: `linear-gradient(135deg, ${colorThemes[selectedTheme].primary}, ${colorThemes[selectedTheme].secondary})`
                       }}
@@ -440,12 +440,12 @@ export default function GlobalShareInterface({
 
                   {/* Card Indicator */}
                   {totalCards > 1 && (
-                    <div className="flex justify-center mt-4 lg:mt-6 gap-2 lg:gap-3">
+                    <div className="flex justify-center mt-3 lg:mt-6 gap-2 lg:gap-3">
                       {Array.from({ length: totalCards }).map((_, index) => (
                         <button
                           key={index}
                           onClick={() => setCurrentIndex(index)}
-                          className={`w-3 h-3 lg:w-4 lg:h-4 rounded-full transition-all duration-200 border-2 ${
+                          className={`w-2.5 h-2.5 lg:w-4 lg:h-4 rounded-full transition-all duration-200 border-2 ${
                             index === currentIndex 
                               ? 'bg-white border-white scale-125 shadow-lg' 
                               : 'bg-white/20 border-white/40 hover:bg-white/50 hover:border-white/60 hover:scale-110'
@@ -462,8 +462,8 @@ export default function GlobalShareInterface({
               )}
             </div>
 
-            {/* Controls Panel - Compact */}
-            <div className="w-full lg:w-72 bg-zinc-900 border-t lg:border-t-0 lg:border-l border-white/10 p-3 lg:p-4 space-y-3 lg:space-y-4 overflow-y-auto max-h-[35vh] lg:max-h-none">
+            {/* Controls Panel - Mobile Optimized */}
+            <div className="w-full lg:w-72 bg-zinc-900 border-t lg:border-t-0 lg:border-l border-white/10 p-3 lg:p-4 space-y-3 lg:space-y-4 overflow-y-auto flex-shrink-0 max-h-[35vh] lg:max-h-none">
               {/* Share Actions - Top Priority */}
               <div>
                 <div className="grid grid-cols-2 gap-2">
