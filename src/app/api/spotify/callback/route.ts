@@ -221,18 +221,18 @@ export async function GET(request: NextRequest) {
         console.error('🤖 Profile Error Details:', profileErrorText);
       }
       
-      return NextResponse.redirect(new URL('/?spotify=error&reason=profile_fetch', request.url));
-    }
+              return NextResponse.redirect(new URL('/?spotify=error&reason=profile_fetch', request.url));
+      }
 
-    let profileData;
-    try {
-      const profileText = await profileResponse.text();
-      console.log('Raw profile response:', profileText.substring(0, 200) + '...');
-      profileData = JSON.parse(profileText);
-    } catch (parseError) {
-      console.error('❌ Failed to parse profile response:', parseError);
-      return NextResponse.redirect(new URL('/?spotify=error&reason=profile_parse', request.url));
-    }
+      let profileData;
+      try {
+        const profileText = await profileResponse.text();
+        console.log('Raw profile response:', profileText.substring(0, 200) + '...');
+        profileData = JSON.parse(profileText);
+      } catch (parseError) {
+        console.error('❌ Failed to parse profile response:', parseError);
+        return NextResponse.redirect(new URL('/?spotify=error&reason=profile_parse', request.url));
+      }
 
     console.log('✅ Profile data parsed:', { 
       id: profileData.id,

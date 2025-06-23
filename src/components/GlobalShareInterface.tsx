@@ -182,11 +182,11 @@ export default function GlobalShareInterface({
         try {
           const newData = await stableOnTimeRangeChange(selectedTimeRange);
           if (isMounted) {
-            setDynamicTopAspectData(newData);
+          setDynamicTopAspectData(newData);
             // Keep user on the same card when time range changes
             // Only reset to first card if current index is out of bounds
             if (currentIndex >= newData.length && newData.length > 0) {
-              setCurrentIndex(0);
+          setCurrentIndex(0);
             }
           }
         } catch (error) {
@@ -194,7 +194,7 @@ export default function GlobalShareInterface({
           // Keep existing data if fetch fails
         } finally {
           if (isMounted) {
-            setIsLoadingTimeRange(false);
+          setIsLoadingTimeRange(false);
           }
         }
       }
@@ -573,7 +573,7 @@ export default function GlobalShareInterface({
                       key={index}
                       onClick={() => setSelectedTheme(index)}
                       className={`relative group transition-all duration-300 ${
-                        selectedTheme === index 
+                        selectedTheme === index
                           ? 'scale-110' 
                           : 'hover:scale-105'
                       }`}
@@ -584,8 +584,8 @@ export default function GlobalShareInterface({
                           selectedTheme === index 
                             ? 'border-white shadow-xl' 
                             : 'border-white/40 hover:border-white/70'
-                        }`}
-                        style={{ 
+                      }`}
+                      style={{
                           background: theme.preview,
                           boxShadow: selectedTheme === index 
                             ? `0 0 25px ${theme.glow}` 
@@ -597,8 +597,8 @@ export default function GlobalShareInterface({
                           className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"
                           style={{ animationDuration: '2s' }}
                         />
-                      </div>
-                      
+              </div>
+
                       {/* Active indicator */}
                       {selectedTheme === index && (
                         <div 
@@ -617,7 +617,7 @@ export default function GlobalShareInterface({
                         {theme.name}
                         <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-black/90"></div>
                       </div>
-                    </button>
+                  </button>
                   ))}
                 </div>
               </div>
@@ -764,7 +764,7 @@ function InsightShareCard({
           <div className="text-center mb-3 lg:mb-4">
             <div className="w-10 lg:w-12 h-10 lg:h-12 mx-auto mb-2 lg:mb-3 rounded-full bg-white/20 flex items-center justify-center">
               <Sparkles size={20} className="lg:w-6 lg:h-6" />
-            </div>
+        </div>
             <h1 className="text-lg lg:text-xl font-bold mb-1">{data.title}</h1>
             <p className="text-white/70 text-xs lg:text-sm mb-1">{getInsightSubtitle(data.type)}</p>
             <p className="text-white/80 text-xs lg:text-sm">{data.description}</p>
@@ -1017,7 +1017,7 @@ function InsightShareCard({
                 <span className="text-2xl lg:text-3xl">
                   {data.visualData?.isNightOwl ? '🌙' : '☀️'}
                 </span>
-                <div className="text-center">
+          <div className="text-center">
                   <div 
                     className="text-lg lg:text-xl font-bold leading-tight"
                     style={{ 
@@ -1113,15 +1113,15 @@ function InsightShareCard({
         )}
 
         {/* AI Insight - Optimized spacing */}
-        {includeAIInsight && data.aiInsight && (
+            {includeAIInsight && data.aiInsight && (
           <div className={`bg-white/10 rounded-lg lg:rounded-xl backdrop-blur-sm ${
             data.type === 'music-radar' 
               ? 'p-2 lg:p-3 mb-2' 
               : 'p-3 lg:p-4 mb-3 lg:mb-4'
           }`}>
             <p className="text-white/90 leading-relaxed text-xs lg:text-sm line-clamp-3">{data.aiInsight}</p>
-          </div>
-        )}
+              </div>
+            )}
 
         {/* Tiny Footer - Bottom Right */}
         <div className="absolute bottom-2 right-2 lg:bottom-3 lg:right-3">
@@ -1249,7 +1249,7 @@ function CompactRadarChart({ data, theme }: { data: any; theme: typeof colorThem
           );
         })}
       </svg>
-    </div>
+        </div>
   );
 }
 

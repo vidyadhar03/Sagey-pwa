@@ -486,7 +486,7 @@ export function useGlobalShare() {
     
     try {
       // Always fetch fresh data for share interface to ensure real-time updates
-      const [tracks, artists, albums] = await Promise.all([
+    const [tracks, artists, albums] = await Promise.all([
         getTopTracks(timeRange).catch((error) => {
           console.error(`Failed to fetch tracks for ${timeRange}:`, error);
           return [];
@@ -500,16 +500,16 @@ export function useGlobalShare() {
           return [];
         })
       ]);
-      
+    
       // Update refs and state with fresh data
-      topTracksDataRef.current = { ...topTracksDataRef.current, [timeRange]: tracks };
-      topArtistsDataRef.current = { ...topArtistsDataRef.current, [timeRange]: artists };
-      topAlbumsDataRef.current = { ...topAlbumsDataRef.current, [timeRange]: albums };
-      
-      setTopTracksData(prev => ({ ...prev, [timeRange]: tracks }));
-      setTopArtistsData(prev => ({ ...prev, [timeRange]: artists }));
-      setTopAlbumsData(prev => ({ ...prev, [timeRange]: albums }));
-      
+    topTracksDataRef.current = { ...topTracksDataRef.current, [timeRange]: tracks };
+    topArtistsDataRef.current = { ...topArtistsDataRef.current, [timeRange]: artists };
+    topAlbumsDataRef.current = { ...topAlbumsDataRef.current, [timeRange]: albums };
+    
+    setTopTracksData(prev => ({ ...prev, [timeRange]: tracks }));
+    setTopArtistsData(prev => ({ ...prev, [timeRange]: artists }));
+    setTopAlbumsData(prev => ({ ...prev, [timeRange]: albums }));
+    
       // Build and return the share data
       const shareData = buildTopAspectData(tracks, artists, albums, timeRange);
       

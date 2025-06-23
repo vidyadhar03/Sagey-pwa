@@ -93,7 +93,8 @@ export async function GET(request: NextRequest) {
     console.log('🔄 Verifying token with Spotify API...');
     const response = await fetch('https://api.spotify.com/v1/me', {
       headers: {
-        'Authorization': `Bearer ${effectiveToken}`
+        'Authorization': `Bearer ${effectiveToken}`,
+        'Content-Type': 'application/json'
       }
     });
 
@@ -128,8 +129,17 @@ export async function GET(request: NextRequest) {
     console.log('✅ Profile data received:', {
       id: profileData.id,
       displayName: profileData.display_name,
-      hasImages: !!profileData.images?.length
+      hasImages: !!profileData.images?.length,
+      product: profileData.product,
+      productType: typeof profileData.product,
+      country: profileData.country,
+      followers: profileData.followers?.total,
+      email: profileData.email,
+      fullProfileKeys: Object.keys(profileData)
     });
+
+    // Log the complete profile data for debugging
+    console.log('🔍 Complete Spotify profile data:', JSON.stringify(profileData, null, 2));
     
     console.log('=== SPOTIFY STATUS CHECK SUCCESS ===');
     

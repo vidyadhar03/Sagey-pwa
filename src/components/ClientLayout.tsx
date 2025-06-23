@@ -16,6 +16,25 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   const isOnPublicRoute = noRedirectRoutes.some(route => pathname?.startsWith(route));
 
   useEffect(() => {
+    // Check for Spotify authentication errors in URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const spotifyStatus = urlParams.get('spotify');
+    const errorReason = urlParams.get('reason');
+
+    // If there's a Spotify auth error, redirect to onboarding regardless of connection status
+    if (spotifyStatus === 'error') {
+      console.log('🔍 Spotify auth error detected, redirecting to onboarding:', {
+        spotifyStatus,
+        errorReason,
+        pathname,
+        connected
+      });
+      
+      // Clear the error parameters and redirect to onboarding
+      router.replace('/onboarding');
+      return;
+    }
+    
     // Immediate redirect for root path if not authenticated and not loading
     if (!loading && !connected && pathname === '/') {
       router.replace('/onboarding');

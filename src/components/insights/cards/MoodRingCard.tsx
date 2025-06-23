@@ -159,31 +159,31 @@ export default function MoodRingCard() {
             {/* Enhanced segments with gradients and glow */}
             {!isFallback && pathSegments.map((segment, segmentIndex) => (
               <motion.g key={segment.emotion}>
-                <motion.path
-                  d={segment.pathData}
+              <motion.path
+                d={segment.pathData}
                   fill={`url(#${segment.emotion}Gradient)`}
-                  stroke={colors[segment.emotion as keyof typeof colors]}
+                stroke={colors[segment.emotion as keyof typeof colors]}
                   strokeWidth="3"
                   opacity="0.95"
-                  filter="drop-shadow(0 0 8px rgba(255,255,255,0.3))"
-                  initial={{ 
-                    opacity: 0,
-                    scale: 0.8,
-                  }}
-                  animate={{ 
-                    opacity: 1,
-                    scale: 1,
-                  }}
-                  transition={{ 
-                    delay: 0.6 + segmentIndex * 0.2, 
-                    duration: 0.8,
-                    ease: "easeOut"
-                  }}
-                  whileHover={{ 
-                    scale: 1.05,
-                    filter: "drop-shadow(0 0 16px rgba(255,255,255,0.5))"
-                  }}
-                />
+                filter="drop-shadow(0 0 8px rgba(255,255,255,0.3))"
+                initial={{ 
+                  opacity: 0,
+                  scale: 0.8,
+                }}
+                animate={{ 
+                  opacity: 1,
+                  scale: 1,
+                }}
+                transition={{ 
+                  delay: 0.6 + segmentIndex * 0.2, 
+                  duration: 0.8,
+                  ease: "easeOut"
+                }}
+                whileHover={{ 
+                  scale: 1.05,
+                  filter: "drop-shadow(0 0 16px rgba(255,255,255,0.5))"
+                }}
+              />
               </motion.g>
             ))}
 
@@ -347,24 +347,24 @@ export default function MoodRingCard() {
             }}
           >
             <div className="flex items-center gap-1.5">
-              <motion.div 
+            <motion.div 
                 className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                style={{ 
+              style={{ 
                   backgroundColor: isFallback ? '#4a5568' : colors[segment.emotion as keyof typeof colors]
-                }}
-                animate={{
-                  boxShadow: isFallback ? 'none' : [
+              }}
+              animate={{
+                boxShadow: isFallback ? 'none' : [
                     `0 0 4px ${colors[segment.emotion as keyof typeof colors]}50`,
                     `0 0 8px ${colors[segment.emotion as keyof typeof colors]}80`,
                     `0 0 4px ${colors[segment.emotion as keyof typeof colors]}50`
-                  ]
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-              />
+                ]
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            />
               <span className="text-white/80 font-medium capitalize text-xs">
                 {segment.emotion}
               </span>
