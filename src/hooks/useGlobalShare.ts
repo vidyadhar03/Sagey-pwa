@@ -9,6 +9,7 @@ import {
 import { useSpotifyInsights } from './useSpotifyInsights';
 import { useSpotify, SpotifyTrack, SpotifyArtist, SpotifyAlbum, RecentlyPlayedTrack } from './useSpotify';
 import { useMusicRadar } from './useMusicRadar';
+import { useAIInsights } from './useAIInsights';
 
 export function useGlobalShare() {
   const [isShareOpen, setIsShareOpen] = useState(false);
@@ -43,6 +44,31 @@ export function useGlobalShare() {
   const { insights } = useSpotifyInsights();
   const { connected, getTopTracks, getTopArtists, getTopAlbums, getRecentTracks } = useSpotify();
   const { payload: radarPayload, ai: radarAI } = useMusicRadar();
+
+  // AI Insights for each insight type (only fetch when data is available)
+  const musicalAgeAI = useAIInsights(
+    'musical_age', 
+    insights.musicalAge, 
+    !!(insights.musicalAge && !insights.isDefault)
+  );
+  
+  const moodRingAI = useAIInsights(
+    'mood_ring', 
+    insights.moodRing, 
+    !!(insights.moodRing && !insights.isDefault)
+  );
+  
+  const genrePassportAI = useAIInsights(
+    'genre_passport', 
+    insights.genrePassport, 
+    !!(insights.genrePassport && !insights.isDefault)
+  );
+  
+  const nightOwlAI = useAIInsights(
+    'night_owl_pattern', 
+    insights.nightOwlPattern, 
+    !!(insights.nightOwlPattern && !insights.isDefault)
+  );
 
   // Rate limiting - track last fetch time for each time range
   const lastFetchTimeRef = useRef<Record<string, number>>({});
@@ -147,7 +173,7 @@ export function useGlobalShare() {
         title: 'Musical Age',
         mainValue: `${insights.musicalAge.age} years`,
         description: insights.musicalAge.description,
-        aiInsight: undefined, // Will be fetched separately if needed
+        aiInsight: musicalAgeAI.copy || undefined,
         visualData: insights.musicalAge,
         colors: {
           primary: '#1DB954',
@@ -167,7 +193,7 @@ export function useGlobalShare() {
         title: 'Mood Ring',
         mainValue: dominantMood ? dominantMood[0] : 'Mixed',
         description: 'Your emotional music palette',
-        aiInsight: undefined,
+        aiInsight: moodRingAI.copy || undefined,
         visualData: insights.moodRing,
         colors: {
           primary: '#8B5CF6',
@@ -184,7 +210,7 @@ export function useGlobalShare() {
         title: 'Genre Passport',
         mainValue: `${insights.genrePassport.totalGenres} genres`,
         description: 'Your musical journey across genres',
-        aiInsight: undefined,
+        aiInsight: genrePassportAI.copy || undefined,
         visualData: insights.genrePassport,
         colors: {
           primary: '#F97316',
@@ -201,7 +227,7 @@ export function useGlobalShare() {
         title: 'Night Owl Pattern',
         mainValue: `${insights.nightOwlPattern.peakHour}:00`,
         description: 'Your daily listening rhythm',
-        aiInsight: undefined,
+        aiInsight: nightOwlAI.copy || undefined,
         visualData: insights.nightOwlPattern,
         colors: {
           primary: '#EC4899',
@@ -212,7 +238,7 @@ export function useGlobalShare() {
     }
 
     return insightData;
-  }, [insights, radarPayload, radarAI]);
+  }, [insights, radarPayload, radarAI, musicalAgeAI.copy, moodRingAI.copy, genrePassportAI.copy, nightOwlAI.copy]);
 
   // Get data for specific time range
   const getDataForTimeRange = useCallback((timeRange: 'short_term' | 'medium_term' | 'long_term') => {

@@ -574,8 +574,44 @@ function InsightShareCard({
 }) {
   if (!data) return null;
 
+  // Get descriptive subtitle for each insight type
+  const getInsightSubtitle = (type: string) => {
+    switch (type) {
+      case 'music-radar':
+        return 'Your music personality across 5 key dimensions';
+      case 'mood-ring':
+        return 'The emotional landscape of your music';
+      case 'night-owl':
+        return 'When you listen to music throughout the day';
+      case 'musical-age':
+        return 'The decades that define your musical taste';
+      case 'genre-passport':
+        return 'Your musical journey across different genres';
+      default:
+        return 'Discover insights about your music taste';
+    }
+  };
+
+  // Render visual component based on insight type
+  const renderVisual = () => {
+    switch (data.type) {
+      case 'music-radar':
+        return <CompactRadarChart data={data.visualData} theme={theme} />;
+      case 'mood-ring':
+        return <CompactMoodRing data={data.visualData} theme={theme} />;
+      case 'night-owl':
+        return <CompactNightOwlChart data={data.visualData} theme={theme} />;
+      case 'musical-age':
+        return <CompactMusicalAgeChart data={data.visualData} theme={theme} />;
+      case 'genre-passport':
+        return <CompactGenreChart data={data.visualData} theme={theme} />;
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="w-full h-full p-4 lg:p-8 text-white relative overflow-hidden">
+    <div className="w-full h-full p-4 lg:p-6 text-white relative overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-6 lg:top-10 left-6 lg:left-10 w-20 lg:w-32 h-20 lg:h-32 rounded-full border-2 border-white"></div>
@@ -585,32 +621,430 @@ function InsightShareCard({
 
       {/* Content */}
       <div className="relative z-10 h-full flex flex-col">
-        {/* Header */}
-        <div className="text-center mb-4 lg:mb-8">
-          <div className="w-12 lg:w-16 h-12 lg:h-16 mx-auto mb-3 lg:mb-4 rounded-full bg-white/20 flex items-center justify-center">
-            <Sparkles size={24} className="lg:w-8 lg:h-8" />
+        {/* Header for Music Radar */}
+        {data.type === 'music-radar' && (
+          <div className="text-center mb-2">
+            <h1 className="text-base lg:text-lg font-semibold text-white/90 mb-1">{data.title}</h1>
+            <p className="text-white/70 text-xs lg:text-sm">{getInsightSubtitle(data.type)}</p>
           </div>
-          <h1 className="text-xl lg:text-2xl font-bold mb-2">{data.title}</h1>
-          <p className="text-white/80 text-sm lg:text-lg">{data.description}</p>
+        )}
+
+        {/* Header for other insights */}
+        {data.type !== 'music-radar' && (
+          <div className="text-center mb-3 lg:mb-4">
+            <div className="w-10 lg:w-12 h-10 lg:h-12 mx-auto mb-2 lg:mb-3 rounded-full bg-white/20 flex items-center justify-center">
+              <Sparkles size={20} className="lg:w-6 lg:h-6" />
+            </div>
+            <h1 className="text-lg lg:text-xl font-bold mb-1">{data.title}</h1>
+            <p className="text-white/70 text-xs lg:text-sm mb-1">{getInsightSubtitle(data.type)}</p>
+            <p className="text-white/80 text-xs lg:text-sm">{data.description}</p>
+          </div>
+        )}
+
+        {/* Visual Chart - Larger for Music Radar */}
+        <div className="flex-1 flex items-center justify-center mb-1 lg:mb-2">
+          <div className={`w-full h-full ${
+            data.type === 'music-radar' 
+              ? 'max-w-[280px] lg:max-w-[320px] max-h-[200px] lg:max-h-[240px]' 
+              : 'max-w-[200px] lg:max-w-[240px] h-[120px] lg:h-[150px]'
+          }`}>
+            {renderVisual()}
+          </div>
         </div>
 
-        {/* Main Value */}
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-4xl lg:text-6xl font-bold mb-3 lg:mb-4">{data.mainValue}</div>
-            {includeAIInsight && data.aiInsight && (
-              <div className="bg-white/10 rounded-xl lg:rounded-2xl p-4 lg:p-6 backdrop-blur-sm">
-                <p className="text-white/90 leading-relaxed text-sm lg:text-base">{data.aiInsight}</p>
+        {/* Main Value - Only for non-radar insights */}
+        {data.type !== 'music-radar' && (
+          <div className="text-center mb-3 lg:mb-4">
+            <div className="text-2xl lg:text-3xl font-bold mb-2">{data.mainValue}</div>
+          </div>
+        )}
+
+        {/* AI Insight - Optimized spacing */}
+        {includeAIInsight && data.aiInsight && (
+          <div className={`bg-white/10 rounded-lg lg:rounded-xl backdrop-blur-sm ${
+            data.type === 'music-radar' 
+              ? 'p-2 lg:p-3 mb-2' 
+              : 'p-3 lg:p-4 mb-3 lg:mb-4'
+          }`}>
+            <p className="text-white/90 leading-relaxed text-xs lg:text-sm line-clamp-3">{data.aiInsight}</p>
+          </div>
+        )}
+
+        {/* Tiny Footer - Bottom Right */}
+        <div className="absolute bottom-2 right-2 lg:bottom-3 lg:right-3">
+          <div className="text-xs text-white/50 font-medium">
+            Vynce
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Compact visual components for each insight type
+function CompactRadarChart({ data, theme }: { data: any; theme: typeof colorThemes[0] }) {
+  if (!data || !data.scores) return null;
+
+  const chartData = Object.entries(data.scores).map(([name, value]) => ({
+    axis: name.replace('-', ' '),
+    value: value as number,
+  }));
+
+  return (
+    <div className="w-full h-full flex items-center justify-center">
+      <svg width="100%" height="100%" viewBox="0 0 220 220" className="overflow-visible">
+        {/* Radial grid lines */}
+        <g>
+          {chartData.map((_, i) => {
+            const angle = (i * 2 * Math.PI) / chartData.length - Math.PI / 2;
+            const x2 = 110 + 80 * Math.cos(angle);
+            const y2 = 110 + 80 * Math.sin(angle);
+            return (
+              <line
+                key={`radial-${i}`}
+                x1="110"
+                y1="110"
+                x2={x2}
+                y2={y2}
+                stroke="rgba(255,255,255,0.15)"
+                strokeWidth="1"
+              />
+            );
+          })}
+        </g>
+
+        {/* Concentric circles */}
+        <g>
+          {[0.3, 0.6, 1].map((scale) => (
+            <circle
+              key={scale}
+              cx="110"
+              cy="110"
+              r={80 * scale}
+              fill="none"
+              stroke="rgba(255,255,255,0.12)"
+              strokeWidth="1"
+            />
+          ))}
+        </g>
+        
+        {/* Data polygon with gradient */}
+        <defs>
+          <radialGradient id="radarGradient" cx="0.5" cy="0.5" r="0.8">
+            <stop offset="0%" stopColor={theme.primary} stopOpacity="0.9" />
+            <stop offset="70%" stopColor={theme.primary} stopOpacity="0.6" />
+            <stop offset="100%" stopColor={theme.primary} stopOpacity="0.3" />
+          </radialGradient>
+        </defs>
+        
+        <polygon
+          points={chartData.map((item, i) => {
+            const angle = (i * 2 * Math.PI) / chartData.length - Math.PI / 2;
+            const radius = (item.value / 100) * 80;
+            const x = 110 + radius * Math.cos(angle);
+            const y = 110 + radius * Math.sin(angle);
+            return `${x},${y}`;
+          }).join(' ')}
+          fill="url(#radarGradient)"
+          stroke={theme.primary}
+          strokeWidth="2.5"
+          opacity="0.95"
+        />
+        
+        {/* Data points */}
+        {chartData.map((item, i) => {
+          const angle = (i * 2 * Math.PI) / chartData.length - Math.PI / 2;
+          const radius = (item.value / 100) * 80;
+          const x = 110 + radius * Math.cos(angle);
+          const y = 110 + radius * Math.sin(angle);
+          
+          return (
+            <circle
+              key={`point-${i}`}
+              cx={x}
+              cy={y}
+              r="2.5"
+              fill={theme.primary}
+              opacity="0.9"
+            />
+          );
+        })}
+        
+        {/* Axis labels - matching home tab names */}
+        {chartData.map((item, i) => {
+          const angle = (i * 2 * Math.PI) / chartData.length - Math.PI / 2;
+          const labelRadius = 95;
+          const x = 110 + labelRadius * Math.cos(angle);
+          const y = 110 + labelRadius * Math.sin(angle);
+          
+          // Use exact same names as home tab radar
+          let label = item.axis;
+          
+          return (
+            <text
+              key={item.axis}
+              x={x}
+              y={y}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fill="white"
+              fontSize="8"
+              fontWeight="400"
+            >
+              {label}
+            </text>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
+function CompactMoodRing({ data, theme }: { data: any; theme: typeof colorThemes[0] }) {
+  if (!data || !data.emotions) return null;
+
+  const emotions = data.emotions;
+  const total = Object.values(emotions).reduce((sum: number, val) => sum + (val as number), 0);
+  
+  const colors = {
+    happy: '#1DB954',
+    energetic: '#FF6B6B', 
+    chill: '#4ECDC4',
+    melancholy: '#9B59B6'
+  };
+
+  const segments = Object.entries(emotions).map(([emotion, value]) => {
+    const percentage = total > 0 ? (value as number / total) * 100 : 0;
+    const angle = total > 0 ? (value as number / total) * 360 : 0;
+    return { emotion, value: value as number, percentage, angle };
+  });
+
+  const outerRadius = 50;
+  const innerRadius = 35;
+  const center = 60;
+
+  let accumulatedAngle = 0;
+  const pathSegments = segments.map((segment) => {
+    const startAngle = accumulatedAngle;
+    const endAngle = accumulatedAngle + segment.angle;
+    
+    const x1 = center + outerRadius * Math.cos((startAngle - 90) * Math.PI / 180);
+    const y1 = center + outerRadius * Math.sin((startAngle - 90) * Math.PI / 180);
+    const x2 = center + outerRadius * Math.cos((endAngle - 90) * Math.PI / 180);
+    const y2 = center + outerRadius * Math.sin((endAngle - 90) * Math.PI / 180);
+    
+    const x3 = center + innerRadius * Math.cos((endAngle - 90) * Math.PI / 180);
+    const y3 = center + innerRadius * Math.sin((endAngle - 90) * Math.PI / 180);
+    const x4 = center + innerRadius * Math.cos((startAngle - 90) * Math.PI / 180);
+    const y4 = center + innerRadius * Math.sin((startAngle - 90) * Math.PI / 180);
+    
+    const largeArcFlag = segment.angle > 180 ? 1 : 0;
+    
+    const pathData = [
+      `M ${x1} ${y1}`,
+      `A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
+      `L ${x3} ${y3}`,
+      `A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${x4} ${y4}`,
+      'Z'
+    ].join(' ');
+    
+    accumulatedAngle += segment.angle;
+    
+    return {
+      ...segment,
+      pathData
+    };
+  });
+
+  return (
+    <div className="w-full h-full flex items-center justify-center">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        {/* Background ring */}
+        <circle
+          cx={center}
+          cy={center}
+          r={(outerRadius + innerRadius) / 2}
+          fill="none"
+          stroke="rgba(255,255,255,0.1)"
+          strokeWidth={outerRadius - innerRadius}
+        />
+        
+        {/* Segments */}
+        {pathSegments.map((segment) => (
+          <path
+            key={segment.emotion}
+            d={segment.pathData}
+            fill={colors[segment.emotion as keyof typeof colors]}
+            stroke={colors[segment.emotion as keyof typeof colors]}
+            strokeWidth="1"
+            opacity="0.9"
+          />
+        ))}
+        
+        {/* Center icon */}
+        <text
+          x={center}
+          y={center}
+          textAnchor="middle"
+          dominantBaseline="central"
+          className="text-lg"
+        >
+          🎵
+        </text>
+      </svg>
+    </div>
+  );
+}
+
+function CompactNightOwlChart({ data, theme }: { data: any; theme: typeof colorThemes[0] }) {
+  if (!data || !data.histogram) return null;
+
+  const hourlyData = data.histogram;
+  const maxValue = Math.max(...hourlyData);
+  const peakHour = data.peakHour;
+
+  return (
+    <div className="w-full h-full flex items-center justify-center">
+      <div className="w-full max-w-[160px] lg:max-w-[180px]">
+        <div className="grid grid-cols-12 gap-0.5 lg:gap-1">
+          {hourlyData.map((value: number, hour: number) => {
+            const intensity = maxValue > 0 ? value / maxValue : 0;
+            const isPeak = hour === peakHour;
+            const height = Math.max(3, intensity * 24); // Reduced height for mobile
+            
+            return (
+              <div
+                key={hour}
+                className="flex flex-col items-center"
+              >
+                <div
+                  className="w-full rounded-sm transition-all duration-300"
+                  style={{
+                    backgroundColor: isPeak 
+                      ? theme.primary 
+                      : `${theme.primary}${Math.round(intensity * 255).toString(16).padStart(2, '0')}`,
+                    height: `${height}px`
+                  }}
+                />
+                {[0, 6, 12, 18].includes(hour) && (
+                  <span className="text-xs text-white/60 mt-0.5 lg:mt-1">
+                    {hour === 0 ? '12A' : hour === 12 ? '12P' : hour > 12 ? `${hour-12}P` : `${hour}A`}
+                  </span>
+                )}
               </div>
-            )}
-          </div>
+            );
+          })}
         </div>
+      </div>
+    </div>
+  );
+}
 
-        {/* Footer */}
-        <div className="text-center">
-          <div className="text-lg lg:text-xl font-semibold">Vynce</div>
-          <div className="text-white/60 text-sm lg:text-base">Your musical DNA</div>
+function CompactMusicalAgeChart({ data, theme }: { data: any; theme: typeof colorThemes[0] }) {
+  if (!data) return null;
+
+  // Use actual decade distribution data if available, otherwise generate based on age
+  let chartData;
+  
+  if (data.decadeDistribution && Array.isArray(data.decadeDistribution)) {
+    // Use real data from musical age calculation
+    chartData = data.decadeDistribution.slice(0, 7); // Limit to 7 decades for space
+  } else {
+    // Fallback: Generate sample data based on the musical age
+    const decades = ['60s', '70s', '80s', '90s', '00s', '10s', '20s'];
+    const currentYear = new Date().getFullYear();
+    const age = typeof data.age === 'number' ? data.age : parseInt(data.age) || 25;
+    const peakDecade = Math.max(0, Math.min(6, Math.floor((currentYear - age) / 10) - 196));
+    
+    chartData = decades.map((decade, index) => {
+      const distance = Math.abs(index - peakDecade);
+      const value = Math.max(10, 100 - (distance * 20));
+      return { decade, value };
+    });
+  }
+
+  const maxValue = Math.max(...chartData.map((d: any) => d.value || d.weight || 0));
+
+  return (
+    <div className="w-full h-full flex items-center justify-center">
+      <div className="w-full max-w-[160px]">
+        <div className="flex items-end justify-between gap-1 h-16">
+          {chartData.map((item: any, index: number) => {
+            const value = item.value || item.weight || 0;
+            const height = maxValue > 0 ? (value / maxValue) * 60 : 10;
+            const label = item.decade || item.label || `${60 + index * 10}s`;
+            const isPeak = value === maxValue;
+            
+            return (
+              <div key={label} className="flex flex-col items-center flex-1">
+                <div
+                  className="w-full rounded-t-sm transition-all duration-300"
+                  style={{
+                    backgroundColor: isPeak ? theme.primary : `${theme.primary}80`,
+                    height: `${Math.max(4, height)}px`
+                  }}
+                />
+                <span className="text-xs text-white/60 mt-1">{label}</span>
+              </div>
+            );
+          })}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function CompactGenreChart({ data, theme }: { data: any; theme: typeof colorThemes[0] }) {
+  if (!data) return null;
+
+  // Use actual genre data if available, otherwise fallback to sample data
+  let genreData;
+  
+  if (data.genres && Array.isArray(data.genres)) {
+    // Use real genre data
+    genreData = data.genres.slice(0, 4).map((genre: any) => ({
+      name: genre.name || genre.genre || genre,
+      value: genre.count || genre.percentage || genre.value || 50
+    }));
+  } else if (data.topGenres && Array.isArray(data.topGenres)) {
+    // Alternative data structure
+    genreData = data.topGenres.slice(0, 4).map((genre: any) => ({
+      name: genre,
+      value: 50 // Default value when no count available
+    }));
+  } else {
+    // Fallback to sample data
+    genreData = [
+      { name: 'Pop', value: 85 },
+      { name: 'Rock', value: 65 },
+      { name: 'Hip-Hop', value: 45 },
+      { name: 'Electronic', value: 30 }
+    ];
+  }
+
+  const maxValue = Math.max(...genreData.map((g: any) => g.value));
+  
+  return (
+    <div className="w-full h-full flex items-center justify-center">
+      <div className="w-full max-w-[140px] space-y-2">
+        {genreData.map((genre: any, index: number) => {
+          const width = maxValue > 0 ? (genre.value / maxValue) * 100 : 0;
+          
+          return (
+            <div key={genre.name} className="flex items-center gap-2">
+              <span className="text-xs text-white/80 w-12 truncate">{genre.name}</span>
+              <div className="flex-1 h-2 bg-white/20 rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-300"
+                  style={{
+                    backgroundColor: theme.primary,
+                    width: `${width}%`
+                  }}
+                />
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
