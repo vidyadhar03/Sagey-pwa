@@ -11,15 +11,23 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fetch recently played tracks
-    const response = await fetch(
-      'https://api.spotify.com/v1/me/player/recently-played?limit=50',
-      {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
+    // Forward optional 'before' or 'after' query params for pagination
+    const { searchParams } = new URL(request.url);
+    const before = searchParams.get('before');
+    const after = searchParams.get('after');
+
+    // Build Spotify API URL with pagination parameters
+    const spotifyUrl = new URL('https://api.spotify.com/v1/me/player/recently-played');
+    spotifyUrl.searchParams.set('limit', '50');
+    if (before) spotifyUrl.searchParams.set('before', before);
+    if (after) spotifyUrl.searchParams.set('after', after);
+
+    // Fetch recently played tracks from Spotify
+    const response = await fetch(spotifyUrl.toString(), {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
       }
-    );
+    });
 
     if (!response.ok) {
       if (response.status === 401) {

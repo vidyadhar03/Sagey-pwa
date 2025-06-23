@@ -62,8 +62,10 @@ export function calculateLast4WeeksStats(recentTracks: any[]): {
   }
 
   const now = new Date();
-  const fourWeeksAgo = new Date(now.getTime() - (28 * 24 * 60 * 60 * 1000));
-  const eightWeeksAgo = new Date(now.getTime() - (56 * 24 * 60 * 60 * 1000));
+  const WINDOW_DAYS = 30;
+  const WINDOW_MS = WINDOW_DAYS * 24 * 60 * 60 * 1000;
+  const windowStart = new Date(now.getTime() - WINDOW_MS);
+  const prevWindowStart = new Date(now.getTime() - WINDOW_MS * 2);
 
   // Split tracks into two periods
   const thisPeriodTracks: any[] = [];
@@ -73,23 +75,55 @@ export function calculateLast4WeeksStats(recentTracks: any[]): {
     const track = item.track || item;
     const playedAt = new Date(item.played_at || track.played_at || now);
     
-    if (playedAt >= fourWeeksAgo) {
+    if (playedAt >= windowStart) {
       thisPeriodTracks.push(track);
-    } else if (playedAt >= eightWeeksAgo) {
+    } else if (playedAt >= prevWindowStart) {
       prevPeriodTracks.push(track);
     }
   });
 
   // Calculate minutes for each period
-  const minutesThis = thisPeriodTracks.reduce((total, track) => {
+  let minutesThis = thisPeriodTracks.reduce((total, track) => {
     return total + (track.duration_ms || 0) / 60000;
   }, 0);
 
-  const minutesPrev = prevPeriodTracks.reduce((total, track) => {
+  let minutesPrev = prevPeriodTracks.reduce((total, track) => {
     return total + (track.duration_ms || 0) / 60000;
   }, 0);
 
-  // Calculate percentage change
+  /**
+   * Compensation for Spotify API limitation (recent-played ≤ 50 plays/24 h).
+   * Approach: compute average listening minutes per *available* day, then
+   * extrapolate to 30 days. This is more robust than using oldest timestamp
+   * because it handles gaps where the user didn't listen.
+   */
+  if (thisPeriodTracks.length > 0) {
+    const perDay = new Map<string, number>();
+    recentTracks.forEach(item => {
+      // Use the explicit played_at from API
+      const playedAtDate = new Date(item.played_at);
+      if (isNaN(playedAtDate.getTime())) return; // skip invalid
+      if (playedAtDate < windowStart) return; // outside 30-day window
+
+      const key = playedAtDate.toISOString().slice(0, 10); // YYYY-MM-DD
+      const minutes = (item.track?.duration_ms || 0) / 60000;
+      perDay.set(key, (perDay.get(key) || 0) + minutes);
+    });
+
+    const daysCovered = perDay.size;
+    if (daysCovered > 0 && daysCovered < WINDOW_DAYS) {
+      const avgPerDay = minutesThis / daysCovered;
+      const scaledMinutes = avgPerDay * WINDOW_DAYS;
+      // Blend original & scaled to avoid dramatic jumps when sample small
+      const scaleFactor = WINDOW_DAYS / daysCovered;
+      const cappedFactor = Math.min(scaleFactor, 10);
+      minutesThis = minutesThis * cappedFactor;
+      // but keep it no more than scaledMinutes to avoid overshoot due to cap logic
+      minutesThis = Math.min(minutesThis, scaledMinutes);
+    }
+  }
+
+  // Recalculate percentage change after scaling
   let percentageChange = '–';
   if (minutesPrev > 0) {
     const delta = ((minutesThis - minutesPrev) / minutesPrev) * 100;

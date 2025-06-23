@@ -276,7 +276,7 @@ export default function HomeLayout({ onTabClick, onInsightShare, scrollContainer
 
           {/* Welcome Header */}
           {connected && user && (
-            <div className="mt-6 mb-8">
+            <div className="mt-3 mb-8">
               <h1 className="text-3xl font-bold text-white">
                 Welcome, <span className="text-green-400">{user.display_name}</span>
               </h1>
@@ -291,26 +291,28 @@ export default function HomeLayout({ onTabClick, onInsightShare, scrollContainer
             </div>
           )}
 
-          {/* Main Content: Stats, Top Tracks/Artists, Recent Plays */}
+          {/* Recently Played Section */}
+          {connected && (
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-white font-semibold text-lg">Recently Played</h3>
+                <button 
+                  onClick={() => onTabClick?.('explore', { section: 'recent' })}
+                  className="text-[#1AA34A] text-sm font-medium hover:text-[#16803C] transition-colors"
+                >
+                  View All
+                </button>
+              </div>
+              <RecentPlays limit={1} />
+            </div>
+          )}
+
+          {/* Main Content: Stats, Top Tracks/Artists */}
           {connected && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Last 4 Weeks Stats */}
-              <div className="lg:col-span-1 space-y-8">
+              <div className="lg:col-span-1">
                 <LastFourWeeksSection />
-
-                {/* Recently Played Section - Single Track */}
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-white font-semibold text-lg">Recently Played</h3>
-                    <button 
-                      onClick={() => onTabClick?.('explore', { section: 'recent' })}
-                      className="text-[#1AA34A] text-sm font-medium hover:text-[#16803C] transition-colors"
-                    >
-                      View All
-                    </button>
-                  </div>
-                  <RecentPlays limit={1} />
-                </div>
               </div>
 
               {/* Top Tracks Section */}

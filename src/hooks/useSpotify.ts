@@ -331,15 +331,15 @@ export function useSpotify() {
 
   // Fetch recent tracks
   const getRecentTracks = useCallback(async (): Promise<RecentlyPlayedTrack[]> => {
-    console.log('🎵 getRecentTracks: Starting fetch');
-    
+    console.log('🎵 getRecentTracks: Fetching recent tracks with pagination');
+
     if (!status.connected) {
       console.log('❌ getRecentTracks: Not connected');
       throw new Error('Spotify not connected');
     }
 
     const cacheKey = 'recent-tracks';
-    
+
     // Check cache first
     if (isCacheValid(cacheKey)) {
       const cachedData = getCacheData(cacheKey);
@@ -366,45 +366,66 @@ export function useSpotify() {
     globalDataCache.isLoading[cacheKey] = true;
 
     try {
-      console.log('📡 getRecentTracks: Making API request');
-      const response = await fetch('/api/spotify/recent-tracks');
-      
-      console.log('📡 getRecentTracks: Response received', {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('❌ getRecentTracks: API error', errorData);
-        
-        // Handle specific error cases
-        if (response.status === 403 && errorData.shouldReconnect) {
-          // Clear current connection status to force reconnection
-          setStatus({
-            connected: false,
-            user: null,
-            loading: false,
-            error: 'Please reconnect your Spotify account to grant updated permissions.'
-          });
+      const FOUR_WEEKS_MS = 28 * 24 * 60 * 60 * 1000;
+      const nowMs = Date.now();
+      let before: number | null = null;
+      let allTracks: any[] = [];
+
+      // Loop to gather tracks covering last 4 weeks (or until API returns < 50 items)
+      // Spotify lets us paginate using the 'before' timestamp. We keep requesting pages
+      // until the oldest track we fetched is older than 4 weeks or the API returns < 50 items.
+      for (let page = 0; page < 25; page++) { // hard-limit to 25 pages (~1250 plays)
+        const requestUrl: string = before
+          ? `/api/spotify/recent-tracks?before=${before}`
+          : '/api/spotify/recent-tracks';
+
+        console.log('📡 getRecentTracks: Requesting page', page + 1, requestUrl);
+
+        const response: Response = await fetch(requestUrl);
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('❌ getRecentTracks: API error', errorData);
+          // Handle 403 permission error same as before
+          if (response.status === 403 && errorData.shouldReconnect) {
+            setStatus({
+              connected: false,
+              user: null,
+              loading: false,
+              error: 'Please reconnect your Spotify account to grant updated permissions.'
+            });
+          }
+          throw new Error(errorData.error || 'Failed to fetch recent tracks');
         }
-        
-        throw new Error(errorData.error || 'Failed to fetch recent tracks');
+
+        const data: { tracks?: any[]; items?: any[] } = await response.json();
+        const pageTracks: any[] = data.tracks || data.items || [];
+
+        if (!Array.isArray(pageTracks) || pageTracks.length === 0) {
+          break; // no more data
+        }
+
+        allTracks = allTracks.concat(pageTracks);
+
+        // Prepare next 'before' timestamp (subtract 1 ms to avoid duplicate track)
+        const oldest: any = pageTracks[pageTracks.length - 1];
+        before = new Date(oldest.played_at).getTime() - 1;
+
+        // Stop if oldest track is beyond 4 weeks
+        if (nowMs - before > FOUR_WEEKS_MS) {
+          break;
+        }
+
+        // Stop if less than 50 items (Spotify returns < limit when no more)
+        if (pageTracks.length < 50) {
+          break;
+        }
       }
 
-      const data = await response.json();
+      console.log('📡 getRecentTracks: Total tracks fetched', allTracks.length);
 
-      // API returns {tracks: [...], total: N} structure
-      const tracksData = data.tracks || data.items || [];
-      
-      if (!tracksData || tracksData.length === 0) {
-        console.warn('⚠️ useSpotify: No recent tracks found in API response.');
-        return [];
-      }
-
-      // Normalize track data from the API response
-      const tracks: RecentlyPlayedTrack[] = tracksData.map((item: any) => ({
+      // Normalize track data (reuse existing mapping logic)
+      const tracks: RecentlyPlayedTrack[] = allTracks.map((item: any) => ({
         played_at: item.played_at,
         track: {
           id: item.track.id,
@@ -437,7 +458,6 @@ export function useSpotify() {
 
       // Cache the data
       setCacheData(cacheKey, tracks);
-      
       return tracks;
     } finally {
       globalDataCache.isLoading[cacheKey] = false;

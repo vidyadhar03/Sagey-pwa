@@ -113,7 +113,7 @@ export default function LastFourWeeksSection() {
     : Math.round(((data.minutesThis - data.minutesPrev) / data.minutesPrev) * 100);
 
   const subtitle = delta === null
-    ? "—"
+    ? null
     : `${delta > 0 ? "+" : ""}${delta}% vs previous 4 weeks`;
 
   // Don't render if not connected
@@ -123,7 +123,7 @@ export default function LastFourWeeksSection() {
 
   return (
     <div>
-      <h3 className="text-white font-semibold text-lg mb-4">Last 4 weeks</h3>
+      <h3 className="text-white font-semibold text-lg mb-4">30-Day Recap</h3>
       
       <div className="space-y-4">
         {/* Listening Time Card - Full Width */}
@@ -135,7 +135,7 @@ export default function LastFourWeeksSection() {
               </svg>
             </div>
             <div>
-              <p className="text-white font-semibold text-sm">Listening time</p>
+              <p className="text-white font-semibold text-sm">Tune time</p>
             </div>
           </div>
           
@@ -151,14 +151,15 @@ export default function LastFourWeeksSection() {
               <div className="text-[#1DB954] text-2xl font-bold mb-1">
                 {formatMinutes(data.minutesThis)}
               </div>
-              <p className={`text-xs ${
-                delta === null ? 'text-zinc-400' :
-                delta < 0 ? 'text-red-400' :
-                delta > 0 ? 'text-green-400' :
-                'text-zinc-400'
-              }`}>
-                {subtitle}
-              </p>
+              {subtitle && (
+                <p className={`text-xs ${
+                  (delta ?? 0) < 0 ? 'text-red-400' :
+                  (delta ?? 0) > 0 ? 'text-green-400' :
+                  'text-zinc-400'
+                }`}>
+                  {subtitle}
+                </p>
+              )}
             </>
           )}
         </div>
