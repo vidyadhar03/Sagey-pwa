@@ -1118,17 +1118,15 @@ function InsightShareCard({
             data.type === 'music-radar' 
               ? 'p-2 lg:p-3 mb-2' 
               : 'p-3 lg:p-4 mb-3 lg:mb-4'
-          }`}>
+          } pb-8`}>
             <p className="text-white/90 leading-relaxed text-xs lg:text-sm line-clamp-3">{data.aiInsight}</p>
               </div>
             )}
 
-        {/* Tiny Footer - Bottom Right */}
-        <div className="absolute bottom-2 right-2 lg:bottom-3 lg:right-3">
-          <div className="text-xs text-white/50 font-medium">
-            Vynce
-          </div>
-        </div>
+        {/* Branding */}
+        <span className="absolute bottom-1 left-3 text-sm lg:text-base text-white/90 font-mono leading-none select-none pointer-events-none z-20 tracking-tight drop-shadow-lg" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>
+          Vynce - Your music, analyzed
+        </span>
       </div>
     </div>
   );
@@ -1666,7 +1664,7 @@ function TopAspectShareCard({
         </div>
 
         {/* Items List - Expanded */}
-        <div className="flex-1 space-y-3 lg:space-y-4 overflow-hidden pb-8">
+        <div className="flex-1 space-y-3 lg:space-y-4 overflow-hidden pb-12">
           {data.items.slice(0, 5).map((item, index) => (
             <div key={index} className="flex items-center gap-3 lg:gap-4 bg-white/10 rounded-lg lg:rounded-xl p-3 lg:p-4 backdrop-blur-sm">
               <span className="text-white/60 font-bold text-base lg:text-xl w-6 lg:w-8">#{index + 1}</span>
@@ -1692,12 +1690,10 @@ function TopAspectShareCard({
           ))}
         </div>
 
-        {/* Tiny Footer - Bottom Left */}
-        <div className="absolute bottom-2 left-2 lg:bottom-4 lg:left-4">
-          <div className="text-xs lg:text-sm text-white/50 font-medium">
-            Vynce - your musical DNA
-          </div>
-        </div>
+        {/* Branding */}
+        <span className="absolute bottom-1 left-3 text-sm lg:text-base text-white/90 font-mono leading-none select-none pointer-events-none z-20 tracking-tight drop-shadow-lg" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>
+          Vynce - Your music, analyzed
+        </span>
       </div>
     </div>
   );
