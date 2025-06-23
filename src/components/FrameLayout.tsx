@@ -75,7 +75,13 @@ const DynamicTopBar = ({
       <div className="w-full max-w-7xl mx-auto px-4 flex items-center justify-between">
         {/* Left side - Title */}
         <div className="flex items-center">
-          <h1 className="text-xl font-medium text-white">{title}</h1>
+          <h1 className={`text-xl text-white ${
+            activeTab === 'home' 
+              ? 'font-medium tracking-widest' 
+              : 'font-semibold tracking-wide'
+          }`} style={activeTab === 'home' ? { fontFamily: 'system-ui, -apple-system, "Segoe UI", sans-serif' } : {}}>
+            {title}
+          </h1>
         </div>
 
         {/* Right side - Profile icon or Explore controls */}
@@ -126,9 +132,13 @@ const DynamicTopBar = ({
           )}
           
           {showProfile && (
-            <button className="p-2" aria-label="Profile" onClick={onProfileClick}>
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
+            <button 
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors" 
+              aria-label="Profile" 
+              onClick={onProfileClick}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-7 h-7 text-white">
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
               </svg>
             </button>
           )}
@@ -254,10 +264,10 @@ export default function FrameLayout({}: FrameLayoutProps) {
 
   return (
     <div className="w-full h-screen flex flex-col bg-[#0D0D0F] text-white">
-      {/* Dynamic Top Bar - Only show when Spotify is connected */}
-      {connected && <DynamicTopBar activeTab={activeTab} onProfileClick={handleProfileClick} exploreTopBarData={exploreTopBarData} onInsightShare={openInsightShare} />}
+      {/* Dynamic Top Bar - Always show for consistent experience */}
+      <DynamicTopBar activeTab={activeTab} onProfileClick={handleProfileClick} exploreTopBarData={exploreTopBarData} onInsightShare={openInsightShare} />
       
-      <main className={`flex-1 relative overflow-hidden ${connected ? 'pt-[60px]' : ''}`}>
+      <main className="flex-1 relative overflow-hidden">
         {/* Render the active tab component without forced remounting */}
         {renderActiveTab()}
       </main>

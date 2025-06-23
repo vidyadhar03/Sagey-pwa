@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import TopAppBar from '../TopAppBar';
+
 import { useSpotify } from '../../hooks/useSpotify';
 import { getTrackImage } from '@/utils';
 import Loader from '../Loader';
@@ -155,12 +155,6 @@ export default function ExploreLayout() {
   if (!connected || !user) {
     return (
       <div className="h-full overflow-y-auto bg-gradient-to-br from-[#0A0A0A] via-[#1A1A1A] to-[#0A0A0A]">
-        <TopAppBar
-          title="Explore"
-          showLeftIcon={false}
-          showRightIcon={false}
-          titleAlign="left"
-        />
         <div className="pt-[60px] h-full flex items-center justify-center p-6">
           <div className="text-center">
             <div className="w-20 h-20 rounded-full bg-gradient-to-r from-[#1DB954] to-[#1ed760] flex items-center justify-center mx-auto mb-6">
@@ -180,12 +174,6 @@ export default function ExploreLayout() {
 
   return (
     <div className="h-full overflow-y-auto bg-gradient-to-br from-[#0A0A0A] via-[#1A1A1A] to-[#0A0A0A]">
-      <TopAppBar
-        title="Explore"
-        showLeftIcon={false}
-        showRightIcon={false}
-        titleAlign="left"
-      />
       <div className="pt-[60px] p-6 space-y-6">
         {/* Header */}
         <motion.div

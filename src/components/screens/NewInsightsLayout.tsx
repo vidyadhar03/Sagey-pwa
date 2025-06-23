@@ -3,7 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import InsightsGrid from '../insights/InsightsGrid';
-import TopAppBar from '../TopAppBar';
+
 import { useSpotify } from '../../hooks/useSpotify';
 
 interface NewInsightsLayoutProps {
@@ -19,15 +19,7 @@ export default function NewInsightsLayout({ scrollContainerRef }: NewInsightsLay
       ref={scrollContainerRef}
       className="w-full h-full overflow-y-auto"
     >
-      {/* TopAppBar - Only show when Spotify is not connected */}
-      {!connected && (
-        <TopAppBar 
-          title="Insights"
-          titleAlign="left"
-        />
-      )}
-      
-      <div className={`max-w-7xl mx-auto px-4 pb-[120px] ${!connected ? 'pt-4' : ''}`}>
+      <div className="max-w-7xl mx-auto px-4 pb-[120px] pt-16">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

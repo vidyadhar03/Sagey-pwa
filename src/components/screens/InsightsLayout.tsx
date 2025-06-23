@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import TopAppBar from '../TopAppBar';
+
 import { useSpotify } from '../../hooks/useSpotify';
 
 export default function InsightsLayout() {
@@ -354,16 +354,7 @@ export default function InsightsLayout() {
 
   return (
     <div className="w-full h-full overflow-y-auto">
-      {/* TopAppBar - Only show when Spotify is not connected */}
-      {!connected && (
-        <TopAppBar 
-          title="Music Insights"
-          showRightIcon={true}
-          titleAlign="left"
-        />
-      )}
-      
-      <div className={`max-w-7xl mx-auto px-4 pb-[120px] ${!connected ? 'pt-4' : ''}`}>
+      <div className="max-w-7xl mx-auto px-4 pb-[120px] pt-16">
         {/* Tab Navigation */}
         <div className="mt-4 mb-6">
           <div className="flex bg-[#2A2A2D] rounded-2xl p-1">

@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import UserProfile from '../UserProfile';
 import SpotifyDebugPanel from '../SpotifyDebugPanel';
-import TopAppBar from '../TopAppBar';
+
 import HomeMusicRadar from '../../features/radar/HomeMusicRadar';
 import RecentPlays from '../RecentPlays';
 import LastFourWeeksSection from '../LastFourWeeksSection';
@@ -220,15 +220,7 @@ export default function HomeLayout({ onTabClick, onInsightShare, scrollContainer
       ref={scrollContainerRef}
       className="w-full h-full overflow-y-auto bg-gradient-to-br from-[#0A0A0A] via-[#1A1A1A] to-[#0A0A0A]"
     >
-      {/* TopAppBar - Only show when Spotify is not connected */}
-      {!connected && (
-        <TopAppBar 
-          title="Vynce"
-          showRightIcon={true}
-          onRightClick={handleAccountClick}
-          titleAlign="left"
-        />
-      )}
+
       
       {/* Show loading screen while checking connection status */}
       {loading ? (
@@ -236,7 +228,7 @@ export default function HomeLayout({ onTabClick, onInsightShare, scrollContainer
           <Loader size={64} />
         </div>
       ) : (
-        <div className={`max-w-7xl mx-auto px-4 pb-[120px] ${!connected ? 'pt-16' : 'pt-6'}`}>
+        <div className="max-w-7xl mx-auto px-4 pb-[120px] pt-16">
           {/* Spotify Error Alert */}
           {displayError && (
             <motion.div 
@@ -538,8 +530,8 @@ export default function HomeLayout({ onTabClick, onInsightShare, scrollContainer
                 className="flex-1 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-[#1ed760]/30 transition-all"
               >
                 <div className="flex items-center justify-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-[#1ed760]">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-[#1ed760]">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                   </svg>
                   <span className="text-white font-medium text-sm">Analyse me</span>
                 </div>
