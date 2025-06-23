@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
-import { X, Instagram, Download, Palette, Sparkles } from 'lucide-react';
+import { X, Instagram, Palette, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export type ShareDataType = 'insights' | 'top-aspects';
 
@@ -40,7 +40,16 @@ export interface GlobalShareProps {
   dataType: ShareDataType;
   insightData?: InsightShareData[];
   topAspectData?: TopAspectShareData[];
+  onTimeRangeChange?: (timeRange: TimeRange) => Promise<TopAspectShareData[]>;
 }
+
+export type TimeRange = 'short_term' | 'medium_term' | 'long_term';
+
+export const timeRangeLabels = {
+  'short_term': '1 Month',
+  'medium_term': '6 Months', 
+  'long_term': 'All Time'
+};
 
 const colorThemes = [
   {
@@ -85,17 +94,35 @@ export default function GlobalShareInterface({
   onClose, 
   dataType, 
   insightData = [], 
-  topAspectData = [] 
+  topAspectData = [],
+  onTimeRangeChange
 }: GlobalShareProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedTheme, setSelectedTheme] = useState(0);
   const [includeAIInsight, setIncludeAIInsight] = useState(true);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>('medium_term');
+  const [dynamicTopAspectData, setDynamicTopAspectData] = useState<TopAspectShareData[]>([]);
+  const [isLoadingTimeRange, setIsLoadingTimeRange] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const currentData = dataType === 'insights' ? insightData : topAspectData;
+  // Use dynamic data for top aspects when time range changes
+  const currentData = dataType === 'insights' 
+    ? insightData 
+    : (dataType === 'top-aspects' && dynamicTopAspectData.length > 0) 
+      ? dynamicTopAspectData 
+      : topAspectData;
   const totalCards = currentData.length;
+  
+  // Reset current index when data changes to prevent out-of-bounds
+  useEffect(() => {
+    if (currentIndex >= totalCards && totalCards > 0) {
+      setCurrentIndex(0);
+    }
+  }, [currentIndex, totalCards]);
+  
+
 
   // Device detection
   const [deviceType, setDeviceType] = useState<'ios' | 'android' | 'desktop'>('desktop');
@@ -109,12 +136,96 @@ export default function GlobalShareInterface({
     }
   }, []);
 
+  // Handle time range changes for top aspects
+  // Memoize the stable reference to prevent infinite re-renders
+  const stableOnTimeRangeChange = useCallback(onTimeRangeChange || (() => Promise.resolve([])), [onTimeRangeChange]);
+
+  useEffect(() => {
+    let isMounted = true;
+    
+    const fetchDataForTimeRange = async () => {
+      if (dataType === 'top-aspects' && stableOnTimeRangeChange && isOpen) {
+        setIsLoadingTimeRange(true);
+        // Clear existing data immediately to show loading state
+        setDynamicTopAspectData([]);
+        try {
+          const newData = await stableOnTimeRangeChange(selectedTimeRange);
+          if (isMounted) {
+            setDynamicTopAspectData(newData);
+            // Keep user on the same card when time range changes
+            // Only reset to first card if current index is out of bounds
+            if (currentIndex >= newData.length && newData.length > 0) {
+              setCurrentIndex(0);
+            }
+          }
+        } catch (error) {
+          console.error('Failed to fetch data for time range:', error);
+          // Keep existing data if fetch fails
+        } finally {
+          if (isMounted) {
+            setIsLoadingTimeRange(false);
+          }
+        }
+      }
+    };
+
+    // Only fetch if we're not already loading and interface is open
+    if (dataType === 'top-aspects' && isOpen) {
+      fetchDataForTimeRange();
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedTimeRange, dataType, isOpen, stableOnTimeRangeChange]);
+
+  // Note: Initial data fetching is now handled by the main useEffect above
+
+  // Reset dynamic data when interface closes
+  useEffect(() => {
+    if (!isOpen) {
+      setDynamicTopAspectData([]);
+      setCurrentIndex(0);
+    }
+  }, [isOpen]);
+
+  // Handle keyboard navigation
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (!isOpen || totalCards <= 1) return;
+      
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        goToPrevious();
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        goToNext();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyPress);
+    return () => document.removeEventListener('keydown', handleKeyPress);
+  }, [isOpen, totalCards, currentIndex]);
+
   // Handle swipe gestures
   const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     const threshold = 100;
     if (info.offset.x > threshold && currentIndex > 0) {
       setCurrentIndex(currentIndex - 1);
     } else if (info.offset.x < -threshold && currentIndex < totalCards - 1) {
+      setCurrentIndex(currentIndex + 1);
+    }
+  };
+
+  // Navigation functions
+  const goToPrevious = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex(currentIndex - 1);
+    }
+  };
+
+  const goToNext = () => {
+    if (currentIndex < totalCards - 1) {
       setCurrentIndex(currentIndex + 1);
     }
   };
@@ -188,6 +299,25 @@ export default function GlobalShareInterface({
     URL.revokeObjectURL(url);
   };
 
+  // Save to device
+  const saveToDevice = async () => {
+    const blob = await generateShareableImage();
+    if (!blob) return;
+
+    try {
+      if (deviceType === 'ios' || deviceType === 'android') {
+        // For mobile devices, try to trigger download
+        downloadImage(blob);
+      } else {
+        // Desktop: download
+        downloadImage(blob);
+      }
+    } catch (error) {
+      console.error('Failed to save image:', error);
+      downloadImage(blob);
+    }
+  };
+
   // Native share
   const nativeShare = async () => {
     const blob = await generateShareableImage();
@@ -219,20 +349,20 @@ export default function GlobalShareInterface({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm"
+        className="fixed inset-0 z-50 bg-black"
         onClick={onClose}
       >
         <motion.div
-          initial={{ y: '100%' }}
-          animate={{ y: 0 }}
-          exit={{ y: '100%' }}
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.9, opacity: 0 }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="absolute bottom-0 left-0 right-0 bg-zinc-900 rounded-t-3xl max-h-[90vh] overflow-hidden"
+          className="h-full w-full flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-white/10">
-            <h2 className="text-xl font-semibold text-white">
+          {/* Header - Compact */}
+          <div className="flex items-center justify-between p-4 bg-zinc-900/90 backdrop-blur-sm border-b border-white/10">
+            <h2 className="text-lg font-semibold text-white">
               Share Your {dataType === 'insights' ? 'Music Insights' : 'Top Music'}
             </h2>
             <button
@@ -243,94 +373,178 @@ export default function GlobalShareInterface({
             </button>
           </div>
 
-          <div className="flex flex-col h-full max-h-[calc(90vh-80px)]">
-            {/* Card Preview Area */}
-            <div className="flex-1 p-6 overflow-hidden">
-              <div 
-                ref={containerRef}
-                className="relative h-full flex items-center justify-center"
-              >
-                {/* Swipeable Card Container */}
-                <motion.div
-                  ref={cardRef}
-                  drag="x"
-                  dragConstraints={{ left: 0, right: 0 }}
-                  dragElastic={0.2}
-                  onDragEnd={handleDragEnd}
-                  className="w-full max-w-sm mx-auto cursor-grab active:cursor-grabbing"
-                  whileDrag={{ scale: 0.95 }}
-                >
-                  {/* Render current card based on type */}
-                  {dataType === 'insights' ? (
-                    <InsightShareCard
-                      data={insightData[currentIndex]}
-                      theme={colorThemes[selectedTheme]}
-                      includeAIInsight={includeAIInsight}
-                    />
-                  ) : (
-                    <TopAspectShareCard
-                      data={topAspectData[currentIndex]}
-                      theme={colorThemes[selectedTheme]}
-                    />
+          {/* Main Content Area - Optimized Layout */}
+          <div className="flex-1 flex flex-col lg:flex-row min-h-0">
+            {/* Card Display Area */}
+            <div className="flex-1 flex items-center justify-center p-3 lg:p-4 bg-gradient-to-br from-zinc-900 to-black">
+              {totalCards > 0 ? (
+                <div className="relative w-full max-w-sm lg:max-w-md mx-auto px-6 lg:px-8">
+                  {/* Navigation Arrows */}
+                  {totalCards > 1 && (
+                    <>
+                      <button
+                        onClick={goToPrevious}
+                        disabled={currentIndex === 0}
+                        className="absolute -left-2 lg:-left-4 top-1/2 -translate-y-1/2 z-20 p-3 lg:p-4 rounded-full bg-black/80 backdrop-blur-md shadow-2xl disabled:opacity-30 disabled:cursor-not-allowed hover:bg-black/90 hover:scale-110 active:scale-95 transition-all duration-200 border border-white/20"
+                        style={{ 
+                          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1)' 
+                        }}
+                      >
+                        <ChevronLeft size={24} className="text-white lg:w-7 lg:h-7" />
+                      </button>
+                      <button
+                        onClick={goToNext}
+                        disabled={currentIndex === totalCards - 1}
+                        className="absolute -right-2 lg:-right-4 top-1/2 -translate-y-1/2 z-20 p-3 lg:p-4 rounded-full bg-black/80 backdrop-blur-md shadow-2xl disabled:opacity-30 disabled:cursor-not-allowed hover:bg-black/90 hover:scale-110 active:scale-95 transition-all duration-200 border border-white/20"
+                        style={{ 
+                          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1)' 
+                        }}
+                      >
+                        <ChevronRight size={24} className="text-white lg:w-7 lg:h-7" />
+                      </button>
+                    </>
                   )}
-                </motion.div>
 
-                {/* Card Navigation Dots */}
-                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-                  {Array.from({ length: totalCards }).map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setCurrentIndex(index)}
-                      className={`w-2 h-2 rounded-full transition-all ${
-                        index === currentIndex 
-                          ? 'bg-white scale-125' 
-                          : 'bg-white/40 hover:bg-white/60'
-                      }`}
-                    />
-                  ))}
+                  {/* Card */}
+                  <motion.div
+                    key={`${dataType}-${currentIndex}-${selectedTimeRange}-${currentData.length}`}
+                    drag="x"
+                    dragConstraints={{ left: 0, right: 0 }}
+                    dragElastic={0.1}
+                    onDragEnd={handleDragEnd}
+                    whileDrag={{ scale: 0.95 }}
+                    className="w-full aspect-[9/16] max-h-[60vh] lg:max-h-[70vh]"
+                  >
+                    <div
+                      ref={cardRef}
+                      className="w-full h-full rounded-2xl lg:rounded-3xl overflow-hidden shadow-2xl"
+                      style={{
+                        background: `linear-gradient(135deg, ${colorThemes[selectedTheme].primary}, ${colorThemes[selectedTheme].secondary})`
+                      }}
+                    >
+                      {dataType === 'insights' ? (
+                        <InsightShareCard 
+                          data={currentData[currentIndex] as InsightShareData} 
+                          theme={colorThemes[selectedTheme]} 
+                          includeAIInsight={includeAIInsight}
+                        />
+                      ) : (
+                        <TopAspectShareCard 
+                          data={currentData[currentIndex] as TopAspectShareData} 
+                          theme={colorThemes[selectedTheme]}
+                          timeRange={selectedTimeRange}
+                        />
+                      )}
+                    </div>
+                  </motion.div>
+
+                  {/* Card Indicator */}
+                  {totalCards > 1 && (
+                    <div className="flex justify-center mt-4 lg:mt-6 gap-2 lg:gap-3">
+                      {Array.from({ length: totalCards }).map((_, index) => (
+                        <button
+                          key={index}
+                          onClick={() => setCurrentIndex(index)}
+                          className={`w-3 h-3 lg:w-4 lg:h-4 rounded-full transition-all duration-200 border-2 ${
+                            index === currentIndex 
+                              ? 'bg-white border-white scale-125 shadow-lg' 
+                              : 'bg-white/20 border-white/40 hover:bg-white/50 hover:border-white/60 hover:scale-110'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </div>
+              ) : (
+                <div className="text-center text-white/60">
+                  <p>No data available for sharing</p>
+                </div>
+              )}
             </div>
 
-            {/* Edit Options */}
-            <div className="border-t border-white/10 p-6 space-y-4">
-              {/* AI Insight Toggle (only for insights) */}
-              {dataType === 'insights' && (
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Sparkles size={16} className="text-purple-400" />
-                    <span className="text-white text-sm">Include AI Insight</span>
-                  </div>
+            {/* Controls Panel - Compact */}
+            <div className="w-full lg:w-72 bg-zinc-900 border-t lg:border-t-0 lg:border-l border-white/10 p-3 lg:p-4 space-y-3 lg:space-y-4 overflow-y-auto max-h-[35vh] lg:max-h-none">
+              {/* Share Actions - Top Priority */}
+              <div>
+                <div className="grid grid-cols-2 gap-2">
+                  {/* Instagram Stories */}
                   <button
-                    onClick={() => setIncludeAIInsight(!includeAIInsight)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      includeAIInsight ? 'bg-green-600' : 'bg-gray-600'
-                    }`}
+                    onClick={shareToInstagram}
+                    disabled={isGeneratingImage}
+                    className="flex items-center justify-center gap-2 p-2 lg:p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg text-white text-xs lg:text-sm font-medium hover:from-purple-600 hover:to-pink-600 transition-all disabled:opacity-50"
                   >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        includeAIInsight ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
+                    <Instagram size={16} className="lg:w-4 lg:h-4" />
+                    Story
                   </button>
+
+                  {/* Native Share */}
+                  <button
+                    onClick={nativeShare}
+                    disabled={isGeneratingImage}
+                    className="flex items-center justify-center gap-2 p-2 lg:p-3 bg-blue-600 rounded-lg text-white text-xs lg:text-sm font-medium hover:bg-blue-700 transition-all disabled:opacity-50"
+                  >
+                    <Sparkles size={16} className="lg:w-4 lg:h-4" />
+                    Share
+                  </button>
+                </div>
+              </div>
+
+              {/* Time Range Selector - Only for top aspects */}
+              {dataType === 'top-aspects' && (
+                <div>
+                  <label className="block text-sm font-medium text-white mb-2">Time Period</label>
+                  <div className="grid grid-cols-3 lg:grid-cols-1 gap-2">
+                    {Object.entries(timeRangeLabels).map(([value, label]) => (
+                      <button
+                        key={value}
+                        onClick={() => setSelectedTimeRange(value as TimeRange)}
+                        disabled={isLoadingTimeRange}
+                        className={`p-2 rounded-lg text-xs font-medium transition-all ${
+                          selectedTimeRange === value
+                            ? 'bg-white text-black'
+                            : 'bg-white/10 text-white hover:bg-white/20'
+                        } disabled:opacity-50`}
+                      >
+                        {isLoadingTimeRange && selectedTimeRange === value ? 'Loading...' : label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* AI Insight Toggle - Only for insights */}
+              {dataType === 'insights' && (
+                <div>
+                  <label className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-white">AI Insight</span>
+                    <button
+                      onClick={() => setIncludeAIInsight(!includeAIInsight)}
+                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                        includeAIInsight ? 'bg-white' : 'bg-white/20'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-3 w-3 transform rounded-full bg-black transition-transform ${
+                          includeAIInsight ? 'translate-x-5' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  </label>
                 </div>
               )}
 
               {/* Color Theme Selector */}
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Palette size={16} className="text-blue-400" />
-                  <span className="text-white text-sm">Color Theme</span>
-                </div>
-                <div className="flex space-x-2 overflow-x-auto pb-2">
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">Color</label>
+                <div className="flex flex-wrap gap-2 justify-center">
                   {colorThemes.map((theme, index) => (
                     <button
                       key={index}
                       onClick={() => setSelectedTheme(index)}
-                      className={`flex-shrink-0 w-12 h-12 rounded-xl border-2 transition-all ${
-                        selectedTheme === index 
-                          ? 'border-white scale-110' 
-                          : 'border-white/20 hover:border-white/40'
+                      className={`w-8 h-8 lg:w-10 lg:h-10 rounded-full transition-all duration-200 border-3 ${
+                        selectedTheme === index
+                          ? 'border-white scale-110 shadow-lg'
+                          : 'border-white/30 hover:border-white/60 hover:scale-105'
                       }`}
                       style={{
                         background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})`
@@ -340,27 +554,6 @@ export default function GlobalShareInterface({
                   ))}
                 </div>
               </div>
-
-              {/* Action Buttons */}
-              <div className="flex space-x-3">
-                <button
-                  onClick={shareToInstagram}
-                  disabled={isGeneratingImage}
-                  className="flex-1 flex items-center justify-center space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-3 px-4 rounded-xl transition-all disabled:opacity-50"
-                >
-                  <Instagram size={18} />
-                  <span>Instagram Story</span>
-                </button>
-                
-                <button
-                  onClick={nativeShare}
-                  disabled={isGeneratingImage}
-                  className="flex-1 flex items-center justify-center space-x-2 bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-xl transition-all disabled:opacity-50"
-                >
-                  <Download size={18} />
-                  <span>Share</span>
-                </button>
-              </div>
             </div>
           </div>
         </motion.div>
@@ -369,7 +562,7 @@ export default function GlobalShareInterface({
   );
 }
 
-// Individual card components
+// Individual card components remain the same but with better styling
 function InsightShareCard({ 
   data, 
   theme, 
@@ -382,53 +575,41 @@ function InsightShareCard({
   if (!data) return null;
 
   return (
-    <div 
-      className="w-full aspect-[9/16] rounded-3xl p-8 text-white relative overflow-hidden"
-      style={{ backgroundColor: theme.bg }}
-    >
-      {/* Background Gradient */}
-      <div 
-        className="absolute inset-0 opacity-20"
-        style={{
-          background: `radial-gradient(circle at 30% 20%, ${theme.primary}40, transparent 50%), radial-gradient(circle at 70% 80%, ${theme.secondary}30, transparent 50%)`
-        }}
-      />
-      
+    <div className="w-full h-full p-4 lg:p-8 text-white relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-6 lg:top-10 left-6 lg:left-10 w-20 lg:w-32 h-20 lg:h-32 rounded-full border-2 border-white"></div>
+        <div className="absolute bottom-6 lg:bottom-10 right-6 lg:right-10 w-16 lg:w-24 h-16 lg:h-24 rounded-full border border-white"></div>
+        <div className="absolute top-1/2 left-1/4 w-12 lg:w-16 h-12 lg:h-16 rounded-full border border-white"></div>
+      </div>
+
       {/* Content */}
       <div className="relative z-10 h-full flex flex-col">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h3 className="text-2xl font-bold mb-2">{data.title}</h3>
-          <div className="text-4xl font-bold" style={{ color: theme.primary }}>
-            {data.mainValue}
+        <div className="text-center mb-4 lg:mb-8">
+          <div className="w-12 lg:w-16 h-12 lg:h-16 mx-auto mb-3 lg:mb-4 rounded-full bg-white/20 flex items-center justify-center">
+            <Sparkles size={24} className="lg:w-8 lg:h-8" />
           </div>
+          <h1 className="text-xl lg:text-2xl font-bold mb-2">{data.title}</h1>
+          <p className="text-white/80 text-sm lg:text-lg">{data.description}</p>
         </div>
 
-        {/* Visual Data (simplified representation) */}
-        <div className="flex-1 flex items-center justify-center mb-8">
-          {/* This would render different visuals based on data.type */}
-          <div 
-            className="w-48 h-48 rounded-full border-4 flex items-center justify-center"
-            style={{ borderColor: theme.primary }}
-          >
-            <span className="text-6xl">🎵</span>
+        {/* Main Value */}
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-4xl lg:text-6xl font-bold mb-3 lg:mb-4">{data.mainValue}</div>
+            {includeAIInsight && data.aiInsight && (
+              <div className="bg-white/10 rounded-xl lg:rounded-2xl p-4 lg:p-6 backdrop-blur-sm">
+                <p className="text-white/90 leading-relaxed text-sm lg:text-base">{data.aiInsight}</p>
+              </div>
+            )}
           </div>
         </div>
-
-        {/* AI Insight */}
-        {includeAIInsight && data.aiInsight && (
-          <div className="bg-white/10 rounded-2xl p-4 mb-6">
-            <p className="text-sm leading-relaxed">{data.aiInsight}</p>
-          </div>
-        )}
 
         {/* Footer */}
         <div className="text-center">
-          <p className="text-sm opacity-80 mb-2">{data.description}</p>
-          <div className="flex items-center justify-center space-x-2">
-            <span className="text-lg font-bold">Vynce</span>
-            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: theme.primary }} />
-          </div>
+          <div className="text-lg lg:text-xl font-semibold">Vynce</div>
+          <div className="text-white/60 text-sm lg:text-base">Your musical DNA</div>
         </div>
       </div>
     </div>
@@ -437,55 +618,53 @@ function InsightShareCard({
 
 function TopAspectShareCard({ 
   data, 
-  theme 
+  theme,
+  timeRange 
 }: { 
   data: TopAspectShareData; 
   theme: typeof colorThemes[0];
+  timeRange: TimeRange;
 }) {
   if (!data) return null;
 
   return (
-    <div 
-      className="w-full aspect-[9/16] rounded-3xl p-8 text-white relative overflow-hidden"
-      style={{ backgroundColor: theme.bg }}
-    >
-      {/* Background Gradient */}
-      <div 
-        className="absolute inset-0 opacity-20"
-        style={{
-          background: `radial-gradient(circle at 30% 20%, ${theme.primary}40, transparent 50%), radial-gradient(circle at 70% 80%, ${theme.secondary}30, transparent 50%)`
-        }}
-      />
-      
+    <div className="w-full h-full p-4 lg:p-8 text-white relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-6 lg:top-10 left-6 lg:left-10 w-20 lg:w-32 h-20 lg:h-32 rounded-full border-2 border-white"></div>
+        <div className="absolute bottom-6 lg:bottom-10 right-6 lg:right-10 w-16 lg:w-24 h-16 lg:h-24 rounded-full border border-white"></div>
+        <div className="absolute top-1/2 left-1/4 w-12 lg:w-16 h-12 lg:h-16 rounded-full border border-white"></div>
+      </div>
+
       {/* Content */}
       <div className="relative z-10 h-full flex flex-col">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h3 className="text-2xl font-bold mb-2">{data.title}</h3>
-          <p className="text-sm opacity-80">{data.period}</p>
+        <div className="text-center mb-4 lg:mb-6">
+          <h1 className="text-xl lg:text-2xl font-bold mb-2">{data.title}</h1>
+          <p className="text-white/80 text-sm lg:text-base">{data.period}</p>
         </div>
 
-        {/* Top Items List */}
-        <div className="flex-1 space-y-4 overflow-hidden">
+        {/* Items List */}
+        <div className="flex-1 space-y-2 lg:space-y-4 overflow-hidden">
           {data.items.slice(0, 5).map((item, index) => (
-            <div key={index} className="flex items-center space-x-4">
-              <div 
-                className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
-                style={{ backgroundColor: theme.primary }}
-              >
-                {index + 1}
-              </div>
+            <div key={index} className="flex items-center gap-3 lg:gap-4 bg-white/10 rounded-lg lg:rounded-xl p-2 lg:p-3 backdrop-blur-sm">
+              <span className="text-white/60 font-bold text-sm lg:text-lg w-6 lg:w-8">#{index + 1}</span>
               {item.image && (
                 <img 
                   src={item.image} 
                   alt={item.name}
-                  className="w-12 h-12 rounded-lg object-cover"
+                  className="w-8 lg:w-12 h-8 lg:h-12 rounded-md lg:rounded-lg object-cover"
                 />
               )}
               <div className="flex-1 min-w-0">
-                <p className="font-medium truncate">{item.name}</p>
+                <h4 className="text-white font-medium truncate text-sm lg:text-base">{item.name}</h4>
                 {item.artist && (
-                  <p className="text-sm opacity-70 truncate">{item.artist}</p>
+                  <p className="text-white/60 text-xs lg:text-sm truncate">{item.artist}</p>
+                )}
+                {data.type === 'top-genres' && item.popularity && (
+                  <p className="text-white/40 text-xs lg:text-sm">
+                    {item.popularity} artist{item.popularity !== 1 ? 's' : ''}
+                  </p>
                 )}
               </div>
             </div>
@@ -493,11 +672,9 @@ function TopAspectShareCard({
         </div>
 
         {/* Footer */}
-        <div className="text-center">
-          <div className="flex items-center justify-center space-x-2">
-            <span className="text-lg font-bold">Vynce</span>
-            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: theme.primary }} />
-          </div>
+        <div className="text-center mt-4 lg:mt-6">
+          <div className="text-lg lg:text-xl font-semibold">Vynce</div>
+          <div className="text-white/60 text-sm lg:text-base">Your musical DNA</div>
         </div>
       </div>
     </div>

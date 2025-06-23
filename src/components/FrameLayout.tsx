@@ -1,6 +1,6 @@
 "use client";
 
-import React, { ReactNode, useState } from 'react';
+import React, { ReactNode, useState, useCallback } from 'react';
 import BottomNav from './BottomNav';
 import HomeLayout from './screens/HomeLayout';
 import InsightsLayout from './screens/InsightsLayout';
@@ -164,7 +164,10 @@ export default function FrameLayout({}: FrameLayoutProps) {
     topAspectData, 
     openInsightShare, 
     openTopAspectShare, 
-    closeShare 
+    closeShare,
+    fetchDataForTimeRange,
+    prepareTopAspectDataForTimeRange,
+    fetchAndPrepareTopAspectData
   } = useGlobalShare();
   
   const handleTabClick = (tab: string, options?: { section?: string }) => {
@@ -188,19 +191,33 @@ export default function FrameLayout({}: FrameLayoutProps) {
     setShowUserProfile(false);
   };
 
+  // Memoize the time range change handler to prevent infinite re-renders
+  const handleTimeRangeChange = useCallback(async (timeRange: 'short_term' | 'medium_term' | 'long_term') => {
+    return await fetchAndPrepareTopAspectData(timeRange);
+  }, [fetchAndPrepareTopAspectData]);
+
   // Render components without keys to prevent unnecessary remounting
   // Components will handle their own state management and optimization
+  // Stable function reference to prevent infinite re-renders
+  const handleExploreTopBarUpdate = useCallback((data: {
+    title: string;
+    showViewToggle: boolean;
+    viewMode: 'list' | 'grid';
+    onViewModeToggle: () => void;
+    onShareClick: () => void;
+  }) => {
+    setExploreTopBarData({
+      ...data,
+      onShareClick: openTopAspectShare
+    });
+  }, [openTopAspectShare]);
+
   const renderActiveTab = () => {
     switch (activeTab) {
       case 'home':
-        return <HomeLayout onTabClick={handleTabClick} />;
+        return <HomeLayout onTabClick={handleTabClick} onInsightShare={openInsightShare} />;
       case 'explore':
-        return <SpotifyDataView initialSection={exploreOptions?.section} onUpdateTopBar={(data) => {
-          setExploreTopBarData({
-            ...data,
-            onShareClick: openTopAspectShare
-          });
-        }} />;
+        return <SpotifyDataView initialSection={exploreOptions?.section} onUpdateTopBar={handleExploreTopBarUpdate} />;
       case 'insights-plus':
         return <NewInsightsLayout />;
       default:
@@ -234,6 +251,7 @@ export default function FrameLayout({}: FrameLayoutProps) {
         dataType={shareDataType}
         insightData={insightData}
         topAspectData={topAspectData}
+        onTimeRangeChange={handleTimeRangeChange}
       />
     </div>
   );

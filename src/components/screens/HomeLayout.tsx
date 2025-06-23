@@ -16,9 +16,10 @@ import Loader from '../Loader';
 
 interface HomeLayoutProps {
   onTabClick?: (tab: string, options?: { section?: string }) => void;
+  onInsightShare?: () => void;
 }
 
-export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
+export default function HomeLayout({ onTabClick, onInsightShare }: HomeLayoutProps) {
   const { connected, user, loading, error: spotifyHookError, getTopTracks, getTopArtists, connect } = useSpotify();
   const { addLog } = useSpotifyDebug();
   const { 
@@ -282,7 +283,7 @@ export default function HomeLayout({ onTabClick }: HomeLayoutProps) {
           {/* Music Radar Overview */}
           {connected && (
             <div className="mb-8">
-              <HomeMusicRadar onTabClick={onTabClick} />
+              <HomeMusicRadar onTabClick={onTabClick} onShareClick={onInsightShare} />
             </div>
           )}
 

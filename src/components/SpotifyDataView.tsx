@@ -50,7 +50,6 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
   const [dataLoading, setDataLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
-  const [showShareCards, setShowShareCards] = useState(false);
   const [genreRetryCount, setGenreRetryCount] = useState(0);
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -253,7 +252,10 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
         showViewToggle,
         viewMode,
         onViewModeToggle: () => setViewMode(viewMode === 'list' ? 'grid' : 'list'),
-        onShareClick: () => setShowShareCards(true)
+        onShareClick: () => {
+          // This will be handled by the parent component (FrameLayout)
+          // which will call openTopAspectShare from useGlobalShare
+        }
       });
     }
   }, [activeTab, viewMode, connected, onUpdateTopBar]);
@@ -348,9 +350,13 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
     setViewMode(viewMode === 'list' ? 'grid' : 'list');
   }, [viewMode]);
 
-  const handleShare = useCallback(() => {
-    setShowShareCards(true);
-  }, []);
+  // Helper function to get track image
+  const getTrackImage = (track: any) => {
+    if (track.album?.images && track.album.images.length > 0) {
+      return track.album.images[0].url;
+    }
+    return null;
+  };
 
   const getViewModeIcon = () => {
     if (viewMode === 'list') {
@@ -967,19 +973,7 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar }: Spot
           )}
         </div>
 
-        {showShareCards && (
-          <ShareableCards
-            onClose={() => setShowShareCards(false)}
-            data={{
-              tracks: dataCache.current?.tracks[timeRange] || [],
-              artists: dataCache.current?.artists[timeRange] || [],
-              albums: dataCache.current?.albums[timeRange] || [],
-              genres: getTopGenres(),
-              recent: dataCache.current?.recent || [],
-              timeRange
-            }}
-          />
-        )}
+        {/* Share functionality is now handled by GlobalShareInterface in FrameLayout */}
       </div>
     </>
   );

@@ -13,9 +13,10 @@ import TypingInsight from '@/components/TypingInsight';
 
 interface HomeMusicRadarProps {
   onTabClick?: (tab: string, options?: { section?: string }) => void;
+  onShareClick?: () => void;
 }
 
-export default function HomeMusicRadar({ onTabClick }: HomeMusicRadarProps) {
+export default function HomeMusicRadar({ onTabClick, onShareClick }: HomeMusicRadarProps) {
   const { payload, ai, isLoading } = useMusicRadar();
   const [isDetailSheetOpen, setDetailSheetOpen] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<number>(0);
@@ -61,8 +62,12 @@ export default function HomeMusicRadar({ onTabClick }: HomeMusicRadarProps) {
   };
 
   const handleShare = () => {
-    // Open the detail sheet which has sharing functionality
-    setDetailSheetOpen(true);
+    // Use global share if available, otherwise fallback to detail sheet
+    if (onShareClick) {
+      onShareClick();
+    } else {
+      setDetailSheetOpen(true);
+    }
   };
 
   if (isContentLoading) {
