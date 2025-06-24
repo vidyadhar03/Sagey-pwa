@@ -69,7 +69,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     );
   }
 
-  const noNavRoutes = ['/onboarding', '/account', '/settings', '/spotify-data'];
+  const noNavRoutes = ['/onboarding', '/account', '/settings', '/spotify-data', '/psycho'];
   const showNav = !noNavRoutes.some(route => pathname?.startsWith(route));
 
   return showNav ? <FrameLayout>{children}</FrameLayout> : <>{children}</>;

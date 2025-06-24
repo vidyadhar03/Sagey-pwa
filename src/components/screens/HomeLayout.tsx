@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import UserProfile from '../UserProfile';
 import SpotifyDebugPanel from '../SpotifyDebugPanel';
 
@@ -46,6 +47,8 @@ export default function HomeLayout({ onTabClick, onInsightShare, scrollContainer
 
   // Combine errors from URL params and hook
   const displayError = spotifyError || spotifyHookError;
+
+  const router = useRouter();
 
   console.log('🏠 HomeLayout rendering:', { 
     connected, 
@@ -280,6 +283,41 @@ export default function HomeLayout({ onTabClick, onInsightShare, scrollContainer
           {connected && (
             <div className="mb-8">
               <HomeMusicRadar onTabClick={onTabClick} onShareClick={onInsightShare} />
+              
+              {/* Psycho-analysis Teaser Card */}
+              <div className="mt-4">
+                <button
+                  onClick={() => router.push('/psycho')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      router.push('/psycho');
+                    }
+                  }}
+                  className="w-full h-14 bg-zinc-900 hover:bg-zinc-800 border border-white/10 hover:border-green-400/30 rounded-2xl p-4 transition-all duration-300 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-400/50 group"
+                  role="button"
+                  tabIndex={0}
+                >
+                  <div className="flex items-center justify-between h-full">
+                    {/* Left: Brain emoji in circle */}
+                    <div className="flex items-center gap-4">
+                      <div className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center group-hover:bg-green-400/20 transition-colors">
+                        <span className="text-lg">🧠</span>
+                      </div>
+                      <div className="text-left">
+                        <h3 className="text-white font-bold text-sm">Psycho-analyse me</h3>
+                        <p className="text-zinc-400 text-xs">Deeper personality insights</p>
+                      </div>
+                    </div>
+                    
+                    {/* Right: Chevron */}
+                    <div className="text-zinc-400 group-hover:text-green-400 transition-colors transform rotate-90">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polyline points="9,18 15,12 9,6" />
+                      </svg>
+                    </div>
+                  </div>
+                </button>
+              </div>
             </div>
           )}
 
@@ -523,10 +561,7 @@ export default function HomeLayout({ onTabClick, onInsightShare, scrollContainer
 
               {/* Psychoanalyse Me */}
               <button 
-                onClick={() => {
-                  // TODO: Implement psychoanalysis feature
-                  console.log('Psychoanalyse me feature - coming soon!');
-                }}
+                onClick={() => router.push('/psycho')}
                 className="flex-1 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-[#1ed760]/30 transition-all"
               >
                 <div className="flex items-center justify-center gap-2">

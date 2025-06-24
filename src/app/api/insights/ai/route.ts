@@ -78,21 +78,134 @@ const RadarSummaryPayloadSchema = z.object({
   weeks: z.number(),
 });
 
+// Validation schema for HypePayload
+const HypePayloadSchema = z.object({
+  psycho: z.object({
+    scores: z.object({
+      musical_diversity: z.object({
+        score: z.number(),
+        confidence: z.enum(['high', 'medium', 'low', 'insufficient']),
+        formula: z.string(),
+        mappedTrackCount: z.number().optional(),
+        minRequired: z.number().optional(),
+      }),
+      exploration_rate: z.object({
+        score: z.number(),
+        confidence: z.enum(['high', 'medium', 'low', 'insufficient']),
+        formula: z.string(),
+        mappedTrackCount: z.number().optional(),
+        minRequired: z.number().optional(),
+      }),
+      temporal_consistency: z.object({
+        score: z.number(),
+        confidence: z.enum(['high', 'medium', 'low', 'insufficient']),
+        formula: z.string(),
+        mappedTrackCount: z.number().optional(),
+        minRequired: z.number().optional(),
+      }),
+      mainstream_affinity: z.object({
+        score: z.number(),
+        confidence: z.enum(['high', 'medium', 'low', 'insufficient']),
+        formula: z.string(),
+        mappedTrackCount: z.number().optional(),
+        minRequired: z.number().optional(),
+      }),
+      emotional_volatility: z.object({
+        score: z.number(),
+        confidence: z.enum(['high', 'medium', 'low', 'insufficient']),
+        formula: z.string(),
+        mappedTrackCount: z.number().optional(),
+        minRequired: z.number().optional(),
+      }),
+    }),
+    metadata: z.object({
+      tracks_analyzed: z.number(),
+      artists_analyzed: z.number(),
+      genres_found: z.number(),
+      generated_at: z.string(),
+    }),
+  }),
+  radar: z.record(z.string(), z.number()),
+  musicalAge: z.object({
+    age: z.number(),
+    era: z.enum(['Vinyl', 'Analog', 'Digital', 'Streaming']),
+    trackCount: z.number(),
+    averageYear: z.number(),
+    stdDev: z.number(),
+    oldest: z.object({
+      title: z.string(),
+      artist: z.string(),
+      year: z.number(),
+    }),
+    newest: z.object({
+      title: z.string(),
+      artist: z.string(),
+      year: z.number(),
+    }),
+    decadeBuckets: z.array(z.object({
+      decade: z.number(),
+      weight: z.number(),
+    })),
+    description: z.string(),
+  }),
+  nightOwl: z.object({
+    hourlyData: z.array(z.number()),
+    peakHour: z.number(),
+    isNightOwl: z.boolean(),
+    score: z.number(),
+    histogram: z.array(z.number()),
+  }),
+  moodRing: z.object({
+    emotions: z.object({
+      happy: z.number(),
+      energetic: z.number(),
+      chill: z.number(),
+      melancholy: z.number(),
+    }),
+    dominantMood: z.string(),
+    distribution: z.array(z.object({
+      label: z.string(),
+      pct: z.number(),
+      color: z.string(),
+    })),
+  }),
+  counts: z.object({
+    tracks: z.number(),
+    artists: z.number(),
+    genres: z.number(),
+    weeks: z.number(),
+  }),
+  topGenre: z.string(),
+  sampleTrack: z.object({
+    title: z.string(),
+    artist: z.string(),
+  }),
+});
+
 // Validation schema for radar_hype AI responses
 const RadarHypeResponseSchema = z.object({
   mainInsight: z.string().min(1).max(250), // 50 words ≈ 250 characters
   tip: z.string().min(1).max(120).optional()
 });
 
+// Validation schema for psycho_hype_v2 AI responses
+const PsychoHypeResponseSchema = z.object({
+  headline: z.string().min(1).max(90),
+  context: z.string().min(1).max(120),
+  traits: z.array(z.string().max(80)).min(1).max(3),
+  tips: z.array(z.string().max(70)).max(3).optional(),
+});
+
 const RequestSchema = z.object({
-  type: z.enum(['musical_age', 'mood_ring', 'genre_passport', 'night_owl_pattern', 'radar_summary', 'radar_hype']),
-  payload: z.union([
-    MusicalAgePayloadSchema,
-    MoodRingPayloadSchema,
-    GenrePassportPayloadSchema,
-    NightOwlPatternPayloadSchema,
-    RadarSummaryPayloadSchema,
-  ]),
+  type: z.enum(['musical_age', 'mood_ring', 'genre_passport', 'night_owl_pattern', 'radar_summary', 'radar_hype', 'psycho_hype_v2']),
+      payload: z.union([
+      MusicalAgePayloadSchema,
+      MoodRingPayloadSchema,
+      GenrePassportPayloadSchema,
+      NightOwlPatternPayloadSchema,
+      RadarSummaryPayloadSchema,
+      HypePayloadSchema,
+    ]),
 });
 
 // Mock authentication - in real implementation, this would use session/JWT
@@ -165,6 +278,56 @@ export async function POST(request: NextRequest) {
         
       } catch (validationError) {
         console.error('❌ radar_hype JSON validation failed:', validationError);
+        console.error('📝 Raw response that failed validation:', result.copy);
+        
+        // Provide more specific error details
+        let errorDetails: string | z.ZodIssue[] = 'JSON parse error';
+        if (validationError instanceof z.ZodError) {
+          errorDetails = validationError.errors;
+        } else if (validationError instanceof SyntaxError) {
+          errorDetails = 'Invalid JSON syntax';
+        } else if (validationError instanceof Error) {
+          errorDetails = validationError.message;
+        }
+        
+        return NextResponse.json(
+          {
+            error: 'BAD_AI_SHAPE',
+            details: errorDetails,
+            rawResponse: result.copy,
+            type,
+            suggestion: 'This indicates the AI returned non-JSON text. Check server logs for OpenAI API errors.',
+          },
+          { status: 502 }
+        );
+      }
+    }
+    
+    // Special validation for psycho_hype_v2 responses
+    if (type === 'psycho_hype_v2') {
+      try {
+        console.log('🔍 Validating psycho_hype_v2 JSON response...');
+        const parsedResponse = JSON.parse(result.copy);
+        const validatedResponse = PsychoHypeResponseSchema.parse(parsedResponse);
+        
+        console.log('✅ psycho_hype_v2 JSON validation passed:', validatedResponse);
+        
+        return NextResponse.json({
+          copy: result.copy,
+          source: 'ai',
+          type,
+          cached: result.fromCache,
+          debug: {
+            regenerated: regenerate,
+            timestamp: new Date().toISOString(),
+            userId: userId.substring(0, 10) + '...',
+            copyLength: result.copy.length,
+            validatedShape: validatedResponse
+          }
+        });
+        
+      } catch (validationError) {
+        console.error('❌ psycho_hype_v2 JSON validation failed:', validationError);
         console.error('📝 Raw response that failed validation:', result.copy);
         
         // Provide more specific error details

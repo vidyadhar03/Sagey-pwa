@@ -9,6 +9,7 @@ import {
 import { MusicalAgePayload } from '../utils/insightSelectors';
 import { RadarPayload } from '../features/radar/types';
 import { radarAxisConfig, coachTipConfig, excludedCoachAxes } from '../features/radar/radarNarrativeConfig';
+import { HypePayload } from '../features/psycho/buildHypePayload';
 
 /**
  * Builds AI prompts for generating fun, quirky copy for insight cards
@@ -243,6 +244,19 @@ Example format:
 Generate JSON now:`;
 }
 
+function buildPsyHypePrompt(data: HypePayload): string {
+  return `You are Vynce's playful music psychologist.
+Output strict JSON: {headline, context, traits:[...], tips:[...]}
+Headline ≤ 90 chars & starts with emoji.
+Context ≤ 120 chars.
+traits: 1-3 crisp strings ≤ 80 chars each.
+tips: 0-3 actionable strings ≤ 70 chars each, only for weakest scores.
+Never diagnose or mention clinical disorders.
+
+Here is the user's aggregated music-profile JSON:
+${JSON.stringify(data)}`;
+}
+
 export function buildPrompt(type: InsightType, data: InsightPayload): string {
   switch (type) {
     case 'musical_age':
@@ -257,7 +271,11 @@ export function buildPrompt(type: InsightType, data: InsightPayload): string {
       return buildRadarSummaryPrompt(data as RadarPayload);
     case 'radar_hype':
       return buildRadarHypePrompt(data as RadarPayload);
+    case 'psycho_hype_v2':
+      return buildPsyHypePrompt(data as HypePayload);
     default:
       throw new Error(`Unknown insight type: ${type}`);
   }
-} 
+}
+
+export { buildPsyHypePrompt }; 

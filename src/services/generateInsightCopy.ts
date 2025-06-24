@@ -48,10 +48,13 @@ export async function getInsightCopy(
     // Call OpenAI
     const openai = getOpenAIClient();
     console.log(`📡 Making OpenAI API call for ${type}...`);
-    console.log(`🎯 Target: ${type === 'radar_hype' ? 'RADAR_HYPE (expecting JSON)' : 'Regular insight'}`);
     
-    // Special parameters for radar_hype type to ensure JSON output
+    // Special parameters for JSON output types to ensure valid responses
     const isRadarHype = type === 'radar_hype';
+    const isPsychoHype = type === 'psycho_hype_v2';
+    const needsJSON = isRadarHype || isPsychoHype;
+    
+    console.log(`🎯 Target: ${needsJSON ? `${type.toUpperCase()} (expecting JSON)` : 'Regular insight'}`);
     
     // Build the request configuration
     const requestConfig: any = {
@@ -59,7 +62,7 @@ export async function getInsightCopy(
       messages: [
         {
           role: 'system',
-          content: isRadarHype 
+          content: needsJSON 
             ? 'You are a Gen-Z hype coach for music insights. Output ONLY valid JSON, no markdown, no code-block. Follow the exact format specified in the user prompt.'
             : 'You are a creative copywriter specializing in fun, engaging social media content about music and personality insights. Generate short, shareable captions that are positive, quirky, and emoji-rich.'
         },
@@ -68,16 +71,16 @@ export async function getInsightCopy(
           content: prompt
         }
       ],
-      max_tokens: isRadarHype ? 160 : 100,
-      temperature: isRadarHype ? 0.9 : 0.95,
+      max_tokens: needsJSON ? 200 : 100,
+      temperature: needsJSON ? 0.9 : 0.95,
       top_p: 0.9,
     };
 
-    // Add response_format for radar_hype if supported
-    if (isRadarHype) {
+    // Add response_format for JSON types if supported
+    if (needsJSON) {
       try {
         requestConfig.response_format = { type: 'json_object' };
-        console.log('🎯 Using JSON response format for radar_hype');
+        console.log(`🎯 Using JSON response format for ${type}`);
       } catch (error) {
         console.warn('⚠️ JSON response format not supported, relying on prompt instructions');
       }
@@ -98,9 +101,9 @@ export async function getInsightCopy(
     const generatedCopy = completion.choices[0]?.message?.content?.trim() || '';
     console.log(`🤖 OpenAI returned (${generatedCopy.length} chars): "${generatedCopy}"`);
     
-    // Special validation for radar_hype responses
-    if (isRadarHype) {
-      console.log(`🔍 RADAR_HYPE Response Analysis:`);
+    // Special validation for JSON responses
+    if (needsJSON) {
+      console.log(`🔍 ${type.toUpperCase()} Response Analysis:`);
       try {
         const testParse = JSON.parse(generatedCopy);
         console.log(`✅ Valid JSON structure detected:`, testParse);
@@ -116,7 +119,7 @@ export async function getInsightCopy(
       usage: completion.usage,
       choices: completion.choices.length,
       finishReason: completion.choices[0]?.finish_reason,
-      isRadarHype,
+      isJsonType: needsJSON,
       responseLength: generatedCopy.length
     });
     
@@ -243,6 +246,30 @@ function getFallbackCopy(type: InsightType, data: InsightPayload): string {
         }
       ];
       return JSON.stringify(radarVariations[randomSeed % radarVariations.length]);
+    
+    case 'psycho_hype_v2':
+      // Return valid JSON structure for psycho_hype_v2 fallback
+      const psychoVariations = [
+        {
+          headline: '🎵 Musical soul detected!',
+          context: 'Your playlist reveals a unique personality that vibes with diverse musical landscapes.',
+          traits: ['Sonic Explorer 🎧', 'Vibe Curator ✨'],
+          tips: ['Keep discovering new genres!', 'Trust your musical instincts 🎶']
+        },
+        {
+          headline: '🌟 Audio architect supreme!',
+          context: 'Your music taste construction skills are next level - building incredible sonic experiences.',
+          traits: ['Creative Explorer 🚀', 'Musical Adventurer 🎵'],
+          tips: ['Keep exploring new sounds!', 'Create themed playlists 🎼']
+        },
+        {
+          headline: '🎧 Melody mastermind!',
+          context: 'Your playlist curation reveals someone who understands the deeper language of music.',
+          traits: ['Taste Maker 🌈', 'Sound Seeker 🔍'],
+          tips: ['Discover more niche artists!', 'Share your musical discoveries 🎶']
+        }
+      ];
+      return JSON.stringify(psychoVariations[randomSeed % psychoVariations.length]);
     
     default:
       const defaultVariations = [
