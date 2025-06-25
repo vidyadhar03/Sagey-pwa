@@ -10,7 +10,8 @@ import { getMockCopy } from '../mocks/aiCopyMock';
 export function useAIInsights<T extends InsightType>(
   type: T,
   payload: InsightPayloadMap[T],
-  enabled: boolean = true
+  enabled: boolean = true,
+  options?: { variant?: "witty" | "poetic" }
 ) {
   const [data, setData] = useState<{ copy: string; source: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -49,7 +50,8 @@ export function useAIInsights<T extends InsightType>(
           },
           body: JSON.stringify({
             type,
-            payload
+            payload,
+            options // Include options like variant
           }),
         });
 
@@ -83,10 +85,10 @@ export function useAIInsights<T extends InsightType>(
     };
 
     fetchInsight();
-  }, [type, JSON.stringify(payload), enabled]);
+  }, [type, JSON.stringify(payload), enabled, JSON.stringify(options)]);
 
-  const mutate = async (options?: { regenerate?: boolean }) => {
-    const regenerate = options?.regenerate || false;
+  const mutate = async (mutateOptions?: { regenerate?: boolean }) => {
+    const regenerate = mutateOptions?.regenerate || false;
     
     setIsLoading(true);
     setError(null);
@@ -117,7 +119,8 @@ export function useAIInsights<T extends InsightType>(
         body: JSON.stringify({
           type,
           payload,
-          regenerate
+          regenerate,
+          options // Include options like variant
         }),
       });
 

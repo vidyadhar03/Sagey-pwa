@@ -198,14 +198,17 @@ const PsychoHypeResponseSchema = z.object({
 
 const RequestSchema = z.object({
   type: z.enum(['musical_age', 'mood_ring', 'genre_passport', 'night_owl_pattern', 'radar_summary', 'radar_hype', 'psycho_hype_v2']),
-      payload: z.union([
-      MusicalAgePayloadSchema,
-      MoodRingPayloadSchema,
-      GenrePassportPayloadSchema,
-      NightOwlPatternPayloadSchema,
-      RadarSummaryPayloadSchema,
-      HypePayloadSchema,
-    ]),
+  payload: z.union([
+    MusicalAgePayloadSchema,
+    MoodRingPayloadSchema,
+    GenrePassportPayloadSchema,
+    NightOwlPatternPayloadSchema,
+    RadarSummaryPayloadSchema,
+    HypePayloadSchema,
+  ]),
+  options: z.object({
+    variant: z.enum(['witty', 'poetic']).optional(),
+  }).optional(),
 });
 
 // Mock authentication - in real implementation, this would use session/JWT
@@ -231,10 +234,10 @@ export async function POST(request: NextRequest) {
     // Parse and validate request body
     const body = await request.json();
     const regenerate = body.regenerate === true || request.nextUrl.searchParams.get('regenerate') === 'true';
-    console.log('📥 Received AI insight request:', { type: body.type, regenerate });
+    console.log('📥 Received AI insight request:', { type: body.type, regenerate, options: body.options });
 
     const validatedData = RequestSchema.parse(body);
-    const { type, payload } = validatedData;
+    const { type, payload, options } = validatedData;
 
     // Get user ID (simple implementation)
     let userId = getUserFromRequest(request);
@@ -244,10 +247,10 @@ export async function POST(request: NextRequest) {
       console.log('⚠️ No user ID found, using anonymous:', userId);
     }
 
-    console.log(`🔍 Generating ${type} insight for user ${userId}`);
+    console.log(`🔍 Generating ${type} insight for user ${userId}${options?.variant ? ` (variant: ${options.variant})` : ''}`);
 
     // Generate AI copy
-    const result = await getInsightCopy(userId, type as InsightType, payload, regenerate);
+    const result = await getInsightCopy(userId, type as InsightType, payload, regenerate, options);
 
     console.log(`✅ Successfully generated ${type} insight`);
     console.info(`[AI] Cache`, { cached: result.fromCache, regenerate, type });

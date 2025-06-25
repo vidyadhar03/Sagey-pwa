@@ -9,6 +9,7 @@ interface PsyHypeCardProps {
   tips?: string[];
   isLoading?: boolean;
   hasValidResponse?: boolean;
+  variant?: "witty" | "poetic";
 }
 
 export default function PsyHypeCard({
@@ -17,7 +18,8 @@ export default function PsyHypeCard({
   traits = [],
   tips = [],
   isLoading = false,
-  hasValidResponse = false
+  hasValidResponse = false,
+  variant = "witty"
 }: PsyHypeCardProps) {
   // Show skeleton while loading
   if (isLoading || !hasValidResponse) {
@@ -45,16 +47,28 @@ export default function PsyHypeCard({
     >
       {/* Headline */}
       {headline && (
-        <h2 className="text-2xl md:text-3xl font-semibold text-white leading-tight mb-1">
+        <motion.h2 
+          key={`${headline}-${variant}`} // Key ensures re-animation on variant change
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="text-2xl md:text-3xl font-semibold text-white leading-tight mb-1"
+        >
           {headline}
-        </h2>
+        </motion.h2>
       )}
 
       {/* Context */}
       {context && (
-        <p className="text-sm md:text-base text-zinc-300 mb-4">
+        <motion.p 
+          key={`${context}-${variant}`} // Key ensures re-animation on variant change
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+          className="text-sm md:text-base text-zinc-300 mb-4"
+        >
           {context}
-        </p>
+        </motion.p>
       )}
 
       {/* Divider */}
@@ -62,31 +76,54 @@ export default function PsyHypeCard({
 
       {/* Traits */}
       {traits.length > 0 && (
-        <div className="mb-4">
+        <motion.div 
+          key={`traits-${variant}`} // Key ensures re-animation on variant change
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+          className="mb-4"
+        >
           <ul className="space-y-1">
             {traits.map((trait, index) => (
-              <li key={index} className="text-sm text-zinc-200 flex items-start">
+              <motion.li 
+                key={`${trait}-${index}-${variant}`}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.2, delay: 0.3 + (index * 0.1) }}
+                className="text-sm text-zinc-200 flex items-start"
+              >
                 <span className="text-zinc-500 mr-2">•</span>
                 <span>{trait}</span>
-              </li>
+              </motion.li>
             ))}
           </ul>
-        </div>
+        </motion.div>
       )}
 
       {/* Coach Tips */}
       {tips && tips.length > 0 && (
-        <div>
+        <motion.div
+          key={`tips-${variant}`} // Key ensures re-animation on variant change
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.4 }}
+        >
           <h3 className="text-sm font-semibold text-green-400 mb-2">Coach Tips</h3>
           <ul className="space-y-1">
             {tips.map((tip, index) => (
-              <li key={index} className="text-sm text-zinc-300 flex items-start">
+              <motion.li 
+                key={`${tip}-${index}-${variant}`}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.2, delay: 0.5 + (index * 0.1) }}
+                className="text-sm text-zinc-300 flex items-start"
+              >
                 <span className="text-green-400 mr-2">•</span>
                 <span>{tip}</span>
-              </li>
+              </motion.li>
             ))}
           </ul>
-        </div>
+        </motion.div>
       )}
     </motion.div>
   );

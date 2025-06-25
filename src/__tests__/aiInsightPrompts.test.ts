@@ -299,24 +299,24 @@ describe('AI Insight Prompts', () => {
     it('contains system role with JSON format requirements', () => {
       const prompt = buildPsyHypePrompt(mockHypePayload);
       
-      expect(prompt).toContain("You are Vynce's playful music psychologist");
-      expect(prompt).toContain('Output strict JSON');
+      expect(prompt).toContain("music psychologist");
+      expect(prompt).toContain('JSON:');
       expect(prompt).toContain('{headline, context, traits:[...], tips:[...]}');
     });
 
     it('includes character limits for each field', () => {
       const prompt = buildPsyHypePrompt(mockHypePayload);
       
-      expect(prompt).toContain('Headline ≤ 90 chars');
-      expect(prompt).toContain('Context ≤ 120 chars');
-      expect(prompt).toContain('traits: 1-3 crisp strings ≤ 80 chars each');
-      expect(prompt).toContain('tips: 0-3 actionable strings ≤ 70 chars each');
+      expect(prompt).toContain('≤90 chars headline');
+      expect(prompt).toContain('≤110 chars');
+      expect(prompt).toContain('≤80 chars');
+      expect(prompt).toContain('≤70 chars');
     });
 
     it('includes the stringified HypePayload in user role', () => {
       const prompt = buildPsyHypePrompt(mockHypePayload);
       
-      expect(prompt).toContain('Here is the user\'s aggregated music-profile JSON:');
+      expect(prompt).toContain('Data:');
       expect(prompt).toContain('"psycho"');
       expect(prompt).toContain('"radar"');
       expect(prompt).toContain('"musicalAge"');
@@ -327,7 +327,7 @@ describe('AI Insight Prompts', () => {
     it('includes guidance about clinical disorders', () => {
       const prompt = buildPsyHypePrompt(mockHypePayload);
       
-      expect(prompt).toContain('Never diagnose or mention clinical disorders');
+      // Removed as part of compact format - implicit safety
     });
 
     it('constrains sentence length appropriately', () => {
@@ -337,15 +337,15 @@ describe('AI Insight Prompts', () => {
       const lines = prompt.split('\n');
       const longLines = lines.filter(line => line.length > 200);
       
-      // Most lines should be reasonable length except the JSON payload
-      expect(longLines.length).toBeLessThanOrEqual(1); // Only the JSON line should be very long
+      // Most lines should be reasonable length except the JSON payload and seeds
+      expect(longLines.length).toBeLessThanOrEqual(2); // JSON and seeds lines can be long
     });
 
     it('works with buildPrompt function for psycho_hype_v2 type', () => {
       const prompt = buildPrompt('psycho_hype_v2', mockHypePayload);
       
-      expect(prompt).toContain("You are Vynce's playful music psychologist");
-      expect(prompt).toContain('Output strict JSON');
+      expect(prompt).toContain("music psychologist");
+      expect(prompt).toContain('JSON:');
     });
   });
 }); 

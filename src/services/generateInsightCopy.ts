@@ -6,6 +6,7 @@ import {
   generateCacheKey, 
   hashInsightData 
 } from './aiInsightCache';
+import { createHash } from 'crypto';
 
 /**
  * Main orchestrator for generating AI insight copy
@@ -14,11 +15,13 @@ export async function getInsightCopy(
   userId: string, 
   type: InsightType, 
   data: InsightPayload,
-  regenerate: boolean = false
+  regenerate: boolean = false,
+  options?: { variant?: "witty" | "poetic" }
 ): Promise<{ copy: string; fromCache: boolean }> {
-  // Generate cache key
-  const dataHash = hashInsightData(data);
-  const cacheKey = generateCacheKey(userId, type, dataHash);
+  // Create cache key that includes variant for psycho_hype_v2
+  const dataHash = createHash('md5').update(JSON.stringify(data)).digest('hex').substring(0, 8);
+  const variantSuffix = type === 'psycho_hype_v2' && options?.variant ? `-${options.variant}` : '';
+  const cacheKey = `insight:${userId}:${type}:${dataHash}${variantSuffix}`;
   
   // Check cache first (skip if regenerating)
   if (!regenerate) {
@@ -32,8 +35,8 @@ export async function getInsightCopy(
   console.log(`🤖 Generating new ${type} insight for user ${userId}${regenerate ? ' (REGENERATE=true)' : ''}`);
 
   try {
-    // Build prompt
-    const prompt = buildPrompt(type, data);
+    // Build prompt with options
+    const prompt = buildPrompt(type, data, options);
     console.log(`📋 Prompt being sent to OpenAI (first 200 chars): "${prompt.substring(0, 200)}..."`);
     
     // Check if OpenAI API key is available

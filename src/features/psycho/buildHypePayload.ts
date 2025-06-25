@@ -17,6 +17,7 @@ export interface HypePayload {
   counts: { tracks: number; artists: number; genres: number; weeks: number };
   topGenre: string;
   sampleTrack: { title: string; artist: string };
+  variant?: "witty" | "poetic"; // Optional variant for tone switching
 }
 
 /**
