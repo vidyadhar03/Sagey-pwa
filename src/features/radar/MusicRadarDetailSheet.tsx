@@ -2,7 +2,7 @@
 
 import { Fragment, useState, useMemo, useRef } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import { X, Share2, TrendingUp, TrendingDown, Music, Sparkles, BarChart3, Clock, Heart, Zap, Compass, Calendar } from 'lucide-react';
+import { X, Share2, TrendingUp, TrendingDown, BarChart3, Clock, Heart, Zap, Compass, Calendar } from 'lucide-react';
 import html2canvas from 'html2canvas';
 
 import type { RadarPayload, RadarAxis } from './types';
@@ -12,7 +12,6 @@ interface MusicRadarDetailSheetProps {
   open: boolean;
   onClose: () => void;
   payload: RadarPayload | null;
-  aiSummary: string | null;
 }
 
 const getStrongestAndWeakest = (scores: Record<RadarAxis, number>): { strongest: RadarAxis, weakest: RadarAxis } => {
@@ -43,7 +42,7 @@ const axisColors = {
   'Night-Owl': 'from-blue-500 to-indigo-500',
 };
 
-export function MusicRadarDetailSheet({ open, onClose, payload, aiSummary }: MusicRadarDetailSheetProps) {
+export function MusicRadarDetailSheet({ open, onClose, payload }: MusicRadarDetailSheetProps) {
   const sheetContentRef = useRef<HTMLDivElement>(null);
 
   const { strongest, weakest } = useMemo(() => {
@@ -145,16 +144,7 @@ export function MusicRadarDetailSheet({ open, onClose, payload, aiSummary }: Mus
                 <div className="overflow-y-auto max-h-[calc(90vh-80px)]" id="shareable-content">
                   <div className="p-6 space-y-6">
                     
-                    {/* AI Summary Section */}
-                    {aiSummary && (
-                      <div className="bg-gradient-to-r from-purple-900/20 to-pink-900/20 rounded-xl p-6 border border-purple-500/20">
-                        <div className="flex items-center gap-3 mb-4">
-                          <Sparkles size={24} className="text-purple-400" />
-                          <h3 className="text-lg font-semibold text-white">AI Insights</h3>
-                        </div>
-                        <p className="text-zinc-300 leading-relaxed">{aiSummary}</p>
-                      </div>
-                    )}
+
 
                     {/* Music Persona Scores */}
                     <div className="space-y-4">
@@ -285,35 +275,7 @@ export function MusicRadarDetailSheet({ open, onClose, payload, aiSummary }: Mus
                       </div>
                     </div>
 
-                    {/* Suggestions */}
-                    {payload.suggestions.length > 0 && (
-                      <div className="space-y-4">
-                        <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                          <Music size={20} className="text-green-400" />
-                          Suggestions For You
-                        </h3>
-                        <p className="text-zinc-400 text-sm">Based on your music persona, here are some curated playlists to explore:</p>
-                        <div className="flex flex-wrap gap-3">
-                          {payload.suggestions.map((suggestion) => (
-                            <a
-                              key={suggestion.label}
-                              href={suggestion.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                window.open(suggestion.url, '_blank', 'noopener noreferrer');
-                              }}
-                              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-900/20 text-green-300 
-                                       border border-green-500/30 hover:bg-green-900/30 transition-all group"
-                            >
-                              <Music size={14} />
-                              <span className="text-sm font-medium">{suggestion.label}</span>
-                            </a>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+
 
                   </div>
                 </div>

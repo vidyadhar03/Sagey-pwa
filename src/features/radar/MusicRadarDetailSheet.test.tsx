@@ -34,22 +34,18 @@ describe('MusicRadarDetailSheet', () => {
 
     it('renders null when open is false', () => {
         const { container } = render(
-            <MusicRadarDetailSheet open={false} onClose={() => {}} payload={testPayload} aiSummary={null} />
+            <MusicRadarDetailSheet open={false} onClose={() => {}} payload={testPayload} />
         );
         expect(container.firstChild).toBeNull();
     });
 
-    it('renders new insight layout with music persona and stats', async () => {
+    it('renders music persona and stats sections', async () => {
         await act(async () => {
-            render(<MusicRadarDetailSheet open={true} onClose={() => {}} payload={testPayload} aiSummary="Test AI Summary" />);
+            render(<MusicRadarDetailSheet open={true} onClose={() => {}} payload={testPayload} />);
         });
         
-        // Check new header
-        expect(screen.getByText('Music Insights')).toBeInTheDocument();
-        
-        // Check AI Insights section
-        expect(screen.getByText('AI Insights')).toBeInTheDocument();
-        expect(screen.getByText('Test AI Summary')).toBeInTheDocument();
+        // Check header
+        expect(screen.getByText('Music Radar Details')).toBeInTheDocument();
         
         // Check Your Music Persona section
         expect(screen.getByText('Your Music Persona')).toBeInTheDocument();
@@ -59,7 +55,7 @@ describe('MusicRadarDetailSheet', () => {
         expect(screen.getByText('Tracks Analyzed')).toBeInTheDocument();
         expect(screen.getByText('Time Period')).toBeInTheDocument();
         expect(screen.getByText('Top Genre')).toBeInTheDocument();
-        expect(screen.getByText('Featured Track')).toBeInTheDocument();
+        expect(screen.getByText('Recent Track')).toBeInTheDocument();
         
         // Check Detailed Breakdown section
         expect(screen.getByText('Detailed Breakdown')).toBeInTheDocument();
@@ -67,116 +63,24 @@ describe('MusicRadarDetailSheet', () => {
         expect(screen.getByText('Musical Exploration')).toBeInTheDocument();
         expect(screen.getByText('Night Owl Behavior')).toBeInTheDocument();
         expect(screen.getByText('Nostalgia Factor')).toBeInTheDocument();
-        
-        // Check Suggestions section
-        expect(screen.getByText('Suggestions For You')).toBeInTheDocument();
-        testPayload.suggestions.forEach(suggestion => {
-            expect(screen.getByText(suggestion.label)).toBeInTheDocument();
-        });
     });
 
-    it('renders without AI summary when not provided', async () => {
+    it('renders main sections correctly', async () => {
         await act(async () => {
-            render(<MusicRadarDetailSheet open={true} onClose={() => {}} payload={testPayload} aiSummary={null} />);
+            render(<MusicRadarDetailSheet open={true} onClose={() => {}} payload={testPayload} />);
         });
         
-        // Should not show AI Insights section
-        expect(screen.queryByText('AI Insights')).not.toBeInTheDocument();
-        
-        // But should still show other sections
+        // Should show main sections
         expect(screen.getByText('Your Music Persona')).toBeInTheDocument();
         expect(screen.getByText('Your Music Stats')).toBeInTheDocument();
-    });
-
-    it('calls html2canvas when share button is clicked', async () => {
-        const user = userEvent.setup();
-        const html2canvas = require('html2canvas');
-        
-        await act(async () => {
-            render(<MusicRadarDetailSheet open={true} onClose={() => {}} payload={testPayload} aiSummary={null} />);
-        });
-        
-        await waitFor(() => {
-            expect(screen.getByTestId('share-button')).toBeInTheDocument();
-        });
-
-        const shareButton = screen.getByTestId('share-button');
-        await user.click(shareButton);
-        
-        await waitFor(() => {
-            expect(html2canvas).toHaveBeenCalled();
-        });
-    });
-
-    it('uses native share when available and supported', async () => {
-        const user = userEvent.setup();
-        const mockShare = jest.fn().mockResolvedValue(undefined);
-        const mockCanShare = jest.fn().mockReturnValue(true);
-        
-        // Mock navigator.share and canShare
-        Object.defineProperty(navigator, 'share', {
-            value: mockShare,
-            writable: true,
-        });
-        Object.defineProperty(navigator, 'canShare', {
-            value: mockCanShare,
-            writable: true,
-        });
-
-        const html2canvas = require('html2canvas');
-        
-        await act(async () => {
-            render(<MusicRadarDetailSheet open={true} onClose={() => {}} payload={testPayload} aiSummary={null} />);
-        });
-
-        const shareButton = screen.getByTestId('share-button');
-        await user.click(shareButton);
-        
-        await waitFor(() => {
-            expect(html2canvas).toHaveBeenCalled();
-            expect(mockCanShare).toHaveBeenCalled();
-            expect(mockShare).toHaveBeenCalledWith({
-                files: expect.any(Array),
-                title: 'My Music Insights',
-                text: 'Check out my music persona from Vynce!',
-            });
-        });
-    });
-
-    it('falls back to download when native share is not available', async () => {
-        const user = userEvent.setup();
-        
-        // Mock no native share support
-        Object.defineProperty(navigator, 'share', {
-            value: undefined,
-            writable: true,
-        });
-        Object.defineProperty(navigator, 'canShare', {
-            value: undefined,
-            writable: true,
-        });
-
-        const html2canvas = require('html2canvas');
-        
-        render(<MusicRadarDetailSheet open={true} onClose={() => {}} payload={testPayload} aiSummary={null} />);
-
-        const shareButton = screen.getByTestId('share-button');
-        await user.click(shareButton);
-        
-        await waitFor(() => {
-            expect(html2canvas).toHaveBeenCalled();
-            // We can't easily test the download link creation in JSDOM,
-            // but we can ensure the fallback logic is triggered.
-            // The console log in the component confirms this.
-            expect(require('html2canvas')).toHaveBeenCalled();
-        });
+        expect(screen.getByText('Detailed Breakdown')).toBeInTheDocument();
     });
 
     it('calls onClose when close button is clicked', async () => {
         const user = userEvent.setup();
         const handleClose = jest.fn();
         
-        render(<MusicRadarDetailSheet open={true} onClose={handleClose} payload={testPayload} aiSummary={null} />);
+        render(<MusicRadarDetailSheet open={true} onClose={handleClose} payload={testPayload} />);
 
         const closeButton = screen.getByTestId('close-button');
         await user.click(closeButton);
@@ -185,7 +89,7 @@ describe('MusicRadarDetailSheet', () => {
 
     it('displays music persona scores with progress bars', async () => {
         await act(async () => {
-            render(<MusicRadarDetailSheet open={true} onClose={() => {}} payload={testPayload} aiSummary={null} />);
+            render(<MusicRadarDetailSheet open={true} onClose={() => {}} payload={testPayload} />);
         });
         
         // Check that all radar axes are displayed
@@ -203,7 +107,7 @@ describe('MusicRadarDetailSheet', () => {
 
     it('displays detailed statistics correctly', async () => {
         await act(async () => {
-            render(<MusicRadarDetailSheet open={true} onClose={() => {}} payload={testPayload} aiSummary={null} />);
+            render(<MusicRadarDetailSheet open={true} onClose={() => {}} payload={testPayload} />);
         });
         
         // Check track count

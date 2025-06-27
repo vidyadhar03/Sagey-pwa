@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
-import { Share2 } from 'lucide-react';
+import { Share2, Info } from 'lucide-react';
 import { useMusicRadar } from '../../hooks/useMusicRadar';
 import RadarSkeleton from './RadarSkeleton';
 import { MusicRadarDetailSheet } from './MusicRadarDetailSheet';
@@ -59,16 +59,25 @@ export default function HomeMusicRadar({ onTabClick, onShareClick }: HomeMusicRa
   
   return (
     <div className="bg-zinc-900 rounded-2xl p-6 border border-white/10 shadow-lg hover:shadow-xl transition-all duration-300 hover:border-[#1DB954]/30 group relative">
-      {/* Header with title and share icon */}
+      {/* Header with title, info icon, and share icon */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold text-white">Your Music Radar</h2>
-        <button
-          onClick={handleShare}
-          className="p-2 rounded-lg transition-all duration-200 text-green-400 hover:text-green-300 hover:bg-zinc-800"
-          title="Share music radar"
-        >
-          <Share2 size={20} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setDetailSheetOpen(true)}
+            className="p-2 rounded-lg transition-all duration-200 text-zinc-400 hover:text-white hover:bg-zinc-800"
+            title="View radar details"
+          >
+            <Info size={20} />
+          </button>
+          <button
+            onClick={handleShare}
+            className="p-2 rounded-lg transition-all duration-200 text-green-400 hover:text-green-300 hover:bg-zinc-800"
+            title="Share music radar"
+          >
+            <Share2 size={20} />
+          </button>
+        </div>
       </div>
 
       {/* Chart with animated background */}
@@ -208,17 +217,11 @@ export default function HomeMusicRadar({ onTabClick, onShareClick }: HomeMusicRa
         </div>
       </div>
       
-      {/* Action Buttons */}
-      <div className="flex justify-center gap-4 mt-6">
-        <button
-          onClick={() => setDetailSheetOpen(true)}
-          className="flex-1 bg-zinc-800/50 hover:bg-zinc-700/50 text-green-400 hover:text-green-300 border border-green-400/30 hover:border-green-300/50 font-medium py-3 px-4 rounded-xl transition-all duration-200 text-sm"
-        >
-          View details ▸
-        </button>
+      {/* Action Button */}
+      <div className="flex justify-center mt-6">
         <button
           onClick={() => onTabClick?.('insights-plus')}
-          className="flex-1 bg-zinc-800/50 hover:bg-zinc-700/50 text-blue-400 hover:text-blue-300 border border-blue-400/30 hover:border-blue-300/50 font-medium py-3 px-4 rounded-xl transition-all duration-200 text-sm"
+          className="w-full bg-zinc-800/50 hover:bg-zinc-700/50 text-blue-400 hover:text-blue-300 border border-blue-400/30 hover:border-blue-300/50 font-medium py-3 px-4 rounded-xl transition-all duration-200 text-sm"
         >
           More insights ▸
         </button>
@@ -228,7 +231,6 @@ export default function HomeMusicRadar({ onTabClick, onShareClick }: HomeMusicRa
         open={isDetailSheetOpen} 
         onClose={() => setDetailSheetOpen(false)}
         payload={payload}
-        aiSummary={`${ai.mainInsight}${ai.tip ? ` ${ai.tip}` : ''}`}
       />
     </div>
   );
