@@ -7,6 +7,7 @@ import UserProfile from '../UserProfile';
 import SpotifyDebugPanel from '../SpotifyDebugPanel';
 
 import HomeMusicRadar from '../../features/radar/HomeMusicRadar';
+import MentalHealthInsights from '../MentalHealthInsights';
 import RecentPlays from '../RecentPlays';
 import LastFourWeeksSection from '../LastFourWeeksSection';
 import { useSpotify } from '../../hooks/useSpotify';
@@ -318,6 +319,13 @@ export default function HomeLayout({ onTabClick, onInsightShare, scrollContainer
                   </div>
                 </button>
               </div>
+            </div>
+          )}
+
+          {/* Mental Health Insights Section */}
+          {connected && (
+            <div className="mb-8">
+              <MentalHealthInsights />
             </div>
           )}
 
