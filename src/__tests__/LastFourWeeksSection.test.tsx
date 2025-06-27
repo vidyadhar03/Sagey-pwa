@@ -47,7 +47,7 @@ describe('LastFourWeeksSection', () => {
 
     render(<LastFourWeeksSection />);
     
-    expect(screen.getByText('Last 4 weeks')).toBeInTheDocument();
+    expect(screen.getByText('30-Day Recap')).toBeInTheDocument();
   });
 
   it('calculates and displays percentage correctly when prevMinutes is 100 and minutes is 120', async () => {
@@ -73,7 +73,7 @@ describe('LastFourWeeksSection', () => {
     render(<LastFourWeeksSection />);
     
     await waitFor(() => {
-      expect(screen.getByText('Listening time')).toBeInTheDocument();
+      expect(screen.getByText('Tune time')).toBeInTheDocument();
     });
 
     // Should show +20% calculation: ((120 - 100) / 100) * 100 = 20
@@ -103,7 +103,7 @@ describe('LastFourWeeksSection', () => {
     render(<LastFourWeeksSection />);
     
     await waitFor(() => {
-      expect(screen.getByText('Listening time')).toBeInTheDocument();
+      expect(screen.getByText('Tune time')).toBeInTheDocument();
     });
 
     // Should show +26% calculation: ((226 - 180) / 180) * 100 = 25.56 -> rounds to 26
@@ -126,11 +126,10 @@ describe('LastFourWeeksSection', () => {
     render(<LastFourWeeksSection />);
     
     await waitFor(() => {
-      expect(screen.getByText('Listening time')).toBeInTheDocument();
+      expect(screen.getByText('Tune time')).toBeInTheDocument();
+      // Wait for the actual data to load and appear
+      expect(screen.getByText('142 minutes')).toBeInTheDocument();
     });
-
-    // Use the default mock value of 142 minutes
-    expect(screen.getByText('142 minutes')).toBeInTheDocument();
   });
 
   it('displays top genre and album cards as siblings (side-by-side layout)', async () => {
@@ -161,6 +160,8 @@ describe('LastFourWeeksSection', () => {
     await waitFor(() => {
       expect(screen.getByText('Top Genre')).toBeInTheDocument();
       expect(screen.getByText('Top Album')).toBeInTheDocument();
+      // Wait for loading to finish and actual data to appear
+      expect(screen.getByText('hip-hop')).toBeInTheDocument();
     });
 
     // Find the container that holds both cards by looking for the div with the grid classes
@@ -175,7 +176,7 @@ describe('LastFourWeeksSection', () => {
     expect(screen.getByText('Taylor Swift')).toBeInTheDocument();
   });
 
-  it('shows em-dash when prevMinutes is 0', async () => {
+  it('shows no percentage when prevMinutes is 0', async () => {
     // Mock the calculateLast4WeeksStats to return zero previous minutes
     (calculateLast4WeeksStats as jest.Mock).mockReturnValue({
       minutesThis: 120,
@@ -194,13 +195,15 @@ describe('LastFourWeeksSection', () => {
     render(<LastFourWeeksSection />);
     
     await waitFor(() => {
-      expect(screen.getByText('Listening time')).toBeInTheDocument();
+      expect(screen.getByText('Tune time')).toBeInTheDocument();
       // Wait for the component to finish loading and display actual content
       expect(screen.getByText('120 minutes')).toBeInTheDocument();
     });
 
-    // Should show em-dash when no previous data
-    expect(screen.getByText('—')).toBeInTheDocument();
+    // Should show minutes but no percentage comparison when no previous data
+    expect(screen.getByText('120 minutes')).toBeInTheDocument();
+    // Should NOT show any percentage text
+    expect(screen.queryByText(/% vs previous 4 weeks/)).not.toBeInTheDocument();
   });
 
   it('shows loading skeletons when loading', () => {
