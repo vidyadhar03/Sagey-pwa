@@ -342,7 +342,7 @@ function MoodBarChart() {
           {/* Chart container */}
           <div className="w-full max-w-full relative">
             {/* Y-axis labels - positioned absolutely */}
-            <div className="absolute left-0 top-0 h-40 sm:h-48 flex flex-col justify-between text-xs text-zinc-400 z-10 pr-2">
+            <div className="absolute left-0 top-0 h-60 sm:h-72 flex flex-col justify-between text-xs text-zinc-400 z-10 pr-2">
               <span>100</span>
               <span>80</span>
               <span>60</span>
@@ -352,12 +352,12 @@ function MoodBarChart() {
             </div>
             
             {/* Y-axis line */}
-            <div className="absolute left-8 top-0 w-px h-40 sm:h-48 bg-zinc-600 z-5"></div>
+            <div className="absolute left-8 top-0 w-px h-60 sm:h-72 bg-zinc-600 z-5"></div>
             
             {/* Chart area with proper left margin for y-axis and right padding */}
             <div className="ml-8 pr-4 w-full max-w-full relative">
               {/* Bars container */}
-              <div className="flex items-end justify-evenly gap-0.5 sm:gap-1 h-40 sm:h-48 w-full relative">
+              <div className="flex items-end justify-evenly gap-0.5 sm:gap-1 h-60 sm:h-72 w-full relative">
                 {moodData.map((data, index) => (
                   <div 
                     key={data.date}
@@ -406,10 +406,10 @@ function MoodBarChart() {
 
                     {/* Bar */}
                     <motion.div 
-                      className="w-full max-w-8 sm:max-w-12 relative overflow-hidden rounded-t-lg border border-white/10"
+                      className="w-full max-w-8 sm:max-w-12 relative overflow-hidden rounded-t-lg border border-white/20 bg-white/10 backdrop-blur-sm shadow-md"
                       initial={{ height: 0 }}
                       animate={{ 
-                        height: `${Math.max(4, (data.moodScore / 100) * 160)}px`
+                        height: `${Math.max(4, (data.moodScore / 100) * 240)}px`
                       }}
                       transition={{ 
                         duration: 0.8,
@@ -477,12 +477,26 @@ function MoodBarChart() {
           ) : (
             <div className="text-zinc-300 text-sm leading-relaxed space-y-2">
               {aiSummary ? (
-                aiSummary.split(/[•\n]/).filter(point => point.trim()).map((point, index) => (
-                  <div key={index} className="flex items-start gap-2">
-                    <span className="text-blue-400 mt-1 flex-shrink-0">•</span>
-                    <span className="break-words">{point.trim()}</span>
-                  </div>
-                ))
+                aiSummary.split(/[•\n]/).filter(point => point.trim()).map((point, index) => {
+                  const icons = [
+                    Brain,
+                    Sparkles,
+                    Compass
+                  ];
+                  const IconComp = icons[index % icons.length];
+                  return (
+                    <motion.div
+                      key={index}
+                      className="flex items-start gap-3 p-3 bg-zinc-800/40 border border-zinc-700/60 rounded-lg"
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: index * 0.1 }}
+                    >
+                      <IconComp size={16} className="text-emerald-400 flex-shrink-0 mt-0.5" />
+                      <p className="text-zinc-300 text-sm leading-snug break-words">{point.replace(/^[-–—\s]+/, '').trim()}</p>
+                    </motion.div>
+                  );
+                })
               ) : (
                 <p className="break-words">No summary available.</p>
               )}
@@ -501,8 +515,8 @@ function MoodBarChart() {
                     {insights.lowestMoodDay.dayName} - Lowest Mood ({insights.lowestMoodDay.moodScore}%)
                   </span>
                 </div>
-                <p className="text-zinc-300 text-sm break-words">
-                  {insights.lowestMoodDay.insight}
+                <p className="text-zinc-400 text-sm break-words">
+                   Energy dipped—take a mindful moment to recharge.
                 </p>
               </div>
               
@@ -513,8 +527,8 @@ function MoodBarChart() {
                     {insights.highestMoodDay.dayName} - Peak Mood ({insights.highestMoodDay.moodScore}%)
                   </span>
                 </div>
-                <p className="text-zinc-300 text-sm break-words">
-                  {insights.highestMoodDay.insight}
+                <p className="text-zinc-400 text-sm break-words">
+                   Sky-high vibes—ride that positive momentum!
                 </p>
               </div>
             </div>

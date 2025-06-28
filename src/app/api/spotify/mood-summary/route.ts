@@ -11,6 +11,11 @@ const MoodSummaryRequestSchema = z.object({
     trackCount: z.number(),
     topGenres: z.array(z.string()).optional(),
     insight: z.string(),
+    musicalDiversity: z.number(),
+    explorationRate: z.number(),
+    temporalConsistency: z.number(),
+    mainstreamAffinity: z.number(),
+    emotionalVolatility: z.number(),
   })),
   averageMood: z.number(),
   highestMoodDay: z.object({
@@ -18,6 +23,7 @@ const MoodSummaryRequestSchema = z.object({
     moodScore: z.number(),
     topGenres: z.array(z.string()).optional(),
   }),
+  personalityType: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -25,7 +31,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = MoodSummaryRequestSchema.parse(body);
     
-    const { moodData, averageMood, highestMoodDay } = validatedData;
+    const { moodData, averageMood, highestMoodDay, personalityType } = validatedData;
     
     if (!moodData.length) {
       return NextResponse.json({ 
@@ -38,31 +44,36 @@ export async function POST(request: NextRequest) {
       `${day.dayName}: ${day.moodScore} mood score (${day.trackCount} tracks${day.topGenres?.length ? `, top genres: ${day.topGenres.slice(0, 2).join(', ')}` : ''})`
     ).join('\n');
 
-    const prompt = `Analyze this user's weekly music listening mood data and create a personalized, insightful summary:
+    // Compute average mental metrics
+    const avgDiversity = Math.round(moodData.reduce((s,d)=>s+d.musicalDiversity,0)/moodData.length);
+    const avgExploration = Math.round(moodData.reduce((s,d)=>s+d.explorationRate,0)/moodData.length);
+    const avgConsistency = Math.round(moodData.reduce((s,d)=>s+d.temporalConsistency,0)/moodData.length);
+    const avgMainstream = Math.round(moodData.reduce((s,d)=>s+d.mainstreamAffinity,0)/moodData.length);
+    const avgVolatility = Math.round(moodData.reduce((s,d)=>s+d.emotionalVolatility,0)/moodData.length);
+
+    const prompt = `You are provided with a user's weekly listening-mood analytics. Write a concise, supportive mental-health recap.
+
+PERSONALITY: ${personalityType || 'Balanced Listener'}
+MENTAL ATTRIBUTES (0-100):
+• Musical diversity ${avgDiversity}
+• Exploration ${avgExploration}
+• Temporal consistency ${avgConsistency}
+• Mainstream affinity ${avgMainstream}
+• Emotional volatility ${avgVolatility}
 
 MOOD DATA:
 ${weekDays}
 
-WEEKLY STATS:
-- Average mood: ${averageMood}/100
-- Best day: ${highestMoodDay.dayName} (${highestMoodDay.moodScore}/100${highestMoodDay.topGenres?.length ? `, ${highestMoodDay.topGenres[0]} music` : ''})
+STATS:
+- Average mood ${averageMood}
+- Peak day ${highestMoodDay.dayName} (${highestMoodDay.moodScore})
 
-Create exactly 2 bullet points that:
-1. Highlight their mood journey or standout moments
-2. Mention specific genres ONLY (no artists)  
-3. Use an encouraging, friendly tone
-4. Each point should be a complete, short sentence (10-15 words max)
-5. Do not use any emojis or special characters
+Create exactly 3 bullet points (complete sentences, 12-18 words):
+1. Overall mental/emotional stability observation
+2. Strength or improvement area related to personality/attributes
+3. Motivational suggestion for the coming week
 
-Format as:
-• [First insight about their week]
-• [Second insight about peak/patterns]
-
-Examples:
-• You had a great week with consistent positive vibes
-• Tuesday's Hip-Hop tracks brought your highest energy levels
-
-Keep each point concise, personal, and uplifting.`;
+Avoid emojis and special characters.`;
 
     const openai = getOpenAIClient();
     

@@ -37,7 +37,14 @@ export function useMoodData() {
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const generateAISummary = async (moodData: DailyMoodData[], insights: MoodInsights) => {
+  // Get personality payload
+  const { payload: psyPayload } = usePsyMetrics();
+
+  const generateAISummary = async (
+    moodData: DailyMoodData[],
+    insights: MoodInsights,
+    personalityType: string
+  ) => {
     try {
       setSummaryLoading(true);
       
@@ -50,6 +57,7 @@ export function useMoodData() {
           moodData,
           averageMood: insights.averageMood,
           highestMoodDay: insights.highestMoodDay,
+          personalityType,
         }),
       });
 
@@ -99,7 +107,8 @@ export function useMoodData() {
 
         // Generate AI summary if we have data
         if (data.moodData?.length && data.insights) {
-          generateAISummary(data.moodData, data.insights);
+          const personalityType = determinePersonalityType(psyPayload);
+          generateAISummary(data.moodData, data.insights, personalityType);
         }
 
       } catch (err) {
@@ -129,10 +138,37 @@ export function useMoodData() {
           setMoodData(data.moodData || []);
           setInsights(data.insights || null);
           if (data.moodData?.length && data.insights) {
-            generateAISummary(data.moodData, data.insights);
+            const personalityType = determinePersonalityType(psyPayload);
+            generateAISummary(data.moodData, data.insights, personalityType);
           }
         })
         .catch(err => setError(err.message));
     }
   };
+}
+
+function determinePersonalityType(psyPayload: any): string {
+  if (!psyPayload) return 'Balanced Listener';
+
+  const scores = psyPayload.scores;
+  const types: string[] = [];
+
+  const musicalDiversity = scores.musical_diversity.score * 100;
+  const explorationRate = scores.exploration_rate.score * 100;
+  const temporalConsistency = scores.temporal_consistency.score * 100;
+  const mainstreamAffinity = scores.mainstream_affinity.score * 100;
+  const emotionalVolatility = scores.emotional_volatility.score * 100;
+
+  if (musicalDiversity >= 60) types.push('Open-minded');
+  if (explorationRate >= 60) types.push('Explorer');
+  if (temporalConsistency >= 60) types.push('Consistent Listener');
+  if (mainstreamAffinity >= 60) types.push('Mainstream Listener');
+
+  if (emotionalVolatility >= 60) {
+    types.push('Emotionally Volatile');
+  } else if (emotionalVolatility <= 40) {
+    types.push('Emotionally Stable');
+  }
+
+  return types.length > 0 ? types[0] : 'Balanced Listener';
 } 
