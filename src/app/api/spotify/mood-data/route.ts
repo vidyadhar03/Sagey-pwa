@@ -397,16 +397,21 @@ export async function GET(request: NextRequest) {
     // Generate insights
     let insights = null;
     if (moodData.length > 0) {
-      const averageMood = moodData.reduce((sum, day) => sum + day.moodScore, 0) / moodData.length;
-      const highestMoodDay = moodData.reduce((max, day) => day.moodScore > max.moodScore ? day : max);
-      const lowestMoodDay = moodData.reduce((min, day) => day.moodScore < min.moodScore ? day : min);
+      // Only consider days with actual mood scores (moodScore > 0) to match what's shown in the chart
+      const visibleMoodData = moodData.filter(day => day.moodScore > 0);
       
-      insights = {
-        averageMood: Math.round(averageMood),
-        highestMoodDay,
-        lowestMoodDay,
-        totalDays: moodData.length
-      };
+      if (visibleMoodData.length > 0) {
+        const averageMood = visibleMoodData.reduce((sum, day) => sum + day.moodScore, 0) / visibleMoodData.length;
+        const highestMoodDay = visibleMoodData.reduce((max, day) => day.moodScore > max.moodScore ? day : max);
+        const lowestMoodDay = visibleMoodData.reduce((min, day) => day.moodScore < min.moodScore ? day : min);
+        
+        insights = {
+          averageMood: Math.round(averageMood),
+          highestMoodDay,
+          lowestMoodDay,
+          totalDays: visibleMoodData.length
+        };
+      }
     }
 
     return NextResponse.json({

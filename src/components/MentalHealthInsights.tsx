@@ -218,7 +218,7 @@ function PersonalityCard({ psyPayload, loading }: { psyPayload: PsyPayload | nul
           <div className="mt-6 pt-6 border-t border-zinc-700 space-y-4 transition-all duration-300">
             <div className="text-center">
               <p className="text-zinc-400 text-sm break-words">
-                Based on your <span className="text-white font-medium">Musical Diversity</span>, <span className="text-white font-medium">Exploration Rate</span>, <span className="text-white font-medium">Temporal Consistency</span>, <span className="text-white font-medium">Mainstream Affinity</span>, and <span className="text-white font-medium">Emotional Volatility</span> patterns.
+                Based on your Musical Diversity, Exploration Rate, Temporal Consistency, Mainstream Affinity, and Emotional Volatility patterns.
               </p>
             </div>
           </div>
@@ -527,7 +527,7 @@ function MoodBarChart() {
                   </span>
                 </div>
                 <p className="text-zinc-400 text-sm break-words">
-                   Energy dipped—take a mindful moment to recharge.
+                   Your music reflected a quieter, more introspective mood.
                 </p>
               </div>
               
@@ -539,7 +539,7 @@ function MoodBarChart() {
                   </span>
                 </div>
                 <p className="text-zinc-400 text-sm break-words">
-                   Sky-high vibes—ride that positive momentum!
+                   Your music showed high energy and positive emotional patterns.
                 </p>
               </div>
             </div>

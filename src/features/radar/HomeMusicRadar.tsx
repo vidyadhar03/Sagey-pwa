@@ -174,15 +174,7 @@ export default function HomeMusicRadar({ onTabClick, onShareClick }: HomeMusicRa
               <PolarAngleAxis
                 dataKey="axis"
                 tick={({ payload, x, y, cx, cy, ...rest }) => {
-                  let label = payload.value;
-                  let showTooltip = false;
-                  if (label === 'Positivity') {
-                    label = 'Positivity (estimated)';
-                    showTooltip = true;
-                  } else if (label === 'Energy') {
-                    label = 'Energy (estimated)';
-                    showTooltip = true;
-                  }
+                  const label = payload.value;
                   return (
                     <g>
                       <text
@@ -196,9 +188,6 @@ export default function HomeMusicRadar({ onTabClick, onShareClick }: HomeMusicRa
                       >
                         {label}
                       </text>
-                      {showTooltip && (
-                        <title>(estimated from genres)</title>
-                      )}
                     </g>
                   );
                 }}
