@@ -68,7 +68,7 @@ export default function HomeMusicRadar({ onTabClick, onShareClick }: HomeMusicRa
             className="p-2 rounded-lg transition-all duration-200 text-zinc-400 hover:text-white hover:bg-zinc-800"
             title="View radar details"
           >
-            <Info size={20} />
+            <Info size={22} />
           </button>
           <button
             onClick={handleShare}

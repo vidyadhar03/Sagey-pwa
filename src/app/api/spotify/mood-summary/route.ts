@@ -51,16 +51,16 @@ Create exactly 2 bullet points that:
 1. Highlight their mood journey or standout moments
 2. Mention specific genres ONLY (no artists)  
 3. Use an encouraging, friendly tone
-4. Include relevant mood emojis (🌕 for high moods 75+, 🌤 for good 60-74, ☁️ for mixed 40-59, 🌧 for low 30-39)
-5. Each point should be a complete, short sentence (10-15 words max)
+4. Each point should be a complete, short sentence (10-15 words max)
+5. Do not use any emojis or special characters
 
 Format as:
 • [First insight about their week]
 • [Second insight about peak/patterns]
 
 Examples:
-• You had a great week with consistent positive vibes! 🌕
-• Tuesday's Hip-Hop tracks brought your highest energy levels 🌤
+• You had a great week with consistent positive vibes
+• Tuesday's Hip-Hop tracks brought your highest energy levels
 
 Keep each point concise, personal, and uplifting.`;
 

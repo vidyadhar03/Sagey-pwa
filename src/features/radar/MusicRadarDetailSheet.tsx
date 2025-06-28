@@ -123,7 +123,7 @@ export function MusicRadarDetailSheet({ open, onClose, payload }: MusicRadarDeta
             >
               <Dialog.Panel
                 ref={sheetContentRef}
-                className="w-full max-w-2xl max-h-[90vh] transform overflow-hidden rounded-2xl 
+                className="w-full max-w-2xl max-h-[50vh] transform overflow-hidden rounded-2xl 
                            bg-zinc-900 border border-zinc-700/50 shadow-2xl transition-all"
               >
                 {/* Header */}
@@ -141,7 +141,7 @@ export function MusicRadarDetailSheet({ open, onClose, payload }: MusicRadarDeta
                 </div>
 
                 {/* Scrollable Content */}
-                <div className="overflow-y-auto max-h-[calc(90vh-80px)]" id="shareable-content">
+                <div className="overflow-y-auto max-h-[calc(50vh-80px)]" id="shareable-content">
                   <div className="p-6 space-y-6">
                     
 

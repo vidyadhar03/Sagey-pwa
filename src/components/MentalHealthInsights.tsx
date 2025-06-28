@@ -258,8 +258,6 @@ function PersonalityCard({ psyPayload, loading }: { psyPayload: PsyPayload | nul
 
         {isExpanded && (
           <div className="mt-6 pt-6 border-t border-zinc-700 space-y-4 transition-all duration-300">
-            <h5 className="text-lg font-semibold text-white mb-4">How Your Personality is Determined</h5>
-            
             <div className="p-4 bg-zinc-800/50 rounded-lg border border-zinc-700/50">
               <div className="text-zinc-300 text-sm">
                 <p className="font-medium text-white mb-3">Your personality type is determined by analyzing 5 key listening attributes:</p>
