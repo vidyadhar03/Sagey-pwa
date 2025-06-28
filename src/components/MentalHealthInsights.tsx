@@ -2,7 +2,9 @@
 
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, Brain, TrendingUp, Music, Sparkles, Heart, Shield, Compass } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { usePsyMetrics } from '../hooks/usePsyMetrics';
+import { useMoodData, DailyMoodData } from '../hooks/useMoodData';
 import { PsyPayload } from '../features/psycho/types';
 
 // Personality calculation logic
@@ -129,12 +131,7 @@ const samplePersonality = {
   ]
 };
 
-const sampleMoodData = [
-  { week: "Week 1", mood: 7.2, dominantGenre: "Indie Folk" },
-  { week: "Week 2", mood: 5.8, dominantGenre: "Alternative Rock" },
-  { week: "Week 3", mood: 8.1, dominantGenre: "Lo-fi Hip Hop" },
-  { week: "Week 4", mood: 4.3, dominantGenre: "Sad Pop" },
-];
+
 
 const sampleRecommendations = [
   {
@@ -217,13 +214,8 @@ function PersonalityCard({ psyPayload, loading }: { psyPayload: PsyPayload | nul
   return (
     <div className="bg-zinc-900 rounded-2xl p-6 border border-white/10 shadow-lg">
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className={`p-2 rounded-lg bg-gradient-to-r ${dominantPersonality?.color || 'from-purple-500 to-pink-500'}`}>
-            <Brain size={24} className="text-white" />
-          </div>
-          <div>
-            <h3 className="text-xl font-semibold text-white">Personality</h3>
-          </div>
+        <div>
+          <h3 className="text-xl font-semibold text-white">Personality</h3>
         </div>
         <button
           onClick={() => setIsExpanded(!isExpanded)}
@@ -283,32 +275,105 @@ function PersonalityCard({ psyPayload, loading }: { psyPayload: PsyPayload | nul
 
 function MoodBarChart() {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [hoveredDay, setHoveredDay] = useState<DailyMoodData | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState<{vertical: 'top' | 'bottom', horizontal: 'left' | 'center' | 'right'}>({
+    vertical: 'top',
+    horizontal: 'center'
+  });
+  
+  // Get real mood data
+  const { moodData, insights, loading, error, aiSummary, summaryLoading } = useMoodData();
 
-  const getMoodColor = (mood: number) => {
-    if (mood >= 7) return "bg-green-500";
-    if (mood >= 5) return "bg-yellow-500"; 
-    return "bg-red-500";
+  // Mood emojis for visualization
+  const getMoodEmoji = (mood: number) => {
+    if (mood >= 75) return "🌞";
+    if (mood >= 60) return "🌤";
+    if (mood >= 40) return "☁️";
+    return "🌧";
   };
 
   const getMoodLabel = (mood: number) => {
-    if (mood >= 8) return "Excellent";
-    if (mood >= 7) return "Good";
-    if (mood >= 5) return "Moderate";
-    if (mood >= 3) return "Low";
-    return "Very Low";
+    if (mood >= 75) return "Joyful & Stable";
+    if (mood >= 60) return "Doing Fine";
+    if (mood >= 40) return "Mild Volatility";
+    return "Mood Unstable";
   };
 
+
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="bg-zinc-900 rounded-2xl p-6 border border-white/10 shadow-lg">
+        <div className="animate-pulse space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-zinc-700 rounded-lg"></div>
+            <div className="space-y-2">
+              <div className="h-4 bg-zinc-700 rounded w-40"></div>
+              <div className="h-3 bg-zinc-700 rounded w-56"></div>
+            </div>
+          </div>
+          <div className="h-64 bg-zinc-700 rounded"></div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    const isPermissionError = error.includes('permissions') || error.includes('403');
+    
+    return (
+      <div className="bg-zinc-900 rounded-2xl p-6 border border-white/10 shadow-lg">
+        <div className="mb-4">
+          <h3 className="text-xl font-semibold text-white">Your weekly mood tune</h3>
+        </div>
+        <div className="text-center py-8">
+          <p className="text-zinc-400 mb-2">
+            {isPermissionError ? 'Spotify Permissions Required' : 'Failed to load mood data'}
+          </p>
+          <p className="text-zinc-500 text-sm mb-4">{error}</p>
+          {isPermissionError && (
+            <div className="mt-4 p-4 bg-orange-900/20 border border-orange-500/30 rounded-lg">
+              <p className="text-orange-300 text-sm">
+                <strong>Note:</strong> Mood analysis requires access to your listening history. 
+                Please ensure your Spotify account is properly connected.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Empty state
+  if (!moodData.length) {
+    return (
+      <div className="bg-zinc-900 rounded-2xl p-6 border border-white/10 shadow-lg">
+        <div className="mb-4">
+          <h3 className="text-xl font-semibold text-white">Your weekly mood tune</h3>
+        </div>
+        <div className="text-center py-8">
+          <p className="text-zinc-400 mb-2">No mood data available</p>
+          <p className="text-zinc-500 text-sm mb-4">
+            Listen to music on Spotify for a few days to see your mood trends.
+          </p>
+          <div className="mt-4 p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
+            <p className="text-blue-300 text-sm">
+              <strong>Tip:</strong> Your mood score is calculated from musical diversity, exploration rate, 
+              temporal consistency, and emotional volatility in your daily listening patterns.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-zinc-900 rounded-2xl p-6 border border-white/10 shadow-lg">
+    <div className="bg-zinc-900/90 backdrop-blur-sm rounded-2xl p-6 border border-white/10 shadow-xl">
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500">
-            <TrendingUp size={24} className="text-white" />
-          </div>
-          <div>
-            <h3 className="text-xl font-semibold text-white">Weekly Mood Trends</h3>
-            <p className="text-zinc-400 text-sm">Your emotional journey through music</p>
-          </div>
+        <div>
+          <h3 className="text-xl font-semibold text-white">Your weekly mood tune</h3>
         </div>
         <button
           onClick={() => setIsExpanded(!isExpanded)}
@@ -319,58 +384,279 @@ function MoodBarChart() {
       </div>
 
       <div className="space-y-6">
-        <div className="space-y-4">
-          {sampleMoodData.map((data, index) => (
-            <div key={index} className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-white font-medium">{data.week}</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-zinc-400 text-sm">{data.dominantGenre}</span>
-                  <span className="text-white font-semibold">{data.mood}/10</span>
-                </div>
-              </div>
-              <div className="w-full bg-zinc-700 rounded-full h-3">
+        {/* Simple Clean Bar Chart */}
+        <div className="relative">
+          {/* Y-axis labels */}
+          <div className="absolute left-0 top-0 h-48 flex flex-col justify-between text-xs text-zinc-400 pr-2">
+            <span>100</span>
+            <span>80</span>
+            <span>60</span>
+            <span>40</span>
+            <span>20</span>
+            <span>0</span>
+          </div>
+          
+          {/* Chart container with proper spacing */}
+          <div className="ml-8">
+            {/* Y-axis line */}
+            <div className="absolute left-8 top-0 h-48 w-px bg-zinc-600"></div>
+            
+            {/* Chart area - animated bars */}
+            <div className="flex items-end justify-center gap-6 sm:gap-8 h-48 relative pl-1">
+              {moodData.map((data, index) => (
                 <div 
-                  className={`h-3 rounded-full ${getMoodColor(data.mood)} transition-all duration-500`}
-                  style={{ width: `${data.mood * 10}%` }}
-                />
-              </div>
-              <div className="text-xs text-zinc-400">{getMoodLabel(data.mood)}</div>
+                  key={index}
+                  className="relative group cursor-pointer"
+                  onMouseEnter={(e) => {
+                    setHoveredDay(data);
+                    // Smart positioning: detect screen boundaries
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const viewportHeight = window.innerHeight;
+                    const viewportWidth = window.innerWidth;
+                    
+                    // Tooltip dimensions (approximate)
+                    const tooltipWidth = window.innerWidth < 640 ? 288 : 320; // w-72 = 288px, w-80 = 320px
+                    const tooltipHeight = 140; // approximate height
+                    
+                    // Vertical positioning
+                    const spaceAbove = rect.top;
+                    const spaceBelow = viewportHeight - rect.bottom;
+                    const vertical = spaceAbove > tooltipHeight + 20 ? 'top' : 'bottom';
+                    
+                    // Horizontal positioning
+                    const centerX = rect.left + rect.width / 2;
+                    const tooltipLeft = centerX - tooltipWidth / 2;
+                    const tooltipRight = centerX + tooltipWidth / 2;
+                    
+                    let horizontal: 'left' | 'center' | 'right' = 'center';
+                    if (tooltipLeft < 10) {
+                      horizontal = 'left';
+                    } else if (tooltipRight > viewportWidth - 10) {
+                      horizontal = 'right';
+                    }
+                    
+                    setTooltipPosition({ vertical, horizontal });
+                  }}
+                  onMouseLeave={() => setHoveredDay(null)}
+                  onTouchStart={(e) => {
+                    setHoveredDay(data);
+                    // Smart positioning for mobile
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const viewportHeight = window.innerHeight;
+                    const viewportWidth = window.innerWidth;
+                    
+                    // Tooltip dimensions (approximate)
+                    const tooltipWidth = window.innerWidth < 640 ? 288 : 320;
+                    const tooltipHeight = 140;
+                    
+                    // Vertical positioning
+                    const spaceAbove = rect.top;
+                    const spaceBelow = viewportHeight - rect.bottom;
+                    const vertical = spaceAbove > tooltipHeight + 20 ? 'top' : 'bottom';
+                    
+                    // Horizontal positioning
+                    const centerX = rect.left + rect.width / 2;
+                    const tooltipLeft = centerX - tooltipWidth / 2;
+                    const tooltipRight = centerX + tooltipWidth / 2;
+                    
+                    let horizontal: 'left' | 'center' | 'right' = 'center';
+                    if (tooltipLeft < 10) {
+                      horizontal = 'left';
+                    } else if (tooltipRight > viewportWidth - 10) {
+                      horizontal = 'right';
+                    }
+                    
+                    setTooltipPosition({ vertical, horizontal });
+                  }}
+                  onTouchEnd={() => {
+                    // Keep tooltip visible for a moment on mobile
+                    setTimeout(() => setHoveredDay(null), 3000);
+                  }}
+                >
+                  {/* Redesigned animated bar */}
+                  <motion.div 
+                    className="w-8 sm:w-12 relative overflow-hidden rounded-t-xl"
+                    initial={{ height: 0 }}
+                    animate={{ 
+                      height: `${Math.max(4, (data.moodScore / 100) * 192)}px`
+                    }}
+                    transition={{ 
+                      duration: 0.8,
+                      delay: index * 0.1,
+                      ease: "easeOut"
+                    }}
+                    whileHover={{ 
+                      scale: 1.05,
+                      transition: { duration: 0.2 }
+                    }}
+                  >
+                    {/* Main gradient bar */}
+                    <div className={`w-full h-full relative ${
+                      data.moodScore >= 75 
+                        ? 'bg-gradient-to-t from-emerald-600 via-emerald-500 to-emerald-300' 
+                        : data.moodScore >= 60 
+                        ? 'bg-gradient-to-t from-blue-600 via-blue-500 to-blue-300'
+                        : data.moodScore >= 40 
+                        ? 'bg-gradient-to-t from-gray-600 via-gray-500 to-gray-300'
+                        : 'bg-gradient-to-t from-purple-600 via-purple-500 to-purple-300'
+                    }`}>
+                      {/* Glass overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-transparent via-white/10 to-white/20 backdrop-blur-[1px]"></div>
+                      
+                      {/* Shine effect */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform -skew-x-12"></div>
+                      
+                      {/* Top highlight */}
+                      <div className="absolute top-0 left-0 right-0 h-1 bg-white/30 rounded-t-xl"></div>
+                    </div>
+
+                    {/* Value label on hover */}
+                    <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="bg-zinc-800/90 backdrop-blur-sm border border-zinc-700/50 rounded-lg px-2 py-1 text-xs text-white whitespace-nowrap shadow-lg">
+                        {data.moodScore}%
+                      </div>
+                    </div>
+                  </motion.div>
+                  
+                  {/* Enhanced tooltip with smart positioning */}
+                  {hoveredDay === data && (
+                    <motion.div 
+                      className={`absolute z-20 bg-zinc-800 border border-zinc-700 rounded-lg p-3 shadow-xl w-72 sm:w-80 ${
+                        tooltipPosition.vertical === 'top' 
+                          ? 'bottom-full mb-4' 
+                          : 'top-full mt-4'
+                      } ${
+                        tooltipPosition.horizontal === 'left' 
+                          ? 'left-0' 
+                          : tooltipPosition.horizontal === 'right' 
+                          ? 'right-0' 
+                          : 'left-1/2 transform -translate-x-1/2'
+                      }`}
+                      initial={{ opacity: 0, y: tooltipPosition.vertical === 'top' ? 10 : -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      {/* Arrow pointing to bar */}
+                      <div className={`absolute w-3 h-3 bg-zinc-800 border rotate-45 ${
+                        tooltipPosition.vertical === 'top' 
+                          ? 'top-full -mt-2 border-r-zinc-700 border-b-zinc-700 border-l-transparent border-t-transparent' 
+                          : 'bottom-full -mb-2 border-l-zinc-700 border-t-zinc-700 border-r-transparent border-b-transparent'
+                      } ${
+                        tooltipPosition.horizontal === 'left' 
+                          ? 'left-6' 
+                          : tooltipPosition.horizontal === 'right' 
+                          ? 'right-6' 
+                          : 'left-1/2 transform -translate-x-1/2'
+                      }`}></div>
+                      
+                      <div className="text-white font-medium mb-1">
+                        {new Date(data.date).toLocaleDateString('en-US', { 
+                          weekday: 'long', 
+                          month: 'short', 
+                          day: 'numeric' 
+                        })}
+                      </div>
+                      <div className="text-zinc-300 text-sm mb-2">
+                        Mood Score: {data.moodScore}% - {getMoodLabel(data.moodScore)} {getMoodEmoji(data.moodScore)}
+                      </div>
+                      <div className="text-zinc-400 text-xs mb-2">
+                        {data.insight}
+                      </div>
+                      <div className="text-zinc-500 text-xs pt-2 border-t border-zinc-700">
+                        {data.trackCount} tracks • Diversity: {data.musicalDiversity}% • Exploration: {data.explorationRate}%
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+              ))}
             </div>
-          ))}
+            
+            {/* X-axis line */}
+            <div className="border-b border-zinc-600 pl-1"></div>
+            
+            {/* Day labels with emojis below x-axis */}
+            <div className="flex justify-center gap-6 sm:gap-8 pl-1 mt-2">
+              {moodData.map((data, index) => (
+                <motion.div 
+                  key={index}
+                  className="w-8 sm:w-12 flex flex-col items-center"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ 
+                    duration: 0.5,
+                    delay: index * 0.1 + 0.3
+                  }}
+                >
+                  <div className="text-base sm:text-lg mb-1">
+                    {getMoodEmoji(data.moodScore)}
+                  </div>
+                  <div className="text-xs sm:text-sm text-zinc-300 font-medium">
+                    {data.dayName}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
         </div>
 
-        {isExpanded && (
+        {/* Weekly mood summary */}
+        <motion.div 
+          className="text-center mt-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 1.2 }}
+        >
+          {summaryLoading ? (
+            <div className="flex items-center justify-center gap-2 text-zinc-400">
+              <div className="w-4 h-4 border-2 border-zinc-600 border-t-white rounded-full animate-spin"></div>
+              <span className="text-sm">Analyzing your weekly mood...</span>
+            </div>
+          ) : (
+            <div className="text-zinc-300 text-sm leading-relaxed space-y-2">
+              {aiSummary ? (
+                aiSummary.split(/[•\n]/).filter(point => point.trim()).map((point, index) => (
+                  <div key={index} className="flex items-start gap-2">
+                    <span className="text-blue-400 mt-1">•</span>
+                    <span>{point.trim()}</span>
+                  </div>
+                ))
+              ) : (
+                <p>No summary available.</p>
+              )}
+            </div>
+          )}
+        </motion.div>
+
+        {isExpanded && insights && (
           <div className="mt-6 pt-6 border-t border-zinc-700 space-y-4 transition-all duration-300">
-            <h5 className="text-lg font-semibold text-white mb-4">Mood Analysis</h5>
+            <h5 className="text-lg font-semibold text-white mb-4">Weekly Mood Analysis</h5>
             <div className="space-y-3">
-              <div className="p-4 bg-red-900/20 rounded-lg border border-red-500/30">
+              <div className={`p-4 rounded-lg border ${insights.lowestMoodDay.moodScore <= 50 ? 'bg-purple-900/20 border-purple-500/30' : 'bg-gray-900/20 border-gray-500/30'}`}>
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                  <span className="text-red-300 font-medium">Week 4 - Lowest Point</span>
+                  <div className={`w-2 h-2 rounded-full ${insights.lowestMoodDay.moodScore <= 50 ? 'bg-purple-500' : 'bg-gray-500'}`}></div>
+                  <span className={`font-medium ${insights.lowestMoodDay.moodScore <= 50 ? 'text-purple-300' : 'text-gray-300'}`}>
+                    {insights.lowestMoodDay.dayName} - Lowest Mood ({insights.lowestMoodDay.moodScore}%)
+                  </span>
                 </div>
                 <p className="text-zinc-300 text-sm">
-                  You were feeling low while listening to <strong>Sad Pop</strong>. This genre typically reflects 
-                  periods of introspection or emotional processing.
+                  {insights.lowestMoodDay.insight}
                 </p>
               </div>
-              <div className="p-4 bg-green-900/20 rounded-lg border border-green-500/30">
+              
+              <div className={`p-4 rounded-lg border ${insights.highestMoodDay.moodScore >= 70 ? 'bg-emerald-900/20 border-emerald-500/30' : 'bg-blue-900/20 border-blue-500/30'}`}>
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-green-300 font-medium">Week 3 - Peak Mood</span>
+                  <div className={`w-2 h-2 rounded-full ${insights.highestMoodDay.moodScore >= 70 ? 'bg-emerald-500' : 'bg-blue-500'}`}></div>
+                  <span className={`font-medium ${insights.highestMoodDay.moodScore >= 70 ? 'text-emerald-300' : 'text-blue-300'}`}>
+                    {insights.highestMoodDay.dayName} - Peak Mood ({insights.highestMoodDay.moodScore}%)
+                  </span>
                 </div>
                 <p className="text-zinc-300 text-sm">
-                  Your highest mood coincided with <strong>Lo-fi Hip Hop</strong>, suggesting this genre 
-                  helps you feel calm and focused.
+                  {insights.highestMoodDay.insight}
                 </p>
               </div>
             </div>
-            <div className="mt-4 p-4 bg-zinc-800/50 rounded-lg border border-zinc-700/50">
-              <p className="text-zinc-300 text-sm">
-                <strong>How it's calculated:</strong> Mood scores are derived from track valence, energy, 
-                listening duration, skip rates, and genre emotional associations across your weekly listening patterns.
-              </p>
-            </div>
+            
+
           </div>
         )}
       </div>
@@ -384,14 +670,9 @@ function SpotifyRecommendations() {
   return (
     <div className="bg-zinc-900 rounded-2xl p-6 border border-white/10 shadow-lg">
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500">
-            <Music size={24} className="text-white" />
-          </div>
-          <div>
-            <h3 className="text-xl font-semibold text-white">Wellness Playlists</h3>
-            <p className="text-zinc-400 text-sm">Curated music for your mental health</p>
-          </div>
+        <div>
+          <h3 className="text-xl font-semibold text-white">Wellness Playlists</h3>
+          <p className="text-zinc-400 text-sm">Curated music for your mental health</p>
         </div>
         <button
           onClick={() => setIsExpanded(!isExpanded)}
