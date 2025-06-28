@@ -566,7 +566,7 @@ function WellnessPlaylists() {
     return (
       <div className="w-full max-w-full overflow-hidden bg-zinc-900 rounded-2xl p-4 sm:p-6 border border-white/10 shadow-lg">
         <div className="mb-4">
-          <h3 className="text-lg sm:text-xl font-semibold text-white break-words">What Can Help You Feel Better?</h3>
+          <h3 className="text-lg sm:text-xl font-semibold text-white break-words">Sounds to Soothe You</h3>
         </div>
         <div className="text-center py-8">
           <p className="text-zinc-400 mb-2 break-words">Unable to load wellness playlists</p>
@@ -581,7 +581,7 @@ function WellnessPlaylists() {
     return (
       <div className="w-full max-w-full overflow-hidden bg-zinc-900 rounded-2xl p-4 sm:p-6 border border-white/10 shadow-lg">
         <div className="mb-4">
-          <h3 className="text-lg sm:text-xl font-semibold text-white break-words">What Can Help You Feel Better?</h3>
+          <h3 className="text-lg sm:text-xl font-semibold text-white break-words">Sounds to Soothe You</h3>
         </div>
         <div className="text-center py-8">
           <p className="text-zinc-400 mb-2 break-words">No wellness data available</p>
@@ -593,13 +593,19 @@ function WellnessPlaylists() {
 
   const { emotionalState, playlists, insight } = data;
   
+  const moodTitleMap: Record<string, string> = {
+    positive: 'Positivity Boost',
+    neutral: 'Balanced Vibes',
+    low: 'Gentle Lift'
+  };
+
   // Debug logging
   console.log('🎵 Wellness Playlists Data:', { emotionalState, playlists: playlists?.length, insight });
 
   return (
     <div className="w-full max-w-full overflow-hidden bg-zinc-900 rounded-2xl p-4 sm:p-6 border border-white/10 shadow-lg">
       <div className="mb-4 sm:mb-6">
-        <h3 className="text-lg sm:text-xl font-semibold text-white mb-4 break-words">What Can Help You Feel Better?</h3>
+        <h3 className="text-lg sm:text-xl font-semibold text-white mb-4 break-words">Sounds to Soothe You</h3>
         
         {/* Horizontally Scrollable Playlist Boxes */}
         <div className="relative mb-6">
@@ -687,7 +693,7 @@ function WellnessPlaylists() {
               <Brain size={16} className="text-white" />
             </div>
             <div className="flex items-center gap-2 min-w-0 flex-1">
-              <span className="text-zinc-300 text-sm capitalize truncate">{emotionalState.state} mood</span>
+              <span className="text-zinc-300 text-sm capitalize truncate">{moodTitleMap[emotionalState.state] || 'Mood Insight'}</span>
             </div>
           </div>
           <p className="text-zinc-300 text-sm leading-relaxed break-words">

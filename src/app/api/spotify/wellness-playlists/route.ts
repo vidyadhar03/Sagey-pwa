@@ -451,26 +451,19 @@ export async function POST(request: NextRequest) {
     );
 
     // Generate overall mood insight
-    const overallInsightPrompt = `Create a supportive wellness insight for a music listener:
+    const playlistNames = selectedPlaylists.map(p=>`"${p.title}"`).join(', ');
+    const overallInsightPrompt = `Compose a single friendly sentence (max 25 words) telling the user *how* the recommended playlists will support their current ${emotionalState.state} mood.
 
-CURRENT STATE:
-- Mood trend: ${emotionalState.state} (${emotionalState.averageScore}/100 average)
-- Personality: ${personalityType}
-- Recent musical preferences: ${topGenres.join(', ') || 'varied'}
+DETAILS TO USE:
+• Playlists: ${playlistNames}
+• Personality type: ${personalityType}
+• Key benefit examples: boost energy, maintain positivity, gentle uplift, calm focus.
 
-Create exactly 1 encouraging sentence that:
-1. Acknowledges their recent emotional state  
-2. Explains how music can support their wellness
-3. Feels personal and supportive
-4. Keep it under 25 words
-5. Do not use emojis
-
-Examples:
-- "Your mood has been drifting lately - these carefully chosen playlists can help you find balance again"
-- "You've been feeling positive this week - let's keep that energy flowing with some uplifting discoveries"
-- "Recent low energy detected - these gentle playlists are designed to slowly lift your spirits"
-
-Write one similar insight for this user.`;
+Requirements:
+1. Reference the playlists collectively (no more than two names) or generically ("these mixes").
+2. Explain the emotional/mental benefit.
+3. Encourage listening.
+4. No emojis.`;
 
     let insight = "Music can be a powerful companion for emotional wellness - these playlists are chosen just for you.";
     try {
