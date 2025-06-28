@@ -758,7 +758,7 @@ export default function SpotifyDataView({ initialSection, onUpdateTopBar, scroll
                 </button>
               </div>
               
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between mt-4 ">
                 <h3 className="text-white text-lg font-medium capitalize">
                   {activeTab === 'tracks' ? 'Tracks' :
                    activeTab === 'artists' ? 'Artists' :
