@@ -204,31 +204,53 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fetch recent tracks (last 7 days)
-    const recentTracksResponse = await fetch(
-      'https://api.spotify.com/v1/me/player/recently-played?limit=50',
-      {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
-      }
-    );
+    // We may need more than 50 tracks to cover 5-7 days, so paginate backwards using the "before" parameter
+    let tracks: any[] = [];
+    let continueFetching = true;
+    let before = Date.now();
 
-    if (!recentTracksResponse.ok) {
-      if (recentTracksResponse.status === 401) {
+    while (continueFetching && tracks.length < 500) {
+      const url = `https://api.spotify.com/v1/me/player/recently-played?limit=50&before=${before}`;
+      const resp = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${accessToken}` }
+      });
+
+      if (!resp.ok) {
+        if (resp.status === 401) {
+          return NextResponse.json(
+            { error: 'Token expired', shouldRefresh: true },
+            { status: 401 }
+          );
+        }
         return NextResponse.json(
-          { error: 'Token expired', shouldRefresh: true },
-          { status: 401 }
+          { error: 'Failed to fetch recent tracks' },
+          { status: resp.status }
         );
       }
-      return NextResponse.json(
-        { error: 'Failed to fetch recent tracks' },
-        { status: recentTracksResponse.status }
-      );
+
+      const data = await resp.json();
+      if (Array.isArray(data.items)) {
+        tracks.push(...data.items);
+        if (data.items.length > 0) {
+          const oldest = data.items[data.items.length - 1];
+          before = new Date(oldest.played_at).getTime() - 1000; // move one second before oldest
+          const daysDiff = Math.floor((Date.now() - new Date(oldest.played_at).getTime()) / (1000 * 60 * 60 * 24));
+          if (daysDiff > 7) {
+            continueFetching = false;
+          }
+        } else {
+          continueFetching = false;
+        }
+      } else {
+        continueFetching = false;
+      }
     }
 
-    const recentTracksData = await recentTracksResponse.json();
-    const tracks = recentTracksData.items;
+    // Trim to tracks within last 7 days just in case
+    tracks = tracks.filter(item => {
+      const playedAt = new Date(item.played_at).getTime();
+      return (Date.now() - playedAt) <= 7 * 24 * 60 * 60 * 1000;
+    });
 
     if (!tracks || tracks.length === 0) {
       return NextResponse.json({
@@ -277,6 +299,8 @@ export async function GET(request: NextRequest) {
     const dailyTrackMap = new Map<string, any[]>();
     const now = new Date();
     
+    console.log(`📅 Grouping ${tracks.length} tracks by day...`);
+    
     tracks.forEach((item: any) => {
       const playedAt = new Date(item.played_at);
       const daysDiff = Math.floor((now.getTime() - playedAt.getTime()) / (1000 * 60 * 60 * 24));
@@ -291,11 +315,52 @@ export async function GET(request: NextRequest) {
       }
     });
 
+    console.log(`📊 Daily track distribution:`, Array.from(dailyTrackMap.entries()).map(([date, tracks]) => ({
+      date,
+      dayName: getDayName(new Date(date)),
+      trackCount: tracks.length
+    })));
+
     // Calculate daily mood scores
     const moodData: DailyMoodData[] = [];
     
-    for (const [dateString, dayTracks] of dailyTrackMap) {
-      if (dayTracks.length === 0) continue;
+    // Ensure we have entries for the last 7 days, even if no tracks
+    const last7Days: string[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      last7Days.push(getDateString(date));
+    }
+    
+    console.log(`📅 Ensuring data for last 7 days:`, last7Days);
+    
+    // Process each of the last 7 days
+    for (const dateString of last7Days) {
+      const dayTracks = dailyTrackMap.get(dateString) || [];
+      
+      if (dayTracks.length === 0) {
+        console.log(`⚠️ No tracks for ${dateString}, creating minimal entry`);
+        // Create minimal entry for days with no listening activity
+        const date = new Date(dateString);
+        const dayName = getDayName(date);
+        
+        moodData.push({
+          date: dateString,
+          dayName,
+          moodScore: 0, // This will trigger the no-data styling
+          trackCount: 0,
+          musicalDiversity: 0,
+          explorationRate: 0,
+          temporalConsistency: 0,
+          mainstreamAffinity: 0,
+          emotionalVolatility: 0,
+          insight: `${dayName}: No listening activity recorded`,
+          topGenres: []
+        });
+        continue;
+      }
+      
+      console.log(`🎵 Processing ${dateString} with ${dayTracks.length} tracks`);
 
       const metrics = calculateDailyMetrics(dayTracks, artistsMap);
       const { topGenres } = extractTopGenres(dayTracks, artistsMap);
@@ -328,9 +393,6 @@ export async function GET(request: NextRequest) {
         topGenres
       });
     }
-
-    // Sort by date (oldest first)
-    moodData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     // Generate insights
     let insights = null;

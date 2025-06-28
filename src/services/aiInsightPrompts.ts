@@ -9,8 +9,7 @@ import {
 import { MusicalAgePayload } from '../utils/insightSelectors';
 import { RadarPayload } from '../features/radar/types';
 import { radarAxisConfig, coachTipConfig, excludedCoachAxes } from '../features/radar/radarNarrativeConfig';
-import { HypePayload } from '../features/psycho/buildHypePayload';
-import { getTraitSeed, selectUniqueSeeds, coachTipSeeds } from '../features/psycho/copy';
+
 
 /**
  * Builds AI prompts for generating fun, quirky copy for insight cards
@@ -245,82 +244,7 @@ Example format:
 Generate JSON now:`;
 }
 
-function buildPsyHypePrompt(data: HypePayload, variant: "witty" | "poetic" = "witty"): string {
-  // Determine tone based on topGenre cluster (existing logic)
-  const genreCluster = getGenreCluster(data.topGenre);
-  const tone = genreCluster === 'electronic' ? 'genZ' : 
-               genreCluster === 'rock' ? 'coach' : 'chill';
-  
-  // Collect trait seeds for each metric, ensuring uniqueness
-  const usedSeeds = new Set<string>();
-  const traitSeedInstructions: string[] = [];
-  
-  Object.entries(data.psycho.scores).forEach(([metricName, scoreData]) => {
-    const seeds = getTraitSeed(metricName, scoreData.score);
-    if (seeds.length > 0) {
-      // Select unique seeds that haven't been used yet
-      const availableSeeds = seeds.filter(seed => !usedSeeds.has(seed));
-      if (availableSeeds.length > 0) {
-        const selectedSeed = selectUniqueSeeds(availableSeeds, 1)[0];
-        usedSeeds.add(selectedSeed);
-        traitSeedInstructions.push(`${metricName}: use "${selectedSeed}" as trait inspiration`);
-      }
-    }
-  });
-  
-  // Generate coach tip combinations for weak metrics (score < 0.4)
-  const weakMetrics = Object.entries(data.psycho.scores)
-    .filter(([_, scoreData]) => scoreData.score < 0.4)
-    .slice(0, 2); // Limit to 2 tips max
-  
-  const coachTipInstructions: string[] = [];
-  if (weakMetrics.length > 0) {
-    const selectedVerbs = selectUniqueSeeds(coachTipSeeds.verbs, weakMetrics.length);
-    const selectedNouns = selectUniqueSeeds(coachTipSeeds.nouns, weakMetrics.length);
-    
-    weakMetrics.forEach(([metricName], index) => {
-      const verb = selectedVerbs[index] || selectedVerbs[0];
-      const noun = selectedNouns[index] || selectedNouns[0];
-      coachTipInstructions.push(`${metricName}: "${verb} new ${noun}"`);
-    });
-  }
-  
-  // Compact instructions
-  const base = `Vynce's music psychologist. JSON: {headline, context, traits:[...], tips:[...]}
-traits: 1-3 ≤80 chars. tips: 0-3 ≤70 chars for weak scores only.`;
 
-  const style = variant === "witty" 
-    ? `WITTY: emoji + upbeat ≤90 chars headline, emoji context ≤110 chars, Gen-Z tone.`
-    : `POETIC: emoji + metaphors ≤85 chars headline, lyrical context ≤110 chars, no text emojis.`;
-
-  // Compact seed guidance
-  const seeds = traitSeedInstructions.length > 0 || coachTipInstructions.length > 0 
-    ? `\nSeeds: ${[...traitSeedInstructions, ...coachTipInstructions].join(', ')}`
-    : '';
-
-  return `${base} ${style}${seeds}
-
-Data: ${JSON.stringify(data)}`;
-}
-
-// Helper function to determine genre cluster for tone selection
-function getGenreCluster(topGenre: string): 'electronic' | 'rock' | 'other' {
-  const lowerGenre = topGenre.toLowerCase();
-  
-  if (lowerGenre.includes('electronic') || lowerGenre.includes('edm') || 
-      lowerGenre.includes('house') || lowerGenre.includes('techno') ||
-      lowerGenre.includes('dubstep') || lowerGenre.includes('trap')) {
-    return 'electronic';
-  }
-  
-  if (lowerGenre.includes('rock') || lowerGenre.includes('metal') ||
-      lowerGenre.includes('punk') || lowerGenre.includes('grunge') ||
-      lowerGenre.includes('indie rock')) {
-    return 'rock';
-  }
-  
-  return 'other';
-}
 
 export function buildPrompt(type: InsightType, data: InsightPayload, options?: { variant?: "witty" | "poetic" }): string {
   switch (type) {
@@ -336,11 +260,7 @@ export function buildPrompt(type: InsightType, data: InsightPayload, options?: {
       return buildRadarSummaryPrompt(data as RadarPayload);
     case 'radar_hype':
       return buildRadarHypePrompt(data as RadarPayload);
-    case 'psycho_hype_v2':
-      return buildPsyHypePrompt(data as HypePayload, options?.variant);
     default:
       throw new Error(`Unknown insight type: ${type}`);
   }
-}
-
-export { buildPsyHypePrompt }; 
+} 

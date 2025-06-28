@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useRouter } from 'next/navigation';
+
 import UserProfile from '../UserProfile';
 import SpotifyDebugPanel from '../SpotifyDebugPanel';
 
@@ -49,7 +49,7 @@ export default function HomeLayout({ onTabClick, onInsightShare, scrollContainer
   // Combine errors from URL params and hook
   const displayError = spotifyError || spotifyHookError;
 
-  const router = useRouter();
+
 
   console.log('🏠 HomeLayout rendering:', { 
     connected, 
@@ -282,43 +282,8 @@ export default function HomeLayout({ onTabClick, onInsightShare, scrollContainer
 
           {/* Music Radar Overview */}
           {connected && (
-            <div className="mb-8">
+            <div className="mb-4">
               <HomeMusicRadar onTabClick={onTabClick} onShareClick={onInsightShare} />
-              
-              {/* Psycho-analysis Teaser Card */}
-              <div className="mt-4">
-                <button
-                  onClick={() => router.push('/psycho')}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      router.push('/psycho');
-                    }
-                  }}
-                  className="w-full h-14 bg-zinc-900 hover:bg-zinc-800 border border-white/10 hover:border-green-400/30 rounded-2xl p-4 transition-all duration-300 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-400/50 group"
-                  role="button"
-                  tabIndex={0}
-                >
-                  <div className="flex items-center justify-between h-full">
-                    {/* Left: Brain emoji in circle */}
-                    <div className="flex items-center gap-4">
-                      <div className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center group-hover:bg-green-400/20 transition-colors">
-                        <span className="text-lg">🧠</span>
-                      </div>
-                      <div className="text-left">
-                        <h3 className="text-white font-bold text-sm">Psycho-analyse me</h3>
-                        <p className="text-zinc-400 text-xs">Deeper personality insights</p>
-                      </div>
-                    </div>
-                    
-                    {/* Right: Chevron */}
-                    <div className="text-zinc-400 group-hover:text-green-400 transition-colors transform rotate-90">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <polyline points="9,18 15,12 9,6" />
-                      </svg>
-                    </div>
-                  </div>
-                </button>
-              </div>
             </div>
           )}
 
@@ -527,56 +492,46 @@ export default function HomeLayout({ onTabClick, onInsightShare, scrollContainer
             className="mt-6 mb-8"
           >
             <h3 className="text-white font-semibold text-lg mb-4">Quick Actions</h3>
-            <div className="grid grid-cols-2 gap-3">
-              {/* Top Music Tab */}
-              <button 
-                onClick={() => onTabClick?.('explore')}
-                className="flex-1 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-[#1ed760]/30 transition-all"
-              >
-                <div className="flex items-center justify-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-[#1ed760]">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6V4m0 2a2 2 0 1 0 0 4m0-4a2 2 0 1 1 0 4m-6 8a2 2 0 1 0 0-4m0 4a2 2 0 1 1 0-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 1 0 0-4m0 4a2 2 0 1 1 0-4m0 4v2m0-6V4" />
-                  </svg>
-                  <span className="text-white font-medium text-sm">Top music</span>
-                </div>
-              </button>
+            <div className="space-y-3">
+              {/* First row - Top Music and Insights */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* Top Music Tab */}
+                <button 
+                  onClick={() => onTabClick?.('explore')}
+                  className="p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-[#1ed760]/30 transition-all"
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-[#1ed760]">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6V4m0 2a2 2 0 1 0 0 4m0-4a2 2 0 1 1 0 4m-6 8a2 2 0 1 0 0-4m0 4a2 2 0 1 1 0-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 1 0 0-4m0 4a2 2 0 1 1 0-4m0 4v2m0-6V4" />
+                    </svg>
+                    <span className="text-white font-medium text-sm">Top music</span>
+                  </div>
+                </button>
 
-              {/* AI Insights Tab */}
-              <button 
-                onClick={() => onTabClick?.('insights-plus')}
-                className="flex-1 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-[#1ed760]/30 transition-all"
-              >
-                <div className="flex items-center justify-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-[#1ed760]">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z" />
-                  </svg>
-                  <span className="text-white font-medium text-sm">Insights</span>
-                </div>
-              </button>
+                {/* AI Insights Tab */}
+                <button 
+                  onClick={() => onTabClick?.('insights-plus')}
+                  className="p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-[#1ed760]/30 transition-all"
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-[#1ed760]">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z" />
+                    </svg>
+                    <span className="text-white font-medium text-sm">Insights</span>
+                  </div>
+                </button>
+              </div>
 
-              {/* Share Insights */}
+              {/* Second row - Share button full width */}
               <button 
                 onClick={onInsightShare}
-                className="flex-1 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-[#1ed760]/30 transition-all"
+                className="w-full p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-[#1ed760]/30 transition-all"
               >
                 <div className="flex items-center justify-center gap-2">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-[#1ed760]">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
                   </svg>
                   <span className="text-white font-medium text-sm">Share</span>
-                </div>
-              </button>
-
-              {/* Psychoanalyse Me */}
-              <button 
-                onClick={() => router.push('/psycho')}
-                className="flex-1 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-[#1ed760]/30 transition-all"
-              >
-                <div className="flex items-center justify-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-[#1ed760]">
-                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                  </svg>
-                  <span className="text-white font-medium text-sm">Analyse me</span>
                 </div>
               </button>
             </div>

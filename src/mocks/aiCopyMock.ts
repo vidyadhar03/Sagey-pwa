@@ -45,11 +45,7 @@ export const mockAICopy: Record<InsightType, string[]> = {
     "🌙 Peak listening powers activate at 5PM! Classic night owl musical behavior detected ✨",
   ],
   
-  psycho_hype_v2: [
-    '{"headline": "🎵 Musical Maverick Detected!", "context": "Your diverse taste spans genres like a true explorer.", "traits": ["Creative Explorer", "Genre Chameleon", "Trend Setter"], "tips": ["Try exploring ambient music for relaxation"]}',
-    '{"headline": "🌟 Sonic Adventurer Unlocked!", "context": "Your music DNA shows bold exploration patterns.", "traits": ["Musical Pioneer", "Vibe Curator"], "tips": ["Mix in some jazz to round out your palette"]}',
-    '{"headline": "🎧 Audio Architect Supreme!", "context": "Your playlist construction skills are next-level.", "traits": ["Beat Builder", "Rhythm Engineer", "Sound Designer"]}',
-  ],
+
 };
 
 /**
@@ -80,6 +76,5 @@ export function getAllMockCopies(): Record<InsightType, string> {
     mood_ring: getMockCopy('mood_ring'),
     genre_passport: getMockCopy('genre_passport'),
     night_owl_pattern: getMockCopy('night_owl_pattern'),
-    psycho_hype_v2: getMockCopy('psycho_hype_v2'),
   };
 } 

@@ -18,10 +18,9 @@ export async function getInsightCopy(
   regenerate: boolean = false,
   options?: { variant?: "witty" | "poetic" }
 ): Promise<{ copy: string; fromCache: boolean }> {
-  // Create cache key that includes variant for psycho_hype_v2
+  // Create cache key
   const dataHash = createHash('md5').update(JSON.stringify(data)).digest('hex').substring(0, 8);
-  const variantSuffix = type === 'psycho_hype_v2' && options?.variant ? `-${options.variant}` : '';
-  const cacheKey = `insight:${userId}:${type}:${dataHash}${variantSuffix}`;
+  const cacheKey = `insight:${userId}:${type}:${dataHash}`;
   
   // Check cache first (skip if regenerating)
   if (!regenerate) {
@@ -54,8 +53,7 @@ export async function getInsightCopy(
     
     // Special parameters for JSON output types to ensure valid responses
     const isRadarHype = type === 'radar_hype';
-    const isPsychoHype = type === 'psycho_hype_v2';
-    const needsJSON = isRadarHype || isPsychoHype;
+    const needsJSON = isRadarHype;
     
     console.log(`🎯 Target: ${needsJSON ? `${type.toUpperCase()} (expecting JSON)` : 'Regular insight'}`);
     
@@ -249,30 +247,6 @@ function getFallbackCopy(type: InsightType, data: InsightPayload): string {
         }
       ];
       return JSON.stringify(radarVariations[randomSeed % radarVariations.length]);
-    
-    case 'psycho_hype_v2':
-      // Return valid JSON structure for psycho_hype_v2 fallback
-      const psychoVariations = [
-        {
-          headline: '🎵 Musical soul detected!',
-          context: 'Your playlist reveals a unique personality that vibes with diverse musical landscapes.',
-          traits: ['Sonic Explorer 🎧', 'Vibe Curator ✨'],
-          tips: ['Keep discovering new genres!', 'Trust your musical instincts 🎶']
-        },
-        {
-          headline: '🌟 Audio architect supreme!',
-          context: 'Your music taste construction skills are next level - building incredible sonic experiences.',
-          traits: ['Creative Explorer 🚀', 'Musical Adventurer 🎵'],
-          tips: ['Keep exploring new sounds!', 'Create themed playlists 🎼']
-        },
-        {
-          headline: '🎧 Melody mastermind!',
-          context: 'Your playlist curation reveals someone who understands the deeper language of music.',
-          traits: ['Taste Maker 🌈', 'Sound Seeker 🔍'],
-          tips: ['Discover more niche artists!', 'Share your musical discoveries 🎶']
-        }
-      ];
-      return JSON.stringify(psychoVariations[randomSeed % psychoVariations.length]);
     
     default:
       const defaultVariations = [

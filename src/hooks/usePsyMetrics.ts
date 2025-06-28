@@ -15,9 +15,15 @@ export function usePsyMetrics(): UsePsyMetricsResult {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { connected, getRecentTracks, getTopArtists } = useSpotify();
+  const { connected, loading: spotifyLoading, getRecentTracks, getTopArtists } = useSpotify();
 
   useEffect(() => {
+    // If Spotify status itself is still loading, keep skeleton visible
+    if (spotifyLoading) {
+      setLoading(true);
+      return;
+    }
+
     if (!connected) {
       setPayload(null);
       setLoading(false);
@@ -68,7 +74,7 @@ export function usePsyMetrics(): UsePsyMetricsResult {
     }
 
     fetchPsyMetrics();
-  }, [connected, getRecentTracks, getTopArtists]);
+  }, [connected, spotifyLoading, getRecentTracks, getTopArtists]);
 
   return {
     payload,

@@ -79,6 +79,7 @@ export function useSpotifyInsights() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastLoadTime, setLastLoadTime] = useState<number>(0);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
   // Circuit breaker: prevent API spam by enforcing minimum time between calls
   const MIN_LOAD_INTERVAL = 2000; // 2 seconds minimum between loads
@@ -347,7 +348,10 @@ export function useSpotifyInsights() {
     
     if (!connected) {
       console.error('❌ VYNCE DEBUG: Not connected to Spotify, using defaults');
-      setInsights(DEFAULT_INSIGHTS);
+      // Only show fallback data if we haven't loaded real data before
+      if (!hasLoadedOnce) {
+        setInsights(DEFAULT_INSIGHTS);
+      }
       setIsLoading(false);
       setError(null);
       return;
@@ -399,7 +403,10 @@ export function useSpotifyInsights() {
       
       if (!tracksToAnalyze || tracksToAnalyze.length === 0) {
         console.error('⚠️ VYNCE DEBUG: No tracks found, using fallback data');
-        setInsights({ ...DEFAULT_INSIGHTS, isDefault: true });
+        // Only show fallback data if we haven't loaded real data before
+        if (!hasLoadedOnce) {
+          setInsights({ ...DEFAULT_INSIGHTS, isDefault: true });
+        }
         setIsLoading(false);
         return;
       }
@@ -460,11 +467,15 @@ export function useSpotifyInsights() {
       });
       
       setInsights(comprehensiveInsights);
+      setHasLoadedOnce(true);
 
     } catch (error) {
       console.error('💥 VYNCE DEBUG: Failed to load insights:', error);
       setError(error instanceof Error ? error.message : 'Failed to load insights');
-      setInsights({ ...DEFAULT_INSIGHTS, isDefault: true });
+      // Only show fallback data if we haven't loaded real data before
+      if (!hasLoadedOnce) {
+        setInsights({ ...DEFAULT_INSIGHTS, isDefault: true });
+      }
     } finally {
       setIsLoading(false);
     }

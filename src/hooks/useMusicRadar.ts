@@ -70,12 +70,17 @@ export function useMusicRadar() {
   const [payload, setPayload] = useState<RadarPayload>(cachedInitial ? cachedInitial.payload : { ...DEFAULT_PAYLOAD });
   const [isLoading, setIsLoading] = useState(!cachedInitial);
   const [error, setError] = useState<Error | null>(null);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(!!cachedInitial);
 
   // Fetch AI copy once the main payload is available and not the default
   const ai = useRadarHype(payload, !payload.isDefault);
 
   const fetchAndSetData = useCallback(async () => {
     if (!connected) {
+      // Only show fallback data if we haven't loaded real data before
+      if (!hasLoadedOnce) {
+        setPayload({ ...DEFAULT_PAYLOAD });
+      }
       setIsLoading(false);
       return;
     }
@@ -96,18 +101,19 @@ export function useMusicRadar() {
     try {
       const data = await radarFetcher(getRecentTracks, getTopArtists);
       setPayload(data);
+      setHasLoadedOnce(true);
       cache.set(cacheKey, { payload: data, timestamp: Date.now() });
     } catch (err) {
       console.error('💥 Failed to fetch Music Radar data:', err);
       setError(err instanceof Error ? err : new Error(String(err)));
-      // Keep stale data if available, otherwise fallback to default
-      if (!cache.has(cacheKey)) {
+      // Keep stale data if available, otherwise fallback to default (only if never loaded before)
+      if (!cache.has(cacheKey) && !hasLoadedOnce) {
         setPayload({ ...DEFAULT_PAYLOAD });
       }
     } finally {
       setIsLoading(false);
     }
-  }, [connected, getRecentTracks, getTopArtists]);
+  }, [connected, getRecentTracks, getTopArtists, hasLoadedOnce]);
 
   useEffect(() => {
     fetchAndSetData();

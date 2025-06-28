@@ -73,9 +73,10 @@ export function useWellnessPlaylists(): UseWellnessPlaylistsReturn {
   const [data, setData] = useState<WellnessPlaylistData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
   // Get mood data and personality
-  const { moodData } = useMoodData();
+  const { moodData, loading: moodLoading } = useMoodData();
   const { payload: psyPayload, loading: psyLoading } = usePsyMetrics();
 
   const fetchWellnessPlaylists = async () => {
@@ -83,8 +84,20 @@ export function useWellnessPlaylists(): UseWellnessPlaylistsReturn {
       setLoading(true);
       setError(null);
 
-      // Wait for mood and personality data
-      if (!moodData.length && psyLoading) {
+      // Wait until both mood and personality data are ready
+      if (moodLoading || psyLoading) {
+        // Keep skeleton visible until real data is available
+        if (!hasLoadedOnce) {
+          setLoading(true);
+        }
+        return;
+      }
+
+      if (moodData.length === 0) {
+        // No mood data yet, avoid showing stale recommendations
+        if (!hasLoadedOnce) {
+          setLoading(true);
+        }
         return;
       }
 
@@ -151,6 +164,7 @@ export function useWellnessPlaylists(): UseWellnessPlaylistsReturn {
 
       const wellnessData = await response.json();
       setData(wellnessData);
+      setHasLoadedOnce(true);
 
     } catch (err) {
       console.error('Failed to fetch wellness playlists:', err);
@@ -165,7 +179,7 @@ export function useWellnessPlaylists(): UseWellnessPlaylistsReturn {
     if (!psyLoading) {
       fetchWellnessPlaylists();
     }
-  }, [moodData.length, psyLoading, psyPayload]);
+  }, [moodData.length, moodLoading, psyLoading, psyPayload]);
 
   const refetch = () => {
     fetchWellnessPlaylists();

@@ -236,11 +236,12 @@ function MoodBarChart() {
     horizontal: 'center'
   });
   
-  // Get real mood data
+  // Get real mood data from the hook. The backend is now responsible for providing a full 5-day array.
   const { moodData, insights, loading, error, aiSummary, summaryLoading } = useMoodData();
 
   // Mood emojis for visualization
   const getMoodEmoji = (mood: number) => {
+    if (mood === 0) return "⚪"; // No data
     if (mood >= 75) return "🌞";
     if (mood >= 60) return "🌤";
     if (mood >= 40) return "☁️";
@@ -248,6 +249,7 @@ function MoodBarChart() {
   };
 
   const getMoodLabel = (mood: number) => {
+    if (mood === 0) return "No Data";
     if (mood >= 75) return "Joyful & Stable";
     if (mood >= 60) return "Doing Fine";
     if (mood >= 40) return "Mild Volatility";
@@ -299,8 +301,8 @@ function MoodBarChart() {
     );
   }
 
-  // Empty state
-  if (!moodData.length) {
+  // Empty state - check for moodData being null or empty
+  if (!moodData || moodData.length === 0) {
     return (
       <div className="w-full max-w-full overflow-hidden bg-zinc-900 rounded-2xl p-4 sm:p-6 border border-white/10 shadow-lg">
         <div className="mb-4">
@@ -358,7 +360,7 @@ function MoodBarChart() {
             <div className="ml-8 pr-4 w-full max-w-full relative">
               {/* Bars container */}
               <div className="flex items-end justify-evenly gap-0.5 sm:gap-1 h-60 sm:h-72 w-full relative">
-                {moodData.map((data, index) => (
+                {moodData.filter(d=>d.moodScore>0).map((data, index) => (
                   <div 
                     key={data.date}
                     className="flex flex-col items-center group cursor-pointer flex-1 min-w-0 relative"
@@ -409,7 +411,7 @@ function MoodBarChart() {
                       className="w-full max-w-8 sm:max-w-12 relative overflow-hidden rounded-t-lg border border-white/20 bg-white/10 backdrop-blur-sm shadow-md"
                       initial={{ height: 0 }}
                       animate={{ 
-                        height: `${Math.max(4, (data.moodScore / 100) * 240)}px`
+                        height: `${data.moodScore === 0 ? 40 : Math.max(20, (data.moodScore / 100) * 240)}px`
                       }}
                       transition={{ 
                         duration: 0.8,
@@ -423,7 +425,9 @@ function MoodBarChart() {
                     >
                       {/* Main gradient bar with enhanced styling */}
                       <div className={`w-full h-full relative rounded-t-lg ${
-                        data.moodScore >= 75 
+                        data.moodScore === 0
+                          ? 'bg-gradient-to-t from-zinc-600 via-zinc-500 to-zinc-400 shadow-zinc-400/30 border border-zinc-400/20'
+                          : data.moodScore >= 75 
                           ? 'bg-gradient-to-t from-emerald-700 via-emerald-500 to-emerald-300 shadow-emerald-500/20' 
                           : data.moodScore >= 60 
                           ? 'bg-gradient-to-t from-blue-700 via-blue-500 to-blue-300 shadow-blue-500/20'
@@ -439,6 +443,13 @@ function MoodBarChart() {
                         
                         {/* Top highlight */}
                         <div className="absolute top-0 left-0 right-0 h-1 bg-white/40 rounded-t-lg"></div>
+                        
+                        {/* No data indicator */}
+                        {data.moodScore === 0 && (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="text-xs text-white/60 font-medium">—</div>
+                          </div>
+                        )}
                       </div>
 
 
@@ -452,7 +463,7 @@ function MoodBarChart() {
               
               {/* Day labels and emojis - positioned below x-axis */}
               <div className="flex items-start justify-evenly gap-0.5 sm:gap-1 w-full mt-2">
-                {moodData.map((data) => (
+                {moodData.filter(d=>d.moodScore>0).map((data) => (
                   <div key={`label-${data.date}`} className="flex flex-col items-center flex-1 min-w-0">
                     <div className="text-zinc-400 text-xs truncate">{data.dayName.slice(0, 3)}</div>
                     <div className="text-lg mt-1">{getMoodEmoji(data.moodScore)}</div>

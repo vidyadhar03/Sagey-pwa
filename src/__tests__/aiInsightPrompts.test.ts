@@ -1,8 +1,7 @@
-import { buildPrompt, buildPsyHypePrompt } from '@/services/aiInsightPrompts';
+import { buildPrompt } from '@/services/aiInsightPrompts';
 import { MusicalAgePayload } from '@/utils/insightSelectors';
 import type { MoodRingPayload, GenrePassportPayload, NightOwlPatternPayload } from '@/lib/openaiClient';
 import { RadarPayload } from '@/features/radar/types';
-import { HypePayload } from '@/features/psycho/buildHypePayload';
 
 describe('AI Insight Prompts', () => {
   describe('buildPrompt for musical_age', () => {
@@ -244,108 +243,5 @@ describe('AI Insight Prompts', () => {
     });
   });
 
-  describe('buildPsyHypePrompt', () => {
-    const mockHypePayload: HypePayload = {
-      psycho: {
-        scores: {
-          musical_diversity: { score: 0.8, confidence: 'high', formula: 'test' },
-          exploration_rate: { score: 0.6, confidence: 'medium', formula: 'test' },
-          temporal_consistency: { score: 0.4, confidence: 'low', formula: 'test' },
-          mainstream_affinity: { score: 0.7, confidence: 'high', formula: 'test' },
-          emotional_volatility: { score: 0.3, confidence: 'insufficient', formula: 'test' },
-        },
-        metadata: {
-          tracks_analyzed: 50,
-          artists_analyzed: 25,
-          genres_found: 8,
-          generated_at: '2024-01-01T00:00:00Z',
-        },
-      },
-      radar: {
-        Positivity: 85,
-        Energy: 70,
-        Exploration: 60,
-        Nostalgia: 40,
-        'Night-Owl': 30,
-      },
-      musicalAge: {
-        age: 15,
-        era: 'Digital',
-        trackCount: 50,
-        averageYear: 2009,
-        stdDev: 8,
-        oldest: { title: 'Bohemian Rhapsody', artist: 'Queen', year: 1975 },
-        newest: { title: 'Blinding Lights', artist: 'The Weeknd', year: 2020 },
-        decadeBuckets: [{ decade: 2000, weight: 15.8 }],
-        description: 'Test description',
-      },
-      nightOwl: {
-        hourlyData: new Array(24).fill(0),
-        peakHour: 22,
-        isNightOwl: true,
-        score: 85,
-        histogram: new Array(24).fill(0),
-      },
-      moodRing: {
-        emotions: { happy: 65, energetic: 25, chill: 8, melancholy: 2 },
-        dominantMood: 'happy',
-        distribution: [{ label: 'happy', pct: 65, color: '#FFD700' }],
-      },
-      counts: { tracks: 50, artists: 25, genres: 8, weeks: 4 },
-      topGenre: 'Pop',
-      sampleTrack: { title: 'Test Track', artist: 'Test Artist' },
-    };
 
-    it('contains system role with JSON format requirements', () => {
-      const prompt = buildPsyHypePrompt(mockHypePayload);
-      
-      expect(prompt).toContain("music psychologist");
-      expect(prompt).toContain('JSON:');
-      expect(prompt).toContain('{headline, context, traits:[...], tips:[...]}');
-    });
-
-    it('includes character limits for each field', () => {
-      const prompt = buildPsyHypePrompt(mockHypePayload);
-      
-      expect(prompt).toContain('≤90 chars headline');
-      expect(prompt).toContain('≤110 chars');
-      expect(prompt).toContain('≤80 chars');
-      expect(prompt).toContain('≤70 chars');
-    });
-
-    it('includes the stringified HypePayload in user role', () => {
-      const prompt = buildPsyHypePrompt(mockHypePayload);
-      
-      expect(prompt).toContain('Data:');
-      expect(prompt).toContain('"psycho"');
-      expect(prompt).toContain('"radar"');
-      expect(prompt).toContain('"musicalAge"');
-      expect(prompt).toContain('"nightOwl"');
-      expect(prompt).toContain('"moodRing"');
-    });
-
-    it('includes guidance about clinical disorders', () => {
-      const prompt = buildPsyHypePrompt(mockHypePayload);
-      
-      // Removed as part of compact format - implicit safety
-    });
-
-    it('constrains sentence length appropriately', () => {
-      const prompt = buildPsyHypePrompt(mockHypePayload);
-      
-      // Should not contain sentence breaks beyond the character limits specified
-      const lines = prompt.split('\n');
-      const longLines = lines.filter(line => line.length > 200);
-      
-      // Most lines should be reasonable length except the JSON payload and seeds
-      expect(longLines.length).toBeLessThanOrEqual(2); // JSON and seeds lines can be long
-    });
-
-    it('works with buildPrompt function for psycho_hype_v2 type', () => {
-      const prompt = buildPrompt('psycho_hype_v2', mockHypePayload);
-      
-      expect(prompt).toContain("music psychologist");
-      expect(prompt).toContain('JSON:');
-    });
-  });
 }); 

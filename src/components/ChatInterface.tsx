@@ -150,11 +150,11 @@ export default function ChatInterface() {
       // Suggestion prompts - expanded to 6 Vynce-specific tasks
   const suggestions = [
     "Analyse my music listening patterns",
-    "Psychoanalyse me by asking the right questions",
     "What do you think about my music taste",
     "Help me understand my mood patterns",
     "Review my goals and suggest improvements",
-    "Find insights from my daily habits"
+    "Find insights from my daily habits",
+    "Discover new music based on my vibes"
   ];
 
   // Custom delay function with faster staggered timing

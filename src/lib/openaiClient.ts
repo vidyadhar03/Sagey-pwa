@@ -1,7 +1,7 @@
 import OpenAI from 'openai';
 import { RadarPayload } from '../features/radar/types';
 import { RadarHypeCopy } from '../features/radar/radarNarrativeConfig';
-import { HypePayload } from '../features/psycho/buildHypePayload';
+
 
 // Singleton OpenAI client
 let openaiClient: OpenAI | null = null;
@@ -26,7 +26,7 @@ export function getOpenAIClient(): OpenAI {
 }
 
 // Type definitions for AI insight types
-export type InsightType = 'musical_age' | 'mood_ring' | 'genre_passport' | 'night_owl_pattern' | 'radar_summary' | 'radar_hype' | 'psycho_hype_v2';
+export type InsightType = 'musical_age' | 'mood_ring' | 'genre_passport' | 'night_owl_pattern' | 'radar_summary' | 'radar_hype';
 
 export interface MusicalAgePayload {
   age: number;
@@ -65,7 +65,6 @@ export interface InsightPayloadMap {
   night_owl_pattern: NightOwlPatternPayload;
   radar_summary: RadarPayload;
   radar_hype: RadarPayload;
-  psycho_hype_v2: HypePayload;
 }
 
 export type InsightPayload = InsightPayloadMap[InsightType]; 
