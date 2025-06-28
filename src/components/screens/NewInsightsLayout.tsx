@@ -25,12 +25,23 @@ export default function NewInsightsLayout({ scrollContainerRef }: NewInsightsLay
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="mt-6 mb-8"
+          className="mt-6 mb-8 text-center"
         >
-          <h2 className="text-3xl font-bold text-white mb-3">Your Fresh Insights</h2>
-          <p className="text-zinc-400">
-            Discover share-worthy insights about your musical personality and listening patterns.
+          <h2 className="text-3xl font-bold text-white mb-2">
+            Your Music DNA
+          </h2>
+          <p className="text-zinc-400 max-w-xl mx-auto">
+            Discover what your music taste reveals about your personality and listening habits.
           </p>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.5, duration: 0.4 }}
+            className="inline-flex items-center gap-2 mt-3 px-3 py-1.5 rounded-full bg-[#1DB954]/10 border border-[#1DB954]/20"
+          >
+            <div className="w-2 h-2 bg-[#1DB954] rounded-full animate-pulse"></div>
+            <span className="text-[#1DB954] text-sm font-medium">Updated daily</span>
+          </motion.div>
         </motion.div>
 
         {/* Insights Grid */}

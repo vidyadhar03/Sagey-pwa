@@ -1,14 +1,17 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Info } from 'lucide-react';
 import InsightCard from './InsightCard';
 import InsightSkeleton from './InsightSkeleton';
 import RefreshButton from './RefreshButton';
 import { useSpotifyInsights } from '../../../hooks/useSpotifyInsights';
 import { useAIInsights } from '../../../hooks/useAIInsights';
+import { InsightDetailSheet } from '../detail/InsightDetailSheet';
 
 export default function NightOwlCard() {
+  const [detailSheetOpen, setDetailSheetOpen] = useState(false);
   const { insights, isLoading } = useSpotifyInsights();
 
   const payload = insights.nightOwlPattern;
@@ -37,7 +40,7 @@ export default function NightOwlCard() {
   };
 
   const handleInfo = () => {
-    console.log('Night Owl Pattern info...');
+    setDetailSheetOpen(true);
   };
 
   const hourlyData = payload.histogram;
@@ -143,7 +146,7 @@ export default function NightOwlCard() {
           transition={{ delay: 0.9 }}
           className="bg-white/5 rounded-xl p-4 mb-4 border border-white/10"
         >
-          <p className="text-sm leading-snug">{copy}</p>
+          <p className="text-xs text-zinc-300 leading-relaxed">{copy}</p>
           <div className="flex justify-between items-center mt-1">
             <span className="inline-flex items-center gap-1 text-xs text-zinc-400">
               ✨ AI Generated
@@ -176,7 +179,7 @@ export default function NightOwlCard() {
           animate={{ opacity: 1 }}
           className="bg-white/5 rounded-xl p-4 mb-4 border border-white/10"
         >
-          <p className="text-sm leading-snug text-zinc-400">We&apos;re speechless 🤫</p>
+          <p className="text-xs text-zinc-400 leading-relaxed">We&apos;re speechless 🤫</p>
           <div className="flex justify-between items-center mt-1">
             <span className="inline-flex items-center gap-1 text-xs text-zinc-500">
               ✨ AI Generated
@@ -216,6 +219,15 @@ export default function NightOwlCard() {
           />
         </div>
       </motion.div>
+
+      {/* Detail Sheet */}
+      <InsightDetailSheet
+        open={detailSheetOpen}
+        onClose={() => setDetailSheetOpen(false)}
+        type="night_owl"
+        title="Night Owl Pattern"
+        payload={payload}
+      />
     </InsightCard>
   );
 } 

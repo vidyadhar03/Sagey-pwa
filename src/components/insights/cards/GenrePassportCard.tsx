@@ -7,10 +7,12 @@ import InsightSkeleton from './InsightSkeleton';
 import RefreshButton from './RefreshButton';
 import { useSpotifyInsights } from '../../../hooks/useSpotifyInsights';
 import { useAIInsights } from '../../../hooks/useAIInsights';
+import { InsightDetailSheet } from '../detail/InsightDetailSheet';
 
 export default function GenrePassportCard() {
   const { insights, isLoading } = useSpotifyInsights();
   const [showModal, setShowModal] = useState(false);
+  const [detailSheetOpen, setDetailSheetOpen] = useState(false);
 
   const payload = insights.genrePassport;
   const isFallback = (payload?.totalGenres === 0 || insights.isDefault) ?? true;
@@ -38,7 +40,7 @@ export default function GenrePassportCard() {
   };
 
   const handleInfo = () => {
-    console.log('Genre Passport info...');
+    setDetailSheetOpen(true);
   };
 
   const handleBadgeClick = () => {
@@ -163,7 +165,7 @@ export default function GenrePassportCard() {
               transition={{ delay: 1.2 }}
               className="bg-white/5 rounded-xl p-4 border border-white/10"
             >
-              <p className="text-sm leading-snug text-white/90">{copy}</p>
+              <p className="text-xs text-zinc-300 leading-relaxed">{copy}</p>
               <div className="flex justify-between items-center mt-2">
                 <span className="inline-flex items-center gap-1 text-xs text-zinc-400">
                   ✨ AI Generated
@@ -196,7 +198,7 @@ export default function GenrePassportCard() {
               animate={{ opacity: 1 }}
               className="bg-white/5 rounded-xl p-4 border border-white/10"
             >
-              <p className="text-sm leading-snug text-zinc-400">We&apos;re speechless 🤫</p>
+              <p className="text-xs text-zinc-400 leading-relaxed">We&apos;re speechless 🤫</p>
               <div className="flex justify-between items-center mt-2">
                 <span className="inline-flex items-center gap-1 text-xs text-zinc-500">
                   ✨ AI Generated
@@ -273,6 +275,15 @@ export default function GenrePassportCard() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Detail Sheet */}
+      <InsightDetailSheet
+        open={detailSheetOpen}
+        onClose={() => setDetailSheetOpen(false)}
+        type="genre_passport"
+        title="Genre Passport"
+        payload={payload}
+      />
     </>
   );
 } 

@@ -7,8 +7,7 @@ import InsightSkeleton from './InsightSkeleton';
 import RefreshButton from './RefreshButton';
 import { useSpotifyInsights } from '../../../hooks/useSpotifyInsights';
 import { useAIInsights } from '../../../hooks/useAIInsights';
-import MusicalAgeDetailSheet from '../detail/MusicalAgeDetailSheet';
-import Loader from '../../Loader';
+import { InsightDetailSheet } from '../detail/InsightDetailSheet';
 
 export default function MusicalAgeCard() {
   const { insights, isLoading } = useSpotifyInsights();
@@ -19,12 +18,17 @@ export default function MusicalAgeCard() {
   const payload = insights.musicalAge;
   const isFallback = payload.trackCount === 0 || insights.isDefault;
 
-  // AI insights for musical age - pass the full payload now that it includes all fields
-  const aiInsights = useAIInsights('musical_age', payload, !isFallback); // Only fetch AI when we have real data
+  // AI Insights - Only fetch when not in fallback mode
+  const aiInsights = useAIInsights(
+    'musical_age', 
+    payload,
+    !isFallback && !isLoading // Pass enabled flag as third parameter
+  );
+  const { copy, isLoading: aiLoading, error: aiError, mutate } = aiInsights;
 
   const handleRefreshInsight = async () => {
-    if (aiInsights.mutate) {
-      await aiInsights.mutate({ regenerate: true });
+    if (mutate) {
+      await mutate({ regenerate: true });
     }
   };
 
@@ -66,7 +70,7 @@ export default function MusicalAgeCard() {
   };
 
   const handleInfo = () => {
-    console.log('Musical Age info...');
+    setOpen(true);
   };
 
   return (
@@ -140,52 +144,129 @@ export default function MusicalAgeCard() {
                 </motion.span>
               )}
             </div>
+            <motion.p 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              className="text-zinc-400 text-sm mt-2"
+            >
+              Average age of your music
+            </motion.p>
           </motion.div>
         </div>
 
-        {/* Description */}
+        {/* Clear Explanation */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="text-center"
+          className="text-center mb-4"
         >
-          <p className="text-zinc-300 text-sm leading-relaxed">
-            {payload.description}
-          </p>
+          <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+            <p className="text-zinc-300 text-sm font-medium mb-2">
+              Your music taste centers around {payload.averageYear}
+            </p>
+            <p className="text-zinc-400 text-xs leading-relaxed">
+              Musical Age = how old your music is on average
+              <br />
+              (Current year - Your average release year = {new Date().getFullYear()} - {payload.averageYear})
+            </p>
+          </div>
         </motion.div>
 
-        {/* AI Generated Copy */}
-        {!isFallback && (
+        {/* Decade Bar Graph */}
+        {!isFallback && payload.decadeBuckets && payload.decadeBuckets.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7 }}
-            className="mt-4 p-3 bg-white/5 rounded-lg border border-white/10"
+            className="mt-4"
           >
-            {aiInsights.isLoading ? (
-              <div className="flex items-center justify-center space-x-2">
-                <Loader size={16} />
-                <span className="text-xs text-zinc-400 ml-2">Generating insight...</span>
-              </div>
-            ) : aiInsights.error ? (
-              <p className="text-xs text-zinc-400 text-center">We&apos;re speechless 🤫</p>
-            ) : (
-              <div>
-                <p className="text-xs text-zinc-300 leading-relaxed" data-testid="ai-copy">
-                  {aiInsights.copy}
-                </p>
-                <div className="flex justify-between items-center mt-2">
-                  <span className="text-xs text-zinc-500 flex items-center space-x-1" data-testid="ai-generated-label">
-                    <span>✨</span>
-                    <span>AI Generated</span>
-                  </span>
-                                    <RefreshButton
-                    onRefresh={handleRefreshInsight}
-                  />
-                </div>
-              </div>
-            )}
+            <div className="text-center mb-3">
+              <p className="text-zinc-400 text-xs font-medium mb-1">Music Distribution Across Decades</p>
+              <p className="text-zinc-500 text-xs">Shows what eras you listen to (not your Musical Age)</p>
+            </div>
+            <div className="flex items-center justify-center gap-1 mb-2">
+              {payload.decadeBuckets.map((bucket, index) => {
+                const maxWeight = Math.max(...payload.decadeBuckets.map(b => b.weight));
+                const height = maxWeight > 0 ? Math.max(8, (bucket.weight / maxWeight) * 40) : 8;
+                const decadeLabel = bucket.decade < 2000 ? `${bucket.decade.toString().slice(-2)}s` : `${bucket.decade.toString().slice(-2)}s`;
+                
+                return (
+                  <motion.div
+                    key={bucket.decade}
+                    initial={{ scaleY: 0 }}
+                    animate={{ scaleY: 1 }}
+                    transition={{ delay: 0.8 + index * 0.1, duration: 0.4 }}
+                    className="flex flex-col items-center gap-1"
+                  >
+                    <div
+                      className="w-6 bg-gradient-to-t from-[#1DB954] to-[#1ED760] rounded-sm transition-all duration-300"
+                      style={{ height: `${height}px` }}
+                      title={`${bucket.decade}s: ${Math.round(bucket.weight)} tracks`}
+                    />
+                    <span className="text-xs text-zinc-400 font-medium">
+                      {decadeLabel}
+                    </span>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+
+        {/* AI Generated Copy */}
+        {!isFallback && !aiLoading && !aiError && copy && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.1 }}
+            className="bg-white/5 rounded-xl p-4 mb-4 border border-white/10"
+          >
+            <p className="text-xs text-zinc-300 leading-relaxed" data-testid="ai-copy">
+              {copy}
+            </p>
+            <div className="flex justify-between items-center mt-1">
+              <span className="inline-flex items-center gap-1 text-xs text-zinc-400" data-testid="ai-generated-label">
+                ✨ AI Generated
+              </span>
+              <RefreshButton 
+                onRefresh={handleRefreshInsight}
+              />
+            </div>
+          </motion.div>
+        )}
+
+        {/* Loading skeleton for AI */}
+        {!isFallback && aiLoading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="bg-white/5 rounded-xl p-4 mb-4 border border-white/10"
+          >
+            <div className="animate-pulse">
+              <div className="h-4 bg-white/10 rounded w-3/4 mb-2"></div>
+              <div className="h-4 bg-white/10 rounded w-1/2"></div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Error state */}
+        {!isFallback && aiError && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="bg-white/5 rounded-xl p-4 mb-4 border border-white/10"
+          >
+            <p className="text-xs text-zinc-400 leading-relaxed">We&apos;re speechless 🤫</p>
+            <div className="flex justify-between items-center mt-1">
+              <span className="inline-flex items-center gap-1 text-xs text-zinc-500">
+                ✨ AI Generated
+              </span>
+              <RefreshButton 
+                onRefresh={handleRefreshInsight}
+              />
+            </div>
           </motion.div>
         )}
 
@@ -193,40 +274,30 @@ export default function MusicalAgeCard() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
+          transition={{ delay: 1.0 }}
           className="flex justify-center items-center mt-4 pt-4 border-t border-white/10"
         >
           <div className="text-center">
-            <p className="text-xs text-zinc-400">Avg. Release Year</p>
-            <p className={`font-semibold ${isFallback ? 'text-zinc-500' : 'text-[#1DB954]'}`}>
+            <p className="text-xs text-zinc-400">Your Music Centers Around</p>
+            <p className={`font-semibold text-lg ${isFallback ? 'text-zinc-500' : 'text-[#1DB954]'}`}>
               {payload.averageYear}
+            </p>
+            <p className="text-xs text-zinc-500 mt-1">
+              {!isFallback && `${new Date().getFullYear() - payload.averageYear} years ago`}
             </p>
           </div>
         </motion.div>
 
-        {/* View Details CTA */}
-        {!isFallback && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.9 }}
-            className="flex justify-center mt-3"
-          >
-            <button
-              onClick={() => setOpen(true)}
-              className="text-sm underline text-green-400 hover:text-green-300 transition-colors"
-            >
-              View details ▸
-            </button>
-          </motion.div>
-        )}
+
       </InsightCard>
 
       {/* Musical Age Detail Sheet */}
-      <MusicalAgeDetailSheet
-        payload={payload}
+      <InsightDetailSheet
         open={open}
         onClose={() => setOpen(false)}
+        type="musical_age"
+        title="Musical Age"
+        payload={payload}
       />
     </>
   );

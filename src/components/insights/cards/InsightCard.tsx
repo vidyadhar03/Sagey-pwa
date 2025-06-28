@@ -2,6 +2,7 @@
 
 import React, { ReactNode } from 'react';
 import { motion } from 'framer-motion';
+import { Info } from 'lucide-react';
 
 interface InsightCardProps {
   title: string;
@@ -37,15 +38,10 @@ export default function InsightCard({
           {onInfo && (
             <button
               onClick={onInfo}
-              className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center
-                       hover:bg-white/20 transition-colors"
-              aria-label="More info"
+              className="p-2 rounded-lg transition-all duration-200 text-zinc-400 hover:text-white hover:bg-zinc-800"
+              title="View insight details"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                <circle cx="12" cy="12" r="10"/>
-                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-                <path d="M12 17h.01"/>
-              </svg>
+              <Info size={22} />
             </button>
           )}
 
